@@ -8,6 +8,21 @@ import type {
 
 const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+function cloneMovesWithNode(
+  moves: AnalysisMoveNode[],
+  nodeIndex: number
+): { newMoves: AnalysisMoveNode[]; newNode: AnalysisMoveNode } {
+  const newMoves = moves.slice();
+  const node = moves[nodeIndex];
+  const newNode: AnalysisMoveNode = {
+    ...node,
+    branches: node.branches.slice(),
+  };
+  newMoves[nodeIndex] = newNode;
+
+  return { newMoves, newNode };
+}
+
 /**
  * Converts chess.js moves to our tree structure
  */
@@ -176,8 +191,9 @@ export function addMoveToTree(
     }
 
     // Different move - truncate branch and add new move
-    const newMoves = structuredClone(moves);
-    const newBranch = newMoves[mainLineIndex].branches[branch.branchIndex];
+    const { newMoves, newNode } = cloneMovesWithNode(moves, mainLineIndex);
+    const newBranch = (newNode.branches[branch.branchIndex] ?? []).slice();
+    newNode.branches[branch.branchIndex] = newBranch;
     // Keep moves up to current position, then add new move
     newBranch.splice(
       nextMoveIndex,
@@ -221,9 +237,9 @@ export function addMoveToTree(
     }
 
     // Create new branch
-    const newMoves = structuredClone(moves);
-    const newBranchIndex = newMoves[mainLineIndex].branches.length;
-    newMoves[mainLineIndex].branches.push([newBranchMove]);
+    const { newMoves, newNode } = cloneMovesWithNode(moves, mainLineIndex);
+    const newBranchIndex = newNode.branches.length;
+    newNode.branches.push([newBranchMove]);
 
     return {
       position: {
@@ -282,9 +298,9 @@ export function addMoveToTree(
   }
 
   // Create new branch on last move
-  const newMoves = structuredClone(moves);
-  const newBranchIndex = newMoves[lastMoveIndex].branches.length;
-  newMoves[lastMoveIndex].branches.push([newBranchMove]);
+  const { newMoves, newNode } = cloneMovesWithNode(moves, lastMoveIndex);
+  const newBranchIndex = newNode.branches.length;
+  newNode.branches.push([newBranchMove]);
 
   return {
     position: {

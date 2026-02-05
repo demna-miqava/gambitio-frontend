@@ -7,14 +7,19 @@ import type { PlayerColor } from "../types/game.types";
  * Calculate legal moves for all pieces on the board
  */
 export const calculateLegalMoves = (chess: Chess) => {
-  return new Map(
-    chess
-      .moves({ verbose: true })
-      .map((m) => [
-        m.from,
-        chess.moves({ square: m.from, verbose: true }).map((move) => move.to),
-      ])
-  );
+  const dests = new Map<string, Set<string>>();
+
+  for (const move of chess.moves({ verbose: true })) {
+    const set = dests.get(move.from) ?? new Set<string>();
+    set.add(move.to);
+    dests.set(move.from, set);
+  }
+
+  const result = new Map<string, string[]>();
+  dests.forEach((set, from) => {
+    result.set(from, Array.from(set));
+  });
+  return result;
 };
 
 /**
@@ -49,8 +54,8 @@ export const syncBoard = ({
     movableColor === "both"
       ? calculateLegalMoves(chess)
       : turn === movableColor
-        ? calculateLegalMoves(chess)
-        : new Map();
+      ? calculateLegalMoves(chess)
+      : new Map();
 
   cg.set({
     fen: chess.fen(),

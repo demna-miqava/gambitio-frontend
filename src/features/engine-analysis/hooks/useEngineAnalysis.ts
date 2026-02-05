@@ -25,17 +25,15 @@ export function useEngineAnalysis({
   });
 
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const analysisAbortedRef = useRef(false);
+  const requestIdRef = useRef(0);
 
   const analyze = useCallback(
-    async (fen: string) => {
+    async (fen: string, requestId: number) => {
       if (!isReady) return;
-      analysisAbortedRef.current = false;
-
       try {
         const result = await analyzeMultiPv(fen, numLines);
-        // Check if analysis was aborted while we were waiting
-        if (analysisAbortedRef.current) return;
+        // Ignore stale responses
+        if (requestId !== requestIdRef.current) return;
 
         if (result) {
           const bestLine = result.lines[0];
@@ -49,8 +47,7 @@ export function useEngineAnalysis({
           });
         }
       } catch {
-        // Ignore errors from aborted analysis
-        if (!analysisAbortedRef.current) {
+        if (requestId === requestIdRef.current) {
           setAnalysis({ isAnalyzing: false });
         }
       }
@@ -65,14 +62,14 @@ export function useEngineAnalysis({
         clearTimeout(debounceTimerRef.current);
       }
 
-      analysisAbortedRef.current = true;
+      const requestId = ++requestIdRef.current;
 
       // Mark as analyzing (keep old lines until new ones arrive)
       setAnalysis({ isAnalyzing: true });
 
       debounceTimerRef.current = setTimeout(() => {
         stop();
-        analyze(fen);
+        analyze(fen, requestId);
       }, debounceMs);
     },
     [analyze, stop, debounceMs, setAnalysis]
@@ -83,6 +80,17 @@ export function useEngineAnalysis({
     if (!isReady || !FEN) return;
     debouncedAnalyze(FEN);
   }, [isReady, FEN, debouncedAnalyze]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      // Invalidate any in-flight analysis on unmount
+      requestIdRef.current += 1;
+      stop();
+    };
+  }, [stop]);
 
   return {
     lines: analysis.lines,

@@ -37,18 +37,60 @@ export const useLiveGameMessages = ({
     undefined
   );
 
+  const syncFromServerState = useCallback(
+    (payload: { pgn?: string; fen?: string }) => {
+      const chess = chessRef.current;
+      const cg = cgRef.current;
+      if (!chess || !cg) return false;
+
+      try {
+        if (payload.pgn) {
+          chess.loadPgn(payload.pgn);
+        } else if (payload.fen) {
+          chess.load(payload.fen);
+        } else {
+          return false;
+        }
+      } catch {
+        return false;
+      }
+
+      const turn = syncBoard({
+        cg,
+        chess,
+        movableColor: color,
+        playPremove: true,
+      });
+      setTurn(turn);
+      return true;
+    },
+    [chessRef, cgRef, color, setTurn]
+  );
+
   // Handle incoming move messages from WebSocket
   const handleIncomingMove = useCallback(
     (data: MoveMessage) => {
       if (!chessRef.current || !cgRef.current) return;
-      if (!data.move) return;
 
       const chess = chessRef.current;
       const isOwnMove = data.userId === currentUserId;
       try {
+        if (!data.move) {
+          if (syncFromServerState({ pgn: data.pgn, fen: data.fen })) {
+            goToLastMove();
+          }
+          return;
+        }
+
         // Only apply the move to chess.js if it's from opponent
         if (!isOwnMove) {
           const move = chess.move(data.move.lan);
+          if (!move) {
+            if (syncFromServerState({ pgn: data.pgn, fen: data.fen })) {
+              goToLastMove();
+            }
+            return;
+          }
           const isCheckmate = chess.isCheckmate();
 
           const turn = syncBoard({
@@ -62,6 +104,8 @@ export const useLiveGameMessages = ({
 
           // Auto-jump to latest move when opponent moves
           goToLastMove();
+        } else if (data.pgn || data.fen) {
+          syncFromServerState({ pgn: data.pgn, fen: data.fen });
         }
 
         // Always update clocks with server time (for both players)
@@ -72,7 +116,9 @@ export const useLiveGameMessages = ({
           setBlackTimeLeft(data.blackTimeLeft);
         }
       } catch {
-        toast.error("Failed to sync move. Please refresh the page.");
+        if (!syncFromServerState({ pgn: data.pgn, fen: data.fen })) {
+          toast.error("Failed to sync move. Please refresh the page.");
+        }
       }
     },
     [
@@ -83,6 +129,7 @@ export const useLiveGameMessages = ({
       playSoundForMove,
       goToLastMove,
       currentUserId,
+      syncFromServerState,
     ]
   );
 
