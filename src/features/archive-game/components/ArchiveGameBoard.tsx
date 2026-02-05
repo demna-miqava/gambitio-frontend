@@ -1,4 +1,4 @@
-import Clock from "@/features/current-game/components/Clock";
+import Clock from "@/features/game/components/Clock";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";

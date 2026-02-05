@@ -11,8 +11,8 @@ import type { Key } from "@lichess-org/chessground/types";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { useChessSound } from "@/features/game/hooks/useChessSound";
 import { useSettings } from "@/features/settings/SettingsContext";
-import { syncBoard } from "@/features/game/utils/board-utils";
 import { useArrowKeyNavigation } from "@/features/game/hooks/useArrowKeyNavigation";
+import { useBoardMoveHandler } from "@/features/game/hooks/useBoardMoveHandler";
 import { useAnalysisTree } from "../hooks/useAnalysisTree";
 import { useAnalysisNavigation } from "../hooks/useAnalysisNavigation";
 import type {
@@ -61,6 +61,14 @@ export const ArchiveGameProvider = ({
   const { settings } = useSettings();
   const { playSoundForMove } = useChessSound(settings?.soundsEnabled);
 
+  const { applyMove } = useBoardMoveHandler({
+    chessRef,
+    cgRef,
+    movableColor: "both",
+    setTurn,
+    playSoundForMove,
+  });
+
   // Parse initial moves from PGN
   const initialMoves = useMemo(() => {
     if (!pgn) return [];
@@ -94,34 +102,22 @@ export const ArchiveGameProvider = ({
       // Create a temporary chess instance to validate move
       const tempChess = new Chess(chess.fen());
 
-      try {
-        const move = tempChess.move({
+      const result = applyMove(
+        {
           from: fromSquare,
           to: toSquare,
-          promotion: "q", // Auto-promote to queen
-        });
+          promotion: "q",
+        },
+        { chess: tempChess, lastMove: [orig, dest], playPremove: false }
+      );
+      if (!result) return;
 
-        if (move) {
-          // Add move to tree (handles branching automatically)
-          tree.addMove(move);
+      // Add move to tree (handles branching automatically)
+      tree.addMove(result.move);
 
-          // Update board
-          const turn = syncBoard({
-            cg,
-            chess: tempChess,
-            movableColor: "both",
-            lastMove: [orig, dest],
-          });
-          setTurn(turn);
-
-          chessRef.current.load(tempChess.fen());
-          playSoundForMove(move, tempChess.isCheckmate());
-        }
-      } catch {
-        cg.set({ fen: chess.fen() });
-      }
+      chessRef.current.load(tempChess.fen());
     },
-    [chessRef, cgRef, setTurn, tree, playSoundForMove]
+    [chessRef, cgRef, applyMove, tree]
   );
 
   // Register move handler with Chessground

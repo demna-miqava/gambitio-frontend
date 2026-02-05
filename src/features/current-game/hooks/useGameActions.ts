@@ -1,13 +1,13 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type { GameEndedMessage } from "@/features/game/types/websocket-messages";
 import { useChessSound } from "@/features/game/hooks/useChessSound";
 import { useUser } from "@/hooks/useUser";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { getGameEndMessage } from "../constants/gameEndMessages";
-import { messageDispatcher } from "@/services/websocketMessageDispatcher";
 import { useSettings } from "@/features/settings/SettingsContext";
 import { useLiveGame } from "../contexts/LiveGameContext";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
+import { useMessageDispatcher } from "@/hooks/useMessageDispatcher";
 
 type FinishState = {
   title: string;
@@ -30,25 +30,26 @@ export const useGameActions = () => {
 
   const hasMoves = (chessRef.current?.history().length || 0) > 0;
 
-  useEffect(() => {
-    const unsubscribe = messageDispatcher.subscribe<GameEndedMessage>(
-      GAME_MESSAGE_TYPES.GAME_ENDED,
-      (data) => {
-        const { reason, winnerId } = data;
+  const handleGameEnded = useCallback(
+    (data: GameEndedMessage) => {
+      const { reason, winnerId } = data;
 
-        const isWinner = winnerId === currentUserId;
-        const message = getGameEndMessage(reason, isWinner);
+      const isWinner = winnerId === currentUserId;
+      const message = getGameEndMessage(reason, isWinner);
 
-        if (message) {
-          setFinish(message);
-          setOpenGameResultDialog(true);
-          playGenericSound();
-        }
+      if (message) {
+        setFinish(message);
+        setOpenGameResultDialog(true);
+        playGenericSound();
       }
-    );
+    },
+    [playGenericSound, currentUserId]
+  );
 
-    return unsubscribe;
-  }, [playGenericSound, currentUserId]);
+  useMessageDispatcher<GameEndedMessage>(
+    GAME_MESSAGE_TYPES.GAME_ENDED,
+    handleGameEnded
+  );
 
   const onResign = useCallback(() => {
     sendMessage(JSON.stringify({ type: GAME_MESSAGE_TYPES.RESIGN }));

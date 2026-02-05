@@ -20,6 +20,7 @@ import { useLiveGameMessages } from "../hooks/useLiveGameMessages";
 import type { SendMessage } from "react-use-websocket";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
 import { isPromotionMove } from "@/features/game/utils/promotionUtils";
+import { useBoardMoveHandler } from "@/features/game/hooks/useBoardMoveHandler";
 
 interface PendingPromotion {
   from: Square;
@@ -57,63 +58,54 @@ export const LiveGameProvider = ({ children }: LiveGameProviderProps) => {
   const [pendingPromotion, setPendingPromotion] =
     useState<PendingPromotion | null>(null);
 
+  const { applyMove } = useBoardMoveHandler({
+    chessRef,
+    cgRef,
+    movableColor: color,
+    setTurn,
+    playSoundForMove,
+  });
+
   // Complete a move with a specific promotion piece
   const completeMove = useCallback(
     (fromSquare: Square, toSquare: Square, promotion?: PieceSymbol) => {
+      const result = applyMove({
+        from: fromSquare,
+        to: toSquare,
+        promotion,
+      });
+      if (!result) return;
+
       const chess = chessRef.current;
-      const cg = cgRef.current;
-      if (!chess || !cg) return;
+      if (!chess) return;
 
-      try {
-        const move = chess.move({
-          from: fromSquare,
-          to: toSquare,
-          promotion,
-        });
+      sendMessage(
+        JSON.stringify({
+          type: GAME_MESSAGE_TYPES.MOVE,
+          move: result.move,
+          fen: chess.fen(),
+          pgn: chess.pgn(),
+          moveNumber: chess.history().length,
+        })
+      );
 
-        const isCheckmate = chess.isCheckmate();
-        const isStalemate = chess.isStalemate();
-
-        const turn = syncBoard({
-          cg: cg,
-          chess,
-          movableColor: color,
-          playPremove: true,
-        });
-        setTurn(turn);
-
-        playSoundForMove(move, isCheckmate);
-
+      // Check for game ending conditions
+      if (result.isCheckmate) {
         sendMessage(
           JSON.stringify({
-            type: GAME_MESSAGE_TYPES.MOVE,
-            move: move,
-            fen: chess.fen(),
-            pgn: chess.pgn(),
-            moveNumber: chess.history().length,
+            type: GAME_MESSAGE_TYPES.CHECKMATE,
+            winnerId: id,
           })
         );
-
-        // Check for game ending conditions
-        if (isCheckmate) {
-          sendMessage(
-            JSON.stringify({
-              type: GAME_MESSAGE_TYPES.CHECKMATE,
-              winnerId: id,
-            })
-          );
-        } else if (isStalemate) {
-          sendMessage(
-            JSON.stringify({
-              type: GAME_MESSAGE_TYPES.STALEMATE,
-            })
-          );
-        }
-      } catch {
-        cg.set({ fen: chess.fen() });
+      } else if (result.isStalemate) {
+        sendMessage(
+          JSON.stringify({
+            type: GAME_MESSAGE_TYPES.STALEMATE,
+          })
+        );
       }
     },
-    [chessRef, cgRef, setTurn, color, playSoundForMove, sendMessage, id]
+    [applyMove, chessRef, sendMessage, id]
   );
 
   // Handle promotion piece selection
@@ -150,8 +142,7 @@ export const LiveGameProvider = ({ children }: LiveGameProviderProps) => {
   const handlePlayerMove = useCallback(
     (orig: Key, dest: Key) => {
       const chess = chessRef.current;
-      const cg = cgRef.current;
-      if (!chess || !cg) return;
+      if (!chess) return;
 
       const fromSquare = orig as Square;
       const toSquare = dest as Square;
@@ -173,7 +164,7 @@ export const LiveGameProvider = ({ children }: LiveGameProviderProps) => {
         completeMove(fromSquare, toSquare);
       }
     },
-    [chessRef, cgRef, settings?.autoPromoteToQueenEnabled, completeMove]
+    [chessRef, settings?.autoPromoteToQueenEnabled, completeMove]
   );
 
   // Register move handler with Chessground

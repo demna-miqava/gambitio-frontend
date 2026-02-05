@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type {
   RematchRequestMessage,
   RematchResponseMessage,
@@ -7,9 +7,9 @@ import type {
 import type { MatchFoundMessage } from "@/features/matchmaking/types/websocket-messages";
 import { MATCHMAKING_MESSAGE_TYPES } from "@/features/matchmaking/constants/websocket-types";
 import { useStartGame } from "@/features/matchmaking/hooks/useStartGame";
-import { messageDispatcher } from "@/services/websocketMessageDispatcher";
 import { useLiveGame } from "../contexts/LiveGameContext";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
+import { useMessageDispatcher } from "@/hooks/useMessageDispatcher";
 
 export const useRematch = ({
   setOpenGameResultDialog,
@@ -23,46 +23,45 @@ export const useRematch = ({
   const [rematchOffered, setRematchOffered] = useState(false);
   const [rematchDeclined, setRematchDeclined] = useState(false);
 
-  useEffect(() => {
-    const unsubCanceled = messageDispatcher.subscribe<CancelRematchMessage>(
-      GAME_MESSAGE_TYPES.REMATCH_CANCELED,
-      () => {
-        setRematchOffered(false);
-      }
-    );
+  const handleRematchCanceled = useCallback(() => {
+    setRematchOffered(false);
+  }, []);
 
-    const unsubRequest = messageDispatcher.subscribe<RematchRequestMessage>(
-      GAME_MESSAGE_TYPES.REMATCH_REQUEST,
-      () => {
-        setRematchOffered(true);
-      }
-    );
+  const handleRematchRequested = useCallback(() => {
+    setRematchOffered(true);
+  }, []);
 
-    const unsubResponse = messageDispatcher.subscribe<RematchResponseMessage>(
-      GAME_MESSAGE_TYPES.REMATCH_RESPONSE,
-      (data) => {
-        if (!data.accepted) {
-          setRematchDeclined(true);
-          setRematchRequested(false);
-        }
-      }
-    );
+  const handleRematchResponse = useCallback((data: RematchResponseMessage) => {
+    if (!data.accepted) {
+      setRematchDeclined(true);
+      setRematchRequested(false);
+    }
+  }, []);
 
-    const unsubMatchFound = messageDispatcher.subscribe<MatchFoundMessage>(
-      MATCHMAKING_MESSAGE_TYPES.MATCH_FOUND,
-      (data) => {
-        startGame(data);
-        setOpenGameResultDialog(false);
-      }
-    );
+  const handleMatchFound = useCallback(
+    (data: MatchFoundMessage) => {
+      startGame(data);
+      setOpenGameResultDialog(false);
+    },
+    [startGame, setOpenGameResultDialog]
+  );
 
-    return () => {
-      unsubCanceled();
-      unsubRequest();
-      unsubResponse();
-      unsubMatchFound();
-    };
-  }, [startGame, setOpenGameResultDialog]);
+  useMessageDispatcher<CancelRematchMessage>(
+    GAME_MESSAGE_TYPES.REMATCH_CANCELED,
+    handleRematchCanceled
+  );
+  useMessageDispatcher<RematchRequestMessage>(
+    GAME_MESSAGE_TYPES.REMATCH_REQUEST,
+    handleRematchRequested
+  );
+  useMessageDispatcher<RematchResponseMessage>(
+    GAME_MESSAGE_TYPES.REMATCH_RESPONSE,
+    handleRematchResponse
+  );
+  useMessageDispatcher<MatchFoundMessage>(
+    MATCHMAKING_MESSAGE_TYPES.MATCH_FOUND,
+    handleMatchFound
+  );
 
   const requestRematch = useCallback(() => {
     sendMessage(JSON.stringify({ type: GAME_MESSAGE_TYPES.REMATCH_REQUEST }));

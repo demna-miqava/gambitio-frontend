@@ -1,6 +1,6 @@
 import { useUser } from "@/hooks/useUser";
 import { useLocation } from "react-router-dom";
-import Clock from "./Clock";
+import Clock from "@/features/game/components/Clock";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useRef, useMemo } from "react";
