@@ -20,6 +20,11 @@ export type GameTableProps = {
   title?: string;
   actionHref?: string;
   limit?: number;
+  /**
+   * Leave out the newest game (Home shows it in "Your last game"). The list
+   * is hidden when that was the only one.
+   */
+  skipLatest?: boolean;
 };
 
 export const GameTable = ({
@@ -27,15 +32,17 @@ export const GameTable = ({
   title = "Recent games",
   actionHref,
   limit = 10,
+  skipLatest = false,
 }: GameTableProps) => {
   const isPreview = variant === "preview";
   const userId = useProfileUserId();
   const { id: currentUserId } = useUser();
   const isOwnProfile = userId === currentUserId;
 
-  const { games, isPending, page, setPage, pagination } = useUserGames({
+  const { games: loaded, isPending, page, setPage, pagination } = useUserGames({
     defaultLimit: limit,
   });
+  const games = skipLatest ? loaded.slice(1) : loaded;
 
   const columns = useMemo(() => createColumns(userId), [userId]);
 
@@ -72,6 +79,8 @@ export const GameTable = ({
     />
   );
   const total = pagination?.total;
+  // Nothing besides the featured game: no empty "No games yet" under it
+  if (skipLatest && !showLoading && loaded.length > 0 && games.length === 0) return null;
 
   return (
     <section className="space-y-3">

@@ -41,7 +41,10 @@ export const Header = () => {
               <Link
                 key={key}
                 to={`${getProfileStatsRoute(id || 0)}?variant=${key}`}
-                aria-label={`${label} rating ${ratings[key] ?? "unrated"}, view stats`}
+                aria-label={`${label} rating ${ratings[key] ?? "unrated"}${
+                  delta ? `, ${delta > 0 ? "up" : "down"} ${Math.abs(delta)} in the last 30 days` : ""
+                }, view stats`}
+                title={delta ? "Rating change in the last 30 days" : undefined}
                 className="flex min-w-0 flex-col gap-1 rounded-xl border border-border/70 bg-card px-3 py-3 transition-colors hover:border-primary/40 hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-28 sm:px-4 lg:min-w-32"
               >
                 <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">

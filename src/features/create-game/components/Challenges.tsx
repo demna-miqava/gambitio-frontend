@@ -6,6 +6,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { formatTimeControl } from "@/utils/timeControl";
 import { formatDistance } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const REFRESH_MS = 30_000;
 
@@ -20,7 +21,16 @@ const useNow = (intervalMs: number, enabled: boolean) => {
   return now;
 };
 
-export const Challenges = () => {
+interface ChallengesProps {
+  /** Replaces the default top rule and spacing (e.g. a card on Home) */
+  className?: string;
+}
+
+/**
+ * Open challenges other players sent you, with Accept / Decline. Renders
+ * nothing while there are none. Shared by Play and Home.
+ */
+export const Challenges = ({ className }: ChallengesProps) => {
   const { data: challenges = [], isLoading } = useIncomingChallenges();
   const { handleAcceptChallenge, handleDeclineChallenge } = useChallenges();
   const now = useNow(REFRESH_MS, challenges.length > 0);
@@ -31,7 +41,7 @@ export const Challenges = () => {
   return (
     <section
       aria-labelledby="incoming-challenges-title"
-      className="space-y-3 border-t border-border/70 pt-5"
+      className={cn("space-y-3", className ?? "border-t border-border/70 pt-5")}
     >
       <h2
         id="incoming-challenges-title"

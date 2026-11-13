@@ -1,39 +1,56 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
 import { SectionHeader } from "@/components/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { useGetStats } from "@/features/stats/hooks/useGetStats";
 import { ResultsBar } from "@/features/stats/components/ResultsBar";
+import type { ComprehensiveStatsData } from "@/features/stats/hooks/useGetComprehensiveStats";
 import { useUser } from "@/hooks/useUser";
+import { apiRequest } from "@/services";
 import { getProfileStatsRoute } from "@/constants/routes";
+import { QKEY_USER_STATS } from "@/constants/queryKeys";
+
+const DAYS = "30";
+const VARIANT = "all";
+
+type RecentStats = Pick<
+  ComprehensiveStatsData,
+  "totalGames" | "wins" | "draws" | "losses" | "bestWin" | "winStreak"
+>;
 
 /**
- * How the player's games have gone overall: win/draw/loss split and win rate.
- * Ratings live in the header, so they're not repeated here.
+ * How the player's rated games went over the last 30 days: win rate, the
+ * win/draw/loss split, best win and longest streak. Ratings and their
+ * 30-day change are in the header, so they're not repeated here.
+ *
+ * Same query key as the stats page with "30 days" and "All" picked, so
+ * the two share a cache entry.
  */
 export const ResultsSummary = () => {
   const { id } = useUser();
-  const { stats, numberOfGames, isPending, isError, refetch } = useGetStats();
+  const { data, isPending, isError, refetch } = useQuery({
+    queryKey: [QKEY_USER_STATS, id, DAYS, VARIANT],
+    queryFn: () =>
+      apiRequest<RecentStats>("get", `/users/${id}/stats`, {
+        params: { days: DAYS, variant: VARIANT },
+      }),
+    enabled: !!id,
+  });
 
-  const totals = Object.values(stats ?? {}).reduce(
-    (acc, s) => ({
-      wins: acc.wins + (s?.wins ?? 0),
-      draws: acc.draws + (s?.draws ?? 0),
-      losses: acc.losses + (s?.losses ?? 0),
-    }),
-    { wins: 0, draws: 0, losses: 0 }
-  );
-  const decided = totals.wins + totals.draws + totals.losses;
-  const winRate = decided ? Math.round((totals.wins / decided) * 100) : 0;
+  const total = data?.totalGames ?? 0;
+  const winRate = total ? Math.round(((data?.wins ?? 0) / total) * 100) : 0;
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border/70 bg-card p-5">
+    <section
+      aria-labelledby="recent-results-title"
+      className="space-y-4 rounded-2xl border border-border/70 bg-card p-5"
+    >
       <SectionHeader
-        title="Your results"
+        title={<span id="recent-results-title">Last 30 days</span>}
         action={
           <Link
-            to={getProfileStatsRoute(id || 0)}
+            to={`${getProfileStatsRoute(id || 0)}?days=${DAYS}`}
             // 44px tall on phones without moving the header (negative margin)
             className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground max-md:-my-3 max-md:min-h-11"
           >
@@ -55,13 +72,13 @@ export const ResultsSummary = () => {
             Retry
           </Button>
         </div>
-      ) : decided === 0 ? (
+      ) : !data || total === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Finish a game and your results will show up here.
+          No rated games in the last 30 days. Games against the computer aren't rated.
         </p>
       ) : (
         <>
-          <div className="flex items-end justify-between">
+          <div className="flex items-end justify-between gap-4">
             <div>
               <p className="font-display-num text-4xl font-medium text-foreground">
                 {winRate}%
@@ -70,12 +87,28 @@ export const ResultsSummary = () => {
             </div>
             <p className="text-right text-sm text-muted-foreground">
               <span className="font-semibold tabular-nums text-foreground">
-                {numberOfGames.toLocaleString()}
+                {total.toLocaleString()}
               </span>{" "}
-              games played
+              rated {total === 1 ? "game" : "games"}
             </p>
           </div>
-          <ResultsBar {...totals} />
+          <ResultsBar wins={data.wins} draws={data.draws} losses={data.losses} />
+          {(data.bestWin > 0 || data.winStreak > 1) && (
+            <dl className="grid grid-cols-2 gap-3 border-t border-border/70 pt-3 text-sm">
+              {data.bestWin > 0 && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">Best win</dt>
+                  <dd className="font-semibold tabular-nums text-foreground">{data.bestWin}</dd>
+                </div>
+              )}
+              {data.winStreak > 1 && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">Longest win streak</dt>
+                  <dd className="font-semibold tabular-nums text-foreground">{data.winStreak}</dd>
+                </div>
+              )}
+            </dl>
+          )}
         </>
       )}
     </section>
