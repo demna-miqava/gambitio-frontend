@@ -112,6 +112,19 @@ export type CancelRematchMessage = {
   type: GAME_MESSAGE_TYPES.REMATCH_CANCELED;
 };
 
+/**
+ * A player (`userId`) gave `color` time. The time lefts are both clocks as
+ * of now, like a move's.
+ */
+export type TimeAddedMessage = {
+  type: GAME_MESSAGE_TYPES.TIME_ADDED;
+  userId: number;
+  color: "white" | "black";
+  addedMs: number;
+  whiteTimeLeft: number;
+  blackTimeLeft: number;
+};
+
 /** Spectator count changed; players aren't counted. */
 export type SpectatorsMessage = {
   type: GAME_MESSAGE_TYPES.SPECTATORS;
@@ -134,4 +147,5 @@ export type GameWebSocketMessage =
   | RematchResponseMessage
   | CancelRematchMessage
   | SpectatorsMessage
+  | TimeAddedMessage
   | GameErrorMessage;

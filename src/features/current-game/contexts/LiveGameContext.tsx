@@ -15,7 +15,10 @@ import {
   useGameWebSocket,
   type GameConnectionStatus,
 } from "@/features/game/hooks/useGameWebSocket";
-import type { RatingChanges } from "@/features/game/types/websocket-messages";
+import type {
+  RatingChanges,
+  TimeAddedMessage,
+} from "@/features/game/types/websocket-messages";
 import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
 import { useSettings } from "@/features/settings/SettingsContext";
 import type { Game, GamePlayerInfo } from "@/types";
@@ -29,6 +32,7 @@ import { useBoardMoveHandler } from "@/features/game/hooks/useBoardMoveHandler";
 import { parseTypedMove } from "@/features/game/utils/parseTypedMove";
 import { describeMove } from "@/features/game/utils/describeMove";
 import { QKEY_ACTIVE_GAME } from "@/constants/queryKeys";
+import { toast } from "sonner";
 
 interface PendingPromotion {
   from: Square;
@@ -64,6 +68,8 @@ interface LiveGameContextValue {
   announcement: string;
   /** Tells screen reader users about a game event (polite) */
   announce: (text: string) => void;
+  /** Adds time to the opponent's clock (see GIVE_TIME_SECONDS). False if not sent. */
+  giveTime: () => boolean;
 }
 
 const LiveGameContext = createContext<LiveGameContextValue | null>(null);
@@ -311,6 +317,29 @@ export const LiveGameProvider = ({
     [announce, opponent, spectating, game.whitePlayer, game.blackPlayer]
   );
 
+  const giveTime = useCallback(() => {
+    if (spectating || gameEnded) return false;
+    return sendMessage(JSON.stringify({ type: GAME_MESSAGE_TYPES.GIVE_TIME }));
+  }, [sendMessage, spectating, gameEnded]);
+
+  const handleTimeAdded = useCallback(
+    ({ userId, color: receiver, addedMs }: TimeAddedMessage) => {
+      const seconds = Math.round(addedMs / 1000);
+      const giver = userId === game.whitePlayer.id ? game.whitePlayer : game.blackPlayer;
+      const taker = receiver === "white" ? game.whitePlayer : game.blackPlayer;
+      if (spectating) {
+        announce(`${giver.username} gave ${taker.username} ${seconds} seconds`);
+      } else if (receiver === color) {
+        // One toast however many clicks: each replaces the last
+        toast(`${giver.username} gave you ${seconds} seconds`, { id: "time_added" });
+        announce(`${giver.username} gave you ${seconds} seconds`);
+      } else {
+        announce(`You gave ${taker.username} ${seconds} seconds`);
+      }
+    },
+    [announce, color, spectating, game.whitePlayer, game.blackPlayer]
+  );
+
   const requestSync = useCallback(() => {
     sendMessage(JSON.stringify({ type: GAME_MESSAGE_TYPES.SYNC }));
   }, [sendMessage]);
@@ -319,6 +348,7 @@ export const LiveGameProvider = ({
     setGameEnded,
     setRatingChanges,
     onOpponentMove: handleOpponentMove,
+    onTimeAdded: handleTimeAdded,
     requestSync,
     turnStartedAtRef,
   });
@@ -341,6 +371,7 @@ export const LiveGameProvider = ({
       submitTypedMove,
       announcement,
       announce,
+      giveTime,
       whiteTimeLeft,
       blackTimeLeft,
     }),
@@ -361,6 +392,7 @@ export const LiveGameProvider = ({
       submitTypedMove,
       announcement,
       announce,
+      giveTime,
       whiteTimeLeft,
       blackTimeLeft,
     ]

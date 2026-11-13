@@ -6,6 +6,7 @@ import type {
   GameErrorMessage,
   GameEndedMessage,
   InitialGameStateMessage,
+  TimeAddedMessage,
 } from "@/features/game/types/websocket-messages";
 import { getLastMove, syncBoard } from "@/features/game/utils/board-utils";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
@@ -25,6 +26,8 @@ interface UseLiveGameMessagesOptions {
    * opponent's, or either player's when spectating
    */
   onOpponentMove?: (san: string, userId: number) => void;
+  /** Called when either player gives the other time */
+  onTimeAdded?: (data: TimeAddedMessage) => void;
   /**
    * Asks the server for the full game state (answered with
    * initial_game_state). Move messages carry only the move and the FEN after
@@ -47,6 +50,7 @@ export const useLiveGameMessages = ({
   setGameEnded,
   setRatingChanges,
   onOpponentMove,
+  onTimeAdded,
   requestSync,
   turnStartedAtRef,
 }: UseLiveGameMessagesOptions) => {
@@ -172,6 +176,17 @@ export const useLiveGameMessages = ({
     [setGameEnded, setRatingChanges, setInputLocked]
   );
 
+  // Only the clock that got the time changes: the other one keeps counting
+  // from where this device has it
+  const handleTimeAdded = useCallback(
+    (data: TimeAddedMessage) => {
+      if (data.color === "white") setWhiteTimeLeft(data.whiteTimeLeft);
+      else setBlackTimeLeft(data.blackTimeLeft);
+      onTimeAdded?.(data);
+    },
+    [onTimeAdded]
+  );
+
   // Sent on connect and on every reconnect
   const handleInitialState = useCallback(
     ({ data }: InitialGameStateMessage) => {
@@ -199,6 +214,11 @@ export const useLiveGameMessages = ({
     gameMessages,
     GAME_MESSAGE_TYPES.GAME_ENDED,
     handleGameEnded
+  );
+  useMessageDispatcher<TimeAddedMessage>(
+    gameMessages,
+    GAME_MESSAGE_TYPES.TIME_ADDED,
+    handleTimeAdded
   );
   useMessageDispatcher<InitialGameStateMessage>(
     gameMessages,

@@ -10,6 +10,7 @@ import { useLiveGame } from "../contexts/LiveGameContext";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
 import { PromotionSelector } from "@/features/game/components/PromotionSelector";
 import { ConnectionBanner } from "./ConnectionBanner";
+import { GiveTimeButton } from "./GiveTimeButton";
 import { useShownLine } from "@/features/game/hooks/useShownLine";
 
 const CurrentGameBoard = () => {
@@ -112,13 +113,16 @@ const CurrentGameBoard = () => {
         ),
       }}
       topPlayerClock={
-        <Clock
-          startingTime={time}
-          isActive={opponentClockActive}
-          onTimeout={opponentClockActive ? handleTimeout : undefined}
-          gameEnded={gameEnded}
-          serverTimeLeft={color === "white" ? blackTimeLeft : whiteTimeLeft}
-        />
+        <div className="flex shrink-0 items-center gap-1">
+          <GiveTimeButton />
+          <Clock
+            startingTime={time}
+            isActive={opponentClockActive}
+            onTimeout={opponentClockActive ? handleTimeout : undefined}
+            gameEnded={gameEnded}
+            serverTimeLeft={color === "white" ? blackTimeLeft : whiteTimeLeft}
+          />
+        </div>
       }
       bottomPlayerClock={
         <Clock

@@ -5,6 +5,8 @@ export const enum GAME_MESSAGE_TYPES {
   // Hint that a clock reached zero; the server checks its own clock
   TIMEOUT = "timeout",
   ABORT = "abort",
+  // Adds GIVE_TIME_MS to the opponent's clock
+  GIVE_TIME = "give_time",
 
   // Draw actions
   DRAW_OFFER = "draw_offer",
@@ -26,4 +28,6 @@ export const enum GAME_MESSAGE_TYPES {
   ERROR = "error",
   // How many people are watching (non-players); sent to everyone on the game
   SPECTATORS = "spectators",
+  // A player gave the other time; sent to everyone on the game
+  TIME_ADDED = "time_added",
 }
