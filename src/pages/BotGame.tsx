@@ -27,6 +27,7 @@ import { ReviewGameLinks } from "@/features/game-review/components/ReviewGameLin
 import type { ImportGameState } from "@/features/import-game/importGameState";
 import { buildBotGamePgn } from "@/features/play-bots/utils/botGamePgn";
 import { cn } from "@/lib/utils";
+import { OpeningName } from "@/features/openings";
 import { positionsAlong } from "@/features/game/utils/material";
 
 const RESULT_TITLES: Record<BotGameResult["outcome"], string> = {
@@ -184,6 +185,7 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
 
       {/* Phones: moves strip sits right under the board */}
       <div className="rounded-xl border border-border/70 bg-card px-1 py-1.5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
+        <OpeningName fens={shownLine} className="px-1.5 pb-1 lg:px-0 lg:pb-2" />
         <MovesListView
           moves={history}
           activeIndex={navigation.currentIndex - 1}

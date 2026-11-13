@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { Key } from "@lichess-org/chessground/types";
 import { EngineAnalysisPanel, formatScore, useAnalysis } from "@/features/engine-analysis";
@@ -20,6 +20,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { AnalysisPanelHeader } from "./AnalysisPanelHeader";
 import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { cn } from "@/lib/utils";
+import { OpeningName } from "@/features/openings";
+import { nodesAlong } from "../utils/analysisTree";
 
 /** Phone engine header: toggle, current evaluation and depth on one row. */
 const EngineStrip = ({ fen }: { fen: string }) => {
@@ -132,7 +134,8 @@ const MoreLinesToggle = ({
  */
 export const AnalysisPanel = ({ onLoadAnotherPgn }: { onLoadAnotherPgn?: () => void }) => {
   const { engineEnabled } = useAnalysis();
-  const { currentNode, playUci, submitTypedMove } = useArchiveGame();
+  const { currentNode, playUci, submitTypedMove, root, path } = useArchiveGame();
+  const lineFens = useMemo(() => nodesAlong(root, path).map((node) => node.fen), [root, path]);
   const review = useGameReview();
   const reviewReady = review?.status === "ready";
   const [showAllMoves, setShowAllMoves] = useState(false);
@@ -182,6 +185,10 @@ export const AnalysisPanel = ({ onLoadAnotherPgn }: { onLoadAnotherPgn?: () => v
       )}
 
       <div className="order-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <OpeningName
+          fens={lineFens}
+          className="px-1 pb-2 lg:shrink-0 lg:border-b lg:border-border/70 lg:px-4 lg:py-2.5"
+        />
         <div className={cn("lg:hidden", showAllMoves && "hidden")}>
           <div className="rounded-xl border border-border/70 bg-card px-1">
             <MoveStrip />

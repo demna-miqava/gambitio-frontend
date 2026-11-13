@@ -13,6 +13,8 @@ import { useDrawOffer } from "../hooks/useDrawOffer";
 import { useGameActions } from "../hooks/useGameActions";
 import { useRematch } from "../hooks/useRematch";
 import { formatTimeControl, getTimeControlIcon } from "@/utils/timeControl";
+import { OpeningName } from "@/features/openings";
+import { useShownLine } from "@/features/game/hooks/useShownLine";
 
 export const MovesContainer = () => {
   const { game, gameEnded, isConnected } = useLiveGame();
@@ -40,6 +42,7 @@ export const MovesContainer = () => {
     declineDraw,
   } = useDrawOffer();
   const TypeIcon = getTimeControlIcon(game.type);
+  const shownLine = useShownLine();
 
   return (
     <div className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
@@ -56,6 +59,7 @@ export const MovesContainer = () => {
 
       {/* Phones: moves strip sits right under the board */}
       <div className="rounded-xl border border-border/70 bg-card px-1 py-1.5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
+        <OpeningName fens={shownLine} className="px-1.5 pb-1 lg:px-0 lg:pb-2" />
         <GameModeMovesList />
       </div>
 
