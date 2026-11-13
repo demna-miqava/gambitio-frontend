@@ -31,7 +31,14 @@ import { isPromotionMove } from "@/features/game/utils/promotionUtils";
 import { useBoardMoveHandler } from "@/features/game/hooks/useBoardMoveHandler";
 import { parseTypedMove } from "@/features/game/utils/parseTypedMove";
 import { describeMove } from "@/features/game/utils/describeMove";
-import { QKEY_ACTIVE_GAME } from "@/constants/queryKeys";
+import {
+  QKEY_ACTIVE_GAME,
+  QKEY_PROFILE_STATUS,
+  QKEY_USER_GAMES,
+  QKEY_USER_PROFILE,
+  QKEY_USER_STATS,
+  QKEY_USER_STATS_SUMMARY,
+} from "@/constants/queryKeys";
 import { toast } from "sonner";
 
 interface PendingPromotion {
@@ -135,6 +142,24 @@ export const LiveGameProvider = ({
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: [QKEY_ACTIVE_GAME] });
   }, [queryClient, gameEnded]);
+
+  // A finished game changes the player's history, stats and ratings (Home's
+  // "Your last game" and results, the header ratings). Only when it ends
+  // while open here: a finished game opened later changed nothing.
+  const startedLiveRef = useRef(game.status !== "finished");
+  useEffect(() => {
+    if (!gameEnded || spectating || !startedLiveRef.current) return;
+    // QKEY_PROFILE_STATUS carries the signed-in user's ratings
+    for (const key of [
+      QKEY_USER_GAMES,
+      QKEY_USER_STATS,
+      QKEY_USER_STATS_SUMMARY,
+      QKEY_USER_PROFILE,
+      QKEY_PROFILE_STATUS,
+    ]) {
+      queryClient.invalidateQueries({ queryKey: [key] });
+    }
+  }, [queryClient, gameEnded, spectating]);
 
   // The player can only move while connected and the game is on (and
   // spectators never can). Locking
