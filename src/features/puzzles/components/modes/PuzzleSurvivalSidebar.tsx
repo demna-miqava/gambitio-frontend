@@ -8,20 +8,17 @@ export const PuzzleSurvivalSidebar = () => {
   const { lives, history, isGameOver, restart } = context;
 
   return (
-    <div className="space-y-4">
-      <div className="bg-card border rounded-xl p-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Heart className="h-5 w-5 text-destructive" />
-          <span className="font-medium">Lives</span>
-        </div>
-        <div className="flex gap-1">
+    <div className="space-y-3">
+      <div className="flex h-12 items-center justify-between rounded-xl border border-border/70 bg-card px-3">
+        <span className="text-sm font-medium text-muted-foreground">Lives</span>
+        <div className="flex gap-1" aria-label={`${lives} of 3 lives left`}>
           {[1, 2, 3].map((i) => (
             <Heart
               key={i}
-              className={`h-6 w-6 transition-all ${
+              className={`size-5 transition-all ${
                 i <= lives
-                  ? "fill-destructive text-destructive"
-                  : "text-muted/30"
+                  ? "fill-loss text-loss"
+                  : "text-muted-foreground/30"
               }`}
             />
           ))}
@@ -29,26 +26,25 @@ export const PuzzleSurvivalSidebar = () => {
       </div>
 
       {history.length > 0 && (
-        <div className="bg-card border rounded-xl p-3">
-          <div className="text-xs text-muted-foreground mb-2">History</div>
-          <div className="flex flex-wrap gap-1.5">
+        <div className="rounded-xl border border-border/70 bg-card px-3 py-2.5">
+          <div className="mb-1.5 text-xs font-medium text-muted-foreground">This run</div>
+          <ol className="flex flex-wrap gap-1.5">
             {history.map((result, idx) => (
-              <div
+              <li
                 key={idx}
-                className={`p-1.5 rounded-full transition-all ${
-                  result
-                    ? "bg-success-bg text-success"
-                    : "bg-destructive/10 text-destructive"
+                className={`rounded-full p-1.5 ${
+                  result ? "bg-success-bg text-success" : "bg-loss-bg text-loss"
                 }`}
               >
+                <span className="sr-only">{`Puzzle ${idx + 1}: ${result ? "solved" : "missed"}`}</span>
                 {result ? (
-                  <Check className="h-3 w-3" />
+                  <Check className="size-3" aria-hidden="true" />
                 ) : (
-                  <X className="h-3 w-3" />
+                  <X className="size-3" aria-hidden="true" />
                 )}
-              </div>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       )}
 
@@ -56,8 +52,8 @@ export const PuzzleSurvivalSidebar = () => {
 
       {isGameOver && (
         <Button onClick={restart} className="w-full" size="lg">
-          <Play className="h-4 w-4 mr-2" />
-          Play Again
+          <Play aria-hidden="true" />
+          Play again
         </Button>
       )}
     </div>

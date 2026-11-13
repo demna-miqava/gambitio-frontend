@@ -15,10 +15,13 @@ const RatingDelta = ({
   const IconComponent = trend === "up" ? TrendingUp : TrendingDown;
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
-      <IconComponent className={`size-3 ${trendColor}`} />
-      <span className={trendColor}>{Math.abs(delta)}</span>
-    </div>
+    <span className={cn("inline-flex items-center gap-1", className)}>
+      <IconComponent className={`size-3 ${trendColor}`} aria-hidden="true" />
+      <span className={cn("tabular-nums", trendColor)}>
+        <span className="sr-only">{trend === "up" ? "Up " : "Down "}</span>
+        {Math.abs(delta)}
+      </span>
+    </span>
   );
 };
 

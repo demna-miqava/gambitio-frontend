@@ -1,5 +1,5 @@
 import { apiRequest } from ".";
-import type { PaginatedGamesResponse, GetUserGamesParams, Game } from "@/types";
+import type { PaginatedGamesResponse, GetUserGamesParams, StoredGame } from "@/types";
 import { getUserGames as getUserGamesAPI } from "./user";
 
 export const getUserGames = async ({
@@ -11,6 +11,34 @@ export const getUserGames = async ({
   return getUserGamesAPI(userId, query);
 };
 
-export const getGameById = async (gameId: string): Promise<Game> => {
-  return apiRequest<Game>("get", `/games/${gameId}`);
+/** Any stored game, including bot games (see isPlayerGame) */
+export const getGameById = async (gameId: string): Promise<StoredGame> => {
+  return apiRequest<StoredGame>("get", `/games/${gameId}`);
+};
+
+/** The signed-in user's live game, or null when they aren't playing. */
+export const getActiveGame = async (): Promise<{ gameId: number | null }> => {
+  return apiRequest<{ gameId: number | null }>("get", "/games/active");
+};
+
+export interface SaveBotGameBody {
+  botId: string;
+  /** The player's colour */
+  color: "white" | "black";
+  pgn: string;
+  endReason:
+    | "checkmate"
+    | "resignation"
+    | "stalemate"
+    | "insufficient_material"
+    | "threefold_repetition"
+    | "fifty_move_rule";
+}
+
+/**
+ * Stores a finished game against a bot (unrated). The server replays the
+ * moves and decides the result; it returns the stored game.
+ */
+export const saveBotGame = async (body: SaveBotGameBody): Promise<StoredGame> => {
+  return apiRequest<StoredGame>("post", "/games/bot", { data: body });
 };

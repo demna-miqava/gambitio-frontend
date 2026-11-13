@@ -7,7 +7,7 @@ export type DrawOfferMessage = {
 export type DrawResponseMessage = {
   type: GAME_MESSAGE_TYPES.DRAW_RESPONSE;
   accepted: boolean;
-  userId?: string;
+  userId?: number;
 };
 
 export type RatingChanges = {
@@ -17,69 +17,85 @@ export type RatingChanges = {
   blackNewRating: number;
 };
 
+export type GameEndReason =
+  | "resignation"
+  | "draw_agreement"
+  | "aborted"
+  | "checkmate"
+  | "timeout"
+  | "timeout_vs_insufficient_material"
+  | "stalemate"
+  | "threefold_repetition"
+  | "insufficient_material"
+  | "fifty_move_rule";
+
+export type GameResult = "white_win" | "black_win" | "draw" | "aborted";
+
 export type GameEndedMessage = {
   type: GAME_MESSAGE_TYPES.GAME_ENDED;
-  reason:
-    | "resignation"
-    | "draw_agreement"
-    | "aborted"
-    | "checkmate"
-    | "timeout"
-    | "stalemate";
-  winnerId?: string;
+  reason: GameEndReason;
+  result: GameResult;
+  winnerId: number | null;
   ratingChanges?: RatingChanges;
-};
-
-export type ResignMessage = {
-  type: GAME_MESSAGE_TYPES.RESIGN;
-  userId?: string;
-};
-
-export type AbortMessage = {
-  type: GAME_MESSAGE_TYPES.ABORT;
 };
 
 export type MoveMessage = {
   type: GAME_MESSAGE_TYPES.MOVE;
   move: {
     lan: string;
-    san?: string;
+    san: string;
     from: string;
     to: string;
+    promotion?: string;
   };
-  userId?: string;
-  fen?: string;
-  pgn?: string;
-  moveNumber?: number;
-  whiteTimeLeft?: number;
-  blackTimeLeft?: number;
+  userId: number;
+  /** Position after the move; a board that doesn't match it asks for a sync */
+  fen: string;
+  moveNumber: number;
+  clockRunning: boolean;
+  whiteTimeLeft: number;
+  blackTimeLeft: number;
 };
 
-export type TimeoutMessage = {
-  type: GAME_MESSAGE_TYPES.TIMEOUT;
+/** Sent only to the player whose move the server refused; resync to this position. */
+export type MoveRejectedMessage = {
+  type: GAME_MESSAGE_TYPES.MOVE_REJECTED;
+  message: string;
+  fen: string;
+  pgn: string;
 };
 
-export type CheckmateMessage = {
-  type: GAME_MESSAGE_TYPES.CHECKMATE;
-  winnerId: string;
-};
-
-export type StalemateMessage = {
-  type: GAME_MESSAGE_TYPES.STALEMATE;
+export type GamePlayer = {
+  id: number;
+  username: string;
+  rating: number;
+  avatarUrl: string | null;
 };
 
 export type InitialGameStateMessage = {
   type: GAME_MESSAGE_TYPES.INITIAL_GAME_STATE;
-  data?: {
+  data: {
     gameId: number;
     fen: string;
-    pgn?: string;
+    pgn: string;
+    whitePlayer: GamePlayer;
+    blackPlayer: GamePlayer;
     time: number;
-    increment?: number | null;
-    status?: string;
-    isFinished?: boolean;
-    whiteTimeLeft?: number;
-    blackTimeLeft?: number;
+    increment: number;
+    status: "in_progress" | "finished";
+    numMoves: number;
+    isFinished: boolean;
+    clockRunning: boolean;
+    whiteTimeLeft: number | null;
+    blackTimeLeft: number | null;
+    drawOfferedBy: number | null;
+    rematchRequestedBy: number | null;
+    /** People watching (not the players); only for games in progress */
+    spectators?: number;
+    result?: GameResult;
+    reason?: GameEndReason;
+    winnerId?: number | null;
+    ratingChanges?: RatingChanges;
   };
 };
 
@@ -96,17 +112,26 @@ export type CancelRematchMessage = {
   type: GAME_MESSAGE_TYPES.REMATCH_CANCELED;
 };
 
+/** Spectator count changed; players aren't counted. */
+export type SpectatorsMessage = {
+  type: GAME_MESSAGE_TYPES.SPECTATORS;
+  count: number;
+};
+
+export type GameErrorMessage = {
+  type: GAME_MESSAGE_TYPES.ERROR;
+  data: { message: string; code?: string };
+};
+
 export type GameWebSocketMessage =
   | DrawOfferMessage
   | DrawResponseMessage
   | GameEndedMessage
-  | ResignMessage
-  | AbortMessage
   | MoveMessage
-  | TimeoutMessage
-  | CheckmateMessage
-  | StalemateMessage
+  | MoveRejectedMessage
   | InitialGameStateMessage
   | RematchRequestMessage
   | RematchResponseMessage
-  | CancelRematchMessage;
+  | CancelRematchMessage
+  | SpectatorsMessage
+  | GameErrorMessage;

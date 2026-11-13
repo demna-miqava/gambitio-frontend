@@ -1,33 +1,60 @@
 export type TimeControlType = "bullet" | "blitz" | "rapid";
 export type GameStatus = "in_progress" | "finished";
 
+export type GamePlayerInfo = {
+  id: number;
+  username: string;
+  rating: number;
+  avatarUrl: string | null;
+  ratingChange: number | null;
+};
+
+export type GameResult = "white_win" | "black_win" | "draw" | "aborted";
+
 export type Game = {
   id: number;
   createdAt: Date;
   pgn: string | null;
   fen: string | null;
   winnerId: number | null;
-  numMoves: number | null;
+  numMoves: number;
   time: number;
-  increment: number | null;
+  increment: number;
   type: TimeControlType;
   status: GameStatus;
-  whitePlayer: {
-    id: number | null;
-    username: string;
-    rating: number;
-    avatarUrl: string;
-  };
-  blackPlayer: {
-    id: number | null;
-    username: string;
-    rating: number;
-    avatarUrl: string;
-  };
+  result: GameResult | null;
+  endReason: string | null;
+  whitePlayer: GamePlayerInfo;
+  blackPlayer: GamePlayerInfo;
 };
 
+/** A player in a stored game; the computer in a bot game has no id */
+export type StoredGamePlayer = Omit<GamePlayerInfo, "id"> & { id: number | null };
+
+/**
+ * A game as GET /games/:id returns it (the game history leaves out pgn and
+ * fen: see StoredGameListItem). Besides games
+ * between two players (a Game) this includes finished games against a
+ * computer bot: unrated, untimed, and with no user on the bot's side. See
+ * isPlayerGame in utils/storedGame.
+ */
+export type StoredGame = Omit<Game, "time" | "type" | "whitePlayer" | "blackPlayer"> & {
+  /** Null for bot games, which are untimed */
+  time: number | null;
+  type: TimeControlType | null;
+  /** False for bot games: they don't change ratings */
+  rated: boolean;
+  /** The computer opponent (play-bots BOTS id) in a bot game */
+  botId: string | null;
+  whitePlayer: StoredGamePlayer;
+  blackPlayer: StoredGamePlayer;
+};
+
+/** A row of the game history: no move list or position (GET /games/:id has those). */
+export type StoredGameListItem = Omit<StoredGame, "pgn" | "fen">;
+
 export type PaginatedGamesResponse = {
-  data: Game[];
+  data: StoredGameListItem[];
   pagination: {
     page: number;
     limit: number;

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Chess } from "chess.js";
+import { parsePgn, PgnParseError } from "@/features/archive-game/utils/pgn";
 
 interface UsePgnInputProps {
   onLoadPgn: (pgn: string) => void;
@@ -16,21 +16,21 @@ export const usePgnInput = ({ onLoadPgn }: UsePgnInputProps) => {
 
   const handleLoadPgn = useCallback(() => {
     if (!pgnInput.trim()) {
-      setError("Please enter a PGN");
+      setError("Paste a PGN first.");
       return;
     }
 
-    const chess = new Chess();
+    // Same parser the analysis uses, so variations and FEN setups import too
     try {
-      chess.loadPgn(pgnInput);
-      if (chess.history().length === 0) {
-        setError("No moves found in PGN");
+      const { root } = parsePgn(pgnInput);
+      if (root.children.length === 0) {
+        setError("This PGN has no moves.");
         return;
       }
       setError(null);
       onLoadPgn(pgnInput);
-    } catch {
-      setError("Invalid PGN format");
+    } catch (err) {
+      setError(err instanceof PgnParseError ? err.message : "Invalid PGN format");
     }
   }, [pgnInput, onLoadPgn]);
 

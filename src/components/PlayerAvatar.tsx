@@ -1,33 +1,26 @@
-import { User } from "lucide-react";
 import { UserAvatar } from "./UserAvatar";
+import { cn } from "@/lib/utils";
 
 interface PlayerAvatarProps {
   username: string;
   avatarUrl?: string | null;
+  /** Kept for callers; opponents get the same initials fallback as everyone */
   isOpponent?: boolean;
   size?: "sm" | "md";
+  /** Screen reader text; decorative by default since the name is shown */
+  alt?: string;
 }
 
 export const PlayerAvatar = ({
   username,
   avatarUrl,
-  isOpponent = false,
   size = "md",
-}: PlayerAvatarProps) => {
-  const sizeClass = size === "sm" ? "size-8" : "size-10";
-  const iconSize = size === "sm" ? "size-4" : "size-6";
-
-  return (
-    <div
-      className={`flex ${sizeClass} items-center justify-center overflow-hidden rounded-full ${
-        isOpponent ? "bg-[#3d3d3d]" : ""
-      }`}
-    >
-      {isOpponent && !avatarUrl ? (
-        <User className={iconSize} />
-      ) : (
-        <UserAvatar src={avatarUrl} username={username} />
-      )}
-    </div>
-  );
-};
+  alt,
+}: PlayerAvatarProps) => (
+  <UserAvatar
+    src={avatarUrl}
+    username={username}
+    alt={alt}
+    className={cn("shrink-0 rounded-lg", size === "sm" ? "size-8" : "size-10")}
+  />
+);

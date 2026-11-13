@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { useBasePuzzleSession } from "../hooks/useBasePuzzleSession";
+import { useAdvanceAfterWrongMove } from "../hooks/useAdvanceAfterWrongMove";
 import { PUZZLE_CONFIG } from "../constants/puzzle.constants";
 import { PuzzleContext, type PuzzleContextType } from "./PuzzleContext";
 
@@ -19,12 +20,8 @@ export const SurvivalPuzzleProvider = ({
     PUZZLE_CONFIG.SURVIVAL.INITIAL_LIVES
   );
   const [history, setHistory] = useState<boolean[]>([]);
-  const [isGameOver, setIsGameOver] = useState(false);
+  const isGameOver = lives <= 0;
   const loadNextPuzzleRef = useRef<(() => void) | null>(null);
-
-  const handleGameOver = useCallback(() => {
-    setIsGameOver(true);
-  }, []);
 
   // Auto-advance on solve
   const onPuzzleSolved = useCallback(() => {
@@ -32,21 +29,12 @@ export const SurvivalPuzzleProvider = ({
     loadNextPuzzleRef.current?.();
   }, []);
 
-  // Auto-advance on fail (if lives remain)
+  // A wrong move costs a life; the next puzzle loads after the move has been
+  // shown on the board (useAdvanceAfterWrongMove), unless that was the last
   const onPuzzleFailed = useCallback(() => {
     setHistory((prev) => [...prev, false]);
-
-    setLives((prev) => {
-      const newLives = prev - 1;
-      if (newLives <= 0) {
-        handleGameOver();
-        return 0;
-      }
-      // Auto-advance when lives remain
-      loadNextPuzzleRef.current?.();
-      return newLives;
-    });
-  }, [handleGameOver]);
+    setLives((prev) => Math.max(0, prev - 1));
+  }, []);
 
   const session = useBasePuzzleSession({
     onPuzzleSolved,
@@ -59,10 +47,11 @@ export const SurvivalPuzzleProvider = ({
     loadNextPuzzleRef.current = session.loadNextPuzzle;
   }, [session.loadNextPuzzle]);
 
+  useAdvanceAfterWrongMove(session.status, !isGameOver, session.loadNextPuzzle, session.puzzle?.id);
+
   const restart = useCallback(() => {
     setLives(PUZZLE_CONFIG.SURVIVAL.INITIAL_LIVES);
     setHistory([]);
-    setIsGameOver(false);
     session.baseRestart();
   }, [session]);
 
@@ -76,6 +65,9 @@ export const SurvivalPuzzleProvider = ({
       onHint: session.onHint,
       onShowSolution: session.onShowSolution,
       sessionStats: session.sessionStats,
+      wrongMove: session.wrongMove,
+      revealed: session.revealed,
+      feed: session.feed,
       mode: "survival" as const,
       lives,
       history,

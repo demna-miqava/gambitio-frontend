@@ -1,3 +1,5 @@
+import type { PaletteId } from "@/constants/palettes";
+
 export type MessagesAllowedFrom = "nobody" | "everyone" | "only_friends";
 
 export type Settings = {
@@ -15,4 +17,5 @@ export type Settings = {
   pieceIconNotationEnabled: boolean;
   emailNotificationsEnabled: boolean;
   messagesAllowedFrom: MessagesAllowedFrom;
+  colorPalette: PaletteId;
 };

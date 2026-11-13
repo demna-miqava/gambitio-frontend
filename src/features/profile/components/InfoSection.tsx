@@ -10,15 +10,17 @@ const InfoSection = ({
   friendsCount: number;
 }) => {
   return (
-    <div className="flex h-full flex-col gap-2">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold">@{username}</h1>
-      </div>
-      <div className="mt-auto flex items-center gap-2 text-sm text-foreground/70">
-        <span>Joined {formatDate(joinedAt)}</span>
-        <span>•</span>
-        <span>{friendsCount} friends</span>
-      </div>
+    <div className="min-w-0 space-y-1.5">
+      <h1 className="truncate font-display text-3xl font-semibold text-foreground sm:text-4xl">
+        {username}
+      </h1>
+      <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+        {joinedAt && <span>Joined {formatDate(joinedAt)}</span>}
+        {joinedAt && <span aria-hidden="true">·</span>}
+        <span>
+          {friendsCount} {friendsCount === 1 ? "friend" : "friends"}
+        </span>
+      </p>
     </div>
   );
 };

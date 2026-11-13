@@ -5,58 +5,151 @@ import {
   useState,
   useCallback,
   useMemo,
+  useRef,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
-import { useGameWebSocket } from "@/features/game/hooks/useGameWebSocket";
+import { useGameNavigation } from "@/features/game/contexts/GameNavigationContext";
+import {
+  useGameWebSocket,
+  type GameConnectionStatus,
+} from "@/features/game/hooks/useGameWebSocket";
 import type { RatingChanges } from "@/features/game/types/websocket-messages";
-import { useChessSound } from "@/features/game/hooks/useChessSound";
+import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
 import { useSettings } from "@/features/settings/SettingsContext";
-import { useUser } from "@/hooks/useUser";
+import type { Game, GamePlayerInfo } from "@/types";
 import type { Key } from "@lichess-org/chessground/types";
 import type { Square, PieceSymbol } from "chess.js";
-import { syncBoard } from "@/features/game/utils/board-utils";
+import { getLastMove, syncBoard } from "@/features/game/utils/board-utils";
 import { useLiveGameMessages } from "../hooks/useLiveGameMessages";
-import type { SendMessage } from "react-use-websocket";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
 import { isPromotionMove } from "@/features/game/utils/promotionUtils";
 import { useBoardMoveHandler } from "@/features/game/hooks/useBoardMoveHandler";
+import { parseTypedMove } from "@/features/game/utils/parseTypedMove";
+import { describeMove } from "@/features/game/utils/describeMove";
+import { QKEY_ACTIVE_GAME } from "@/constants/queryKeys";
 
 interface PendingPromotion {
   from: Square;
   to: Square;
 }
 
+/** Sends a message if the socket is open. Returns false (and drops it) otherwise. */
+export type SendGameMessage = (message: string) => boolean;
+
 interface LiveGameContextValue {
+  game: Game;
+  /**
+   * Watching someone else's game: the board never takes input and there's
+   * nothing to send. player/opponent are then white/black.
+   */
+  spectating: boolean;
+  player: GamePlayerInfo;
+  opponent: GamePlayerInfo;
   gameEnded: boolean;
+  clockRunning: boolean;
   ratingChanges: RatingChanges | null;
-  sendMessage: SendMessage;
+  sendMessage: SendGameMessage;
+  connectionStatus: GameConnectionStatus;
+  isConnected: boolean;
   whiteTimeLeft: number | undefined;
   blackTimeLeft: number | undefined;
   pendingPromotion: PendingPromotion | null;
   handlePromotionSelect: (piece: PieceSymbol) => void;
   cancelPromotion: () => void;
+  /** Plays a typed move ("Nf3", "e2e4"). Returns an error message, or null if it was played. */
+  submitTypedMove: (text: string) => string | null;
+  /** Latest message for the screen reader live region */
+  announcement: string;
+  /** Tells screen reader users about a game event (polite) */
+  announce: (text: string) => void;
 }
 
 const LiveGameContext = createContext<LiveGameContextValue | null>(null);
 
 interface LiveGameProviderProps {
+  game: Game;
+  /** Read-only view for someone who isn't playing (see LiveGameContextValue) */
+  spectating?: boolean;
   children: ReactNode;
 }
 
-export const LiveGameProvider = ({ children }: LiveGameProviderProps) => {
-  const { chessRef, cgRef, setTurn, color } = useChessBoardContext();
-  const { sendMessage } = useGameWebSocket();
+export const LiveGameProvider = ({
+  game,
+  spectating = false,
+  children,
+}: LiveGameProviderProps) => {
+  const { chessRef, cgRef, setTurn, color, inputLockedRef, setInputLocked } =
+    useChessBoardContext();
+  const { goToLastMove } = useGameNavigation();
+  const {
+    sendMessage: sendRaw,
+    status: connectionStatus,
+    getWebSocket,
+  } = useGameWebSocket();
   const { settings } = useSettings();
-  const { playSoundForMove } = useChessSound(settings?.soundsEnabled);
-  const { id } = useUser();
+  const { playSoundForMove } = useChessSound();
+  const queryClient = useQueryClient();
+  const player = color === "white" ? game.whitePlayer : game.blackPlayer;
+  const opponent = color === "white" ? game.blackPlayer : game.whitePlayer;
+  const isConnected = connectionStatus === "open";
 
-  const [gameEnded, setGameEnded] = useState(false);
+  // A finished game is locked from the start, before the socket confirms it
+  const [gameEnded, setGameEnded] = useState(game.status === "finished");
   const [ratingChanges, setRatingChanges] = useState<RatingChanges | null>(
     null
   );
   const [pendingPromotion, setPendingPromotion] =
     useState<PendingPromotion | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  // When this player's clock last started on this device (see useLiveGameMessages)
+  const turnStartedAtRef = useRef<number | null>(null);
+
+  // Repeating the same text doesn't re-announce it, so alternate a trailing
+  // no-break space
+  const announce = useCallback((text: string) => {
+    setAnnouncement((prev) => (prev === text ? `${text}\u00a0` : text));
+  }, []);
+
+  // Never queue messages while disconnected: a resign or move queued now
+  // would be sent minutes later, after the position has changed. Reads the
+  // socket itself, so the function is stable (safe in toast callbacks).
+  const sendMessage = useCallback<SendGameMessage>(
+    (message) => {
+      if (getWebSocket()?.readyState !== WebSocket.OPEN) return false;
+      sendRaw(message, false);
+      return true;
+    },
+    [getWebSocket, sendRaw]
+  );
+
+  // The Home / top bar "Return to game" banner reads the active game; keep it
+  // fresh when a game page opens and when the game ends
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: [QKEY_ACTIVE_GAME] });
+  }, [queryClient, gameEnded]);
+
+  // The player can only move while connected and the game is on (and
+  // spectators never can). Locking
+  // drops selections and premoves; unlocking (back online) re-enables the
+  // board from the current position. The server also resends the full state
+  // on reconnect.
+  const locked = spectating || gameEnded || !isConnected;
+  useEffect(() => {
+    setInputLocked(locked);
+    if (locked) {
+      setPendingPromotion(null);
+      return;
+    }
+    const cg = cgRef.current;
+    const chess = chessRef.current;
+    if (!cg || !chess) return;
+    setTurn(
+      syncBoard({ cg, chess, movableColor: color, lastMove: getLastMove(chess) })
+    );
+    goToLastMove();
+  }, [locked, setInputLocked, cgRef, chessRef, color, setTurn, goToLastMove]);
 
   const { applyMove } = useBoardMoveHandler({
     chessRef,
@@ -66,46 +159,68 @@ export const LiveGameProvider = ({ children }: LiveGameProviderProps) => {
     playSoundForMove,
   });
 
+  /** Puts the board back to the real position (e.g. a move that can't be sent) */
+  const resyncBoard = useCallback(
+    (playPremove = false) => {
+      const cg = cgRef.current;
+      const chess = chessRef.current;
+      if (!cg || !chess) return;
+      setTurn(
+        syncBoard({
+          cg,
+          chess,
+          movableColor: inputLockedRef.current ? undefined : color,
+          lastMove: getLastMove(chess),
+          playPremove,
+        })
+      );
+    },
+    [cgRef, chessRef, color, inputLockedRef, setTurn]
+  );
+
   // Complete a move with a specific promotion piece
   const completeMove = useCallback(
     (fromSquare: Square, toSquare: Square, promotion?: PieceSymbol) => {
+      // The board is locked while offline or after the game, but a drop or
+      // promotion choice can still be in flight
+      if (inputLockedRef.current) {
+        resyncBoard();
+        return null;
+      }
       const result = applyMove({
         from: fromSquare,
         to: toSquare,
         promotion,
       });
-      if (!result) return;
+      if (!result) return null;
 
-      const chess = chessRef.current;
-      if (!chess) return;
-
-      sendMessage(
+      // The server validates the move, detects checkmate/draws and runs the
+      // clock; the local move is only an optimistic preview. thinkMs is how
+      // long this player's clock ran here, so the server can leave out the
+      // time the moves spent on the network (within a limit).
+      const startedAt = turnStartedAtRef.current;
+      const sent = sendMessage(
         JSON.stringify({
           type: GAME_MESSAGE_TYPES.MOVE,
-          move: result.move,
-          fen: chess.fen(),
-          pgn: chess.pgn(),
-          moveNumber: chess.history().length,
+          move: {
+            from: result.move.from,
+            to: result.move.to,
+            ...(result.move.promotion && { promotion: result.move.promotion }),
+          },
+          ...(startedAt !== null && {
+            thinkMs: Math.max(0, Math.round(performance.now() - startedAt)),
+          }),
         })
       );
-
-      // Check for game ending conditions
-      if (result.isCheckmate) {
-        sendMessage(
-          JSON.stringify({
-            type: GAME_MESSAGE_TYPES.CHECKMATE,
-            winnerId: id,
-          })
-        );
-      } else if (result.isStalemate) {
-        sendMessage(
-          JSON.stringify({
-            type: GAME_MESSAGE_TYPES.STALEMATE,
-          })
-        );
+      if (!sent) {
+        // The socket dropped before the lock caught up: take the move back
+        chessRef.current.undo();
+        resyncBoard();
+        return null;
       }
+      return result.move;
     },
-    [applyMove, chessRef, sendMessage, id]
+    [applyMove, sendMessage, inputLockedRef, resyncBoard, chessRef]
   );
 
   // Handle promotion piece selection
@@ -121,22 +236,9 @@ export const LiveGameProvider = ({ children }: LiveGameProviderProps) => {
 
   // Cancel promotion and revert the move
   const cancelPromotion = useCallback(() => {
-    const cg = cgRef.current;
-    const chess = chessRef.current;
-
-    if (cg && chess) {
-      // Revert the board to the current chess state and sync everything
-      const turn = syncBoard({
-        cg,
-        chess,
-        movableColor: color,
-        playPremove: true,
-      });
-      setTurn(turn);
-    }
-
+    resyncBoard(true);
     setPendingPromotion(null);
-  }, [cgRef, chessRef, color, setTurn]);
+  }, [resyncBoard]);
 
   // Handle player's piece drag/drop on the board
   const handlePlayerMove = useCallback(
@@ -178,29 +280,87 @@ export const LiveGameProvider = ({ children }: LiveGameProviderProps) => {
     });
   }, [cgRef, handlePlayerMove]);
 
-  const { whiteTimeLeft, blackTimeLeft } = useLiveGameMessages({
+  const submitTypedMove = useCallback(
+    (text: string) => {
+      const chess = chessRef.current;
+      if (spectating) return "You're watching this game.";
+      if (gameEnded) return "The game is over.";
+      if (!isConnected) return "Not connected. Wait for the connection to come back.";
+      if (chess.turn() !== color[0]) return "It's your opponent's turn.";
+      const move = parseTypedMove(chess, text);
+      if (!move) return `"${text.trim()}" isn't a legal move here.`;
+      goToLastMove();
+      const played = completeMove(move.from, move.to, move.promotion);
+      if (!played) return "That move couldn't be played.";
+      announce(`You played ${describeMove(played.san)}`);
+      return null;
+    },
+    [chessRef, spectating, gameEnded, isConnected, color, completeMove, goToLastMove, announce]
+  );
+
+  const handleOpponentMove = useCallback(
+    (san: string, userId: number) => {
+      // Spectators hear both sides, so name whoever moved
+      const mover = !spectating
+        ? opponent
+        : userId === game.blackPlayer.id
+          ? game.blackPlayer
+          : game.whitePlayer;
+      announce(`${mover.username} played ${describeMove(san)}`);
+    },
+    [announce, opponent, spectating, game.whitePlayer, game.blackPlayer]
+  );
+
+  const requestSync = useCallback(() => {
+    sendMessage(JSON.stringify({ type: GAME_MESSAGE_TYPES.SYNC }));
+  }, [sendMessage]);
+
+  const { whiteTimeLeft, blackTimeLeft, clockRunning } = useLiveGameMessages({
     setGameEnded,
     setRatingChanges,
+    onOpponentMove: handleOpponentMove,
+    requestSync,
+    turnStartedAtRef,
   });
 
   const value = useMemo<LiveGameContextValue>(
     () => ({
+      game,
+      spectating,
+      player,
+      opponent,
       gameEnded,
+      clockRunning,
       ratingChanges,
       sendMessage,
+      connectionStatus,
+      isConnected,
       pendingPromotion,
       handlePromotionSelect,
       cancelPromotion,
+      submitTypedMove,
+      announcement,
+      announce,
       whiteTimeLeft,
       blackTimeLeft,
     }),
     [
+      game,
+      spectating,
+      player,
+      opponent,
       gameEnded,
+      clockRunning,
       ratingChanges,
       sendMessage,
+      connectionStatus,
+      isConnected,
       pendingPromotion,
       handlePromotionSelect,
       cancelPromotion,
+      submitTypedMove,
+      announcement,
+      announce,
       whiteTimeLeft,
       blackTimeLeft,
     ]

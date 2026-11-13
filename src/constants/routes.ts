@@ -8,6 +8,8 @@ export const ROUTES = {
   SETTINGS: "/settings",
   GAME: "/game/:gameId",
   ARCHIVE_GAME: "/archive/:gameId",
+  WATCH: "/watch",
+  LEADERBOARD: "/leaderboard",
   PROFILE: {
     ROOT: "/profile/:id",
     OVERVIEW: "",
@@ -30,8 +32,13 @@ export const ROUTES = {
 // Helper functions for dynamic routes
 export const getPuzzleModeRoute = (mode: "infinite" | "rush" | "survival") =>
   `/puzzles/${mode}`;
-export const getGameRoute = (gameId: string) => `/game/${gameId}`;
-export const getArchiveGameRoute = (gameId: string) => `/archive/${gameId}`;
+export const getGameRoute = (gameId: string | number) => `/game/${gameId}`;
+export const getArchiveGameRoute = (gameId: string | number) => `/archive/${gameId}`;
+/** Query param that starts the computer review as soon as the game page opens */
+export const REVIEW_PARAM = "review";
+/** The archived game with the computer review started */
+export const getGameReviewRoute = (gameId: string | number) =>
+  `/archive/${gameId}?${REVIEW_PARAM}=1`;
 export const getProfileRoute = (id: number) => `/profile/${id}`;
 export const getProfileGamesRoute = (id: number) => `/profile/${id}/games`;
 export const getProfileStatsRoute = (id: number) => `/profile/${id}/stats`;

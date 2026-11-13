@@ -13,7 +13,8 @@ const ImportGameSidebar = ({
   isGameLoaded,
 }: ImportGameSidebarProps) => {
   return (
-    <div className="flex gap-3 w-full">
+    // Fills the panel column once a game is loaded (GameLayout's fitPanel)
+    <div className={isGameLoaded ? "w-full lg:h-full" : "w-full"}>
       {isGameLoaded ? (
         <AnalysisSidebarContent onNewGame={onNewGame} />
       ) : (

@@ -3,15 +3,20 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
+import { REDIRECT_PARAM, getSafeRedirect } from "@/routes/redirect";
 import { toast } from "sonner";
-import { syncProfile, checkUsernameAvailability } from "@/services/user";
+import {
+  syncProfile,
+  checkUsernameAvailability,
+  type ProfileStatusResponse,
+} from "@/services/user";
 import { useDebounce } from "@/hooks/useDebounce";
-import { ROUTES } from "@/constants/routes";
 import type { SignupSkill } from "../types";
 import {
-  QKEY_PROFILE_STATUS,
   QKEY_USERNAME_AVAILABILITY,
+  profileStatusKey,
 } from "@/constants/queryKeys";
 
 const profileSetupSchema = z.object({
@@ -34,7 +39,9 @@ type Step = "username" | "skill";
 
 export const useProfileSetup = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const { userId } = useAuth();
   const [step, setStep] = useState<Step>("username");
 
   const form = useForm<ProfileSetupForm>({
@@ -57,6 +64,8 @@ export const useProfileSetup = () => {
     data: availabilityData,
     isLoading: isCheckingUsername,
     isFetched: isAvailabilityFetched,
+    isError: isAvailabilityError,
+    refetch: refetchAvailability,
   } = useQuery({
     queryKey: [QKEY_USERNAME_AVAILABILITY, debouncedUsername],
     queryFn: () => checkUsernameAvailability(debouncedUsername),
@@ -67,22 +76,31 @@ export const useProfileSetup = () => {
   });
 
   const isUsernameAvailable = availabilityData?.available ?? false;
+  const isCurrentUsername = isValidFormat && debouncedUsername === username;
+  // A failed request says nothing about the name, so it isn't shown as taken
+  const availabilityCheckFailed = isCurrentUsername && isAvailabilityError;
   const showAvailabilityStatus =
-    isAvailabilityFetched && isValidFormat && debouncedUsername === username;
+    isAvailabilityFetched && isCurrentUsername && !isAvailabilityError;
 
   const { mutate: createProfile, isPending: isCreatingProfile } = useMutation({
     mutationFn: syncProfile,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QKEY_PROFILE_STATUS] });
-      toast.success("Profile created successfully!");
-      navigate(ROUTES.HOME, { replace: true });
+    onSuccess: ({ user }) => {
+      // Write the new profile straight into the cache: navigating before a
+      // refetch finished made AuthGuard bounce /home → /profile-setup → /home
+      queryClient.setQueryData<ProfileStatusResponse>(profileStatusKey(userId), {
+        hasProfile: true,
+        user,
+      });
+      toast.success("Profile created");
+      // Back to where they were headed before signing up (e.g. a game link)
+      navigate(getSafeRedirect(searchParams.get(REDIRECT_PARAM)), { replace: true });
     },
     onError: (error: Error & { response?: { status: number } }) => {
       if (error.response?.status === 409) {
-        toast.error("Username is already taken. Please choose another.");
+        toast.error("That username was just taken. Choose another one.");
         setStep("username");
       } else {
-        toast.error("Failed to create profile. Please try again.");
+        toast.error("Couldn't create your profile. Try again.");
       }
     },
   });
@@ -118,6 +136,8 @@ export const useProfileSetup = () => {
     isCheckingUsername,
     isUsernameAvailable,
     showAvailabilityStatus,
+    availabilityCheckFailed,
+    retryAvailabilityCheck: () => void refetchAvailability(),
     canProceedToSkill,
     isCreatingProfile,
     goToSkillStep,

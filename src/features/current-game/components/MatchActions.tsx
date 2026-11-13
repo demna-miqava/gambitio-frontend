@@ -1,102 +1,66 @@
 import { Flag, HandshakeIcon, X } from "lucide-react";
-import GameResultDialog from "./GameResultDialog";
-import { useGameActions } from "../hooks/useGameActions";
-import { useRematch } from "../hooks/useRematch";
 import { ActionButton } from "./ActionButton";
-import RematchOffered from "./RematchOffered";
-import RematchRequested from "./RematchRequested";
-import PostGameActions from "./PostGameActions";
 import { useSettings } from "@/features/settings/SettingsContext";
+
 interface MatchActionsProps {
-  gameEnded: boolean;
+  /** Both players have moved, so the game can't be aborted any more */
+  hasMoves: boolean;
+  onAbort: () => void;
+  onResign: () => void;
+  onOfferDraw: () => void;
+  /** Our draw offer is waiting for an answer */
+  drawOfferSent: boolean;
+  /** Offline: nothing could be sent */
+  disabled: boolean;
 }
 
-const MatchActions = ({ gameEnded }: MatchActionsProps) => {
+/** Abort, or Resign and Offer draw, while the game is on. */
+const MatchActions = ({
+  hasMoves,
+  onAbort,
+  onResign,
+  onOfferDraw,
+  drawOfferSent,
+  disabled,
+}: MatchActionsProps) => {
   const { settings } = useSettings();
-  const {
-    openGameResultDialog,
-    setOpenGameResultDialog,
-    finish,
-    onResign,
-    onOfferDraw,
-    onAbort,
-    hasMoves,
-  } = useGameActions();
-
-  const {
-    rematchRequested,
-    rematchOffered,
-    requestRematch,
-    acceptRematch,
-    declineRematch,
-    cancelRematch,
-  } = useRematch({
-    setOpenGameResultDialog,
-  });
-
   const confirmDrawResignationEnabled = settings?.confirmDrawResignationEnabled;
 
+  if (!hasMoves) {
+    return (
+      <ActionButton
+        variant="abort"
+        onClick={onAbort}
+        icon={<X className="size-4" aria-hidden="true" />}
+        label="Abort game"
+        disabled={disabled}
+      />
+    );
+  }
+
   return (
-    <>
-      {!gameEnded && (
-        <>
-          {!hasMoves ? (
-            <ActionButton
-              variant="abort"
-              onClick={onAbort}
-              icon={<X className="size-4" />}
-              label="Abort Game"
-            />
-          ) : (
-            <div className="flex gap-2">
-              <ActionButton
-                variant="resign"
-                onClick={onResign}
-                icon={<Flag className="size-4" />}
-                label="Resign"
-                confirmTitle={
-                  confirmDrawResignationEnabled
-                    ? "Are you sure you want to resign?"
-                    : undefined
-                }
-              />
-              <ActionButton
-                variant="draw"
-                onClick={onOfferDraw}
-                icon={<HandshakeIcon className="size-4" />}
-                label="Offer Draw"
-                confirmTitle={
-                  confirmDrawResignationEnabled
-                    ? "Are you sure you want to offer draw?"
-                    : undefined
-                }
-              />
-            </div>
-          )}
-        </>
-      )}
-
-      <GameResultDialog
-        open={openGameResultDialog}
-        onOpenChange={setOpenGameResultDialog}
-        title={finish?.title ?? "Game Over"}
-        description={finish?.description}
-      >
-        {rematchOffered && (
-          <RematchOffered
-            onAcceptRematch={acceptRematch}
-            onDeclineRematch={declineRematch}
-          />
-        )}
-
-        {rematchRequested && (
-          <RematchRequested onCancelRematchRequest={cancelRematch} />
-        )}
-        {!rematchOffered && !rematchRequested && (
-          <PostGameActions onRematch={requestRematch} />
-        )}
-      </GameResultDialog>
-    </>
+    <div className="flex gap-2">
+      <ActionButton
+        variant="resign"
+        onClick={onResign}
+        icon={<Flag className="size-4" aria-hidden="true" />}
+        label="Resign"
+        disabled={disabled}
+        confirmTitle={
+          confirmDrawResignationEnabled ? "Resign this game?" : undefined
+        }
+      />
+      <ActionButton
+        variant="draw"
+        onClick={onOfferDraw}
+        icon={<HandshakeIcon className="size-4" aria-hidden="true" />}
+        label={drawOfferSent ? "Draw offered…" : "Offer draw"}
+        disabled={disabled || drawOfferSent}
+        confirmTitle={
+          confirmDrawResignationEnabled ? "Offer your opponent a draw?" : undefined
+        }
+      />
+    </div>
   );
 };
 

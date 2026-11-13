@@ -21,11 +21,15 @@ export const FriendsSearch = () => {
   }, [debouncedValue, setSearch, setPage]);
 
   return (
-    <div className="relative w-64">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+    <div className="relative w-full sm:w-64">
+      <Search
+        className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+        aria-hidden="true"
+      />
       <Input
-        type="text"
-        placeholder="Search friends..."
+        type="search"
+        aria-label="Search friends"
+        placeholder="Search friends…"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         className="pl-9"

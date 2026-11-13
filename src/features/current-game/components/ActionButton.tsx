@@ -20,7 +20,9 @@ type ActionButtonProps = {
    * If provided, onClick will require confirmation.
    */
   confirmTitle?: string;
+  /** Confirm button label; defaults to the action's own label (e.g. "Resign") */
   confirmText?: string;
+  disabled?: boolean;
 };
 
 export const ActionButton = ({
@@ -30,7 +32,8 @@ export const ActionButton = ({
   variant,
   className,
   confirmTitle,
-  confirmText = "Confirm",
+  confirmText,
+  disabled = false,
 }: ActionButtonProps) => {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -49,7 +52,7 @@ export const ActionButton = ({
     <Button
       onClick={needsConfirmation ? undefined : onClick}
       className={className || GAME_BUTTON_STYLES[variant]}
-      aria-label={label}
+      disabled={disabled}
     >
       {icon}
       {label}
@@ -63,16 +66,21 @@ export const ActionButton = ({
   return (
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
       <PopoverTrigger asChild>{button}</PopoverTrigger>
-      <PopoverContent className="w-80">
+      <PopoverContent className="w-72" align="center">
         <div className="grid gap-4">
-          <div className="space-y-2">
-            <h4 className="font-medium">{confirmTitle}</h4>
-          </div>
+          <p className="text-sm font-medium">{confirmTitle}</p>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleCancel}>
+            <Button variant="ghost" size="sm" className="h-11 sm:h-8" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button onClick={handleConfirm}>{confirmText}</Button>
+            <Button
+              size="sm"
+              className="h-11 sm:h-8"
+              variant={variant === "resign" ? "destructive" : "default"}
+              onClick={handleConfirm}
+            >
+              {confirmText ?? label}
+            </Button>
           </div>
         </div>
       </PopoverContent>

@@ -1,4 +1,7 @@
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RadioGroup } from "@/components/ui/radio-group";
+import { PageHeader } from "@/components/PageHeader";
 import { type SignupSkill } from "../types";
 import { SKILL_OPTIONS } from "../consts";
 import SkillOption from "./SkillOption";
@@ -21,44 +24,47 @@ export const SkillStep = ({
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={onBack}
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="-ml-2.5 text-muted-foreground"
         >
-          ← Back
-        </button>
-        <div className="space-y-3 text-center">
-          <h2 className="text-3xl font-semibold text-foreground">
-            What is your chess skill level?
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            A starting point for smart match pairings and curated training
-            plans.
-          </p>
-        </div>
+          <ArrowLeft aria-hidden="true" /> Back
+        </Button>
+        <PageHeader
+          className="text-center sm:justify-center"
+          title="How well do you play?"
+          description="It sets your starting rating, so you're paired with players near your level."
+        />
       </div>
 
-      <div className="flex flex-col gap-3">
-        {SKILL_OPTIONS.map((skill) => {
-          const isActive = selectedSkill === skill.value;
-          return (
-            <SkillOption
-              skill={skill}
-              onSelectSkill={onSelectSkill}
-              isActive={isActive}
-            />
-          );
-        })}
-      </div>
-
-      <Button
-        onClick={onContinue}
-        disabled={!selectedSkill || isLoading}
-        className="w-full rounded-full px-8 py-6 text-base font-semibold disabled:opacity-60"
+      <RadioGroup
+        aria-label="Skill level"
+        value={selectedSkill ?? ""}
+        onValueChange={(value) => onSelectSkill(value as SignupSkill)}
+        className="flex flex-col gap-3"
       >
-        {isLoading ? "Creating profile..." : "Continue"}
-      </Button>
+        {SKILL_OPTIONS.map((skill) => (
+          <SkillOption key={skill.value} skill={skill} />
+        ))}
+      </RadioGroup>
+
+      <div className="space-y-2">
+        <Button
+          size="xl"
+          onClick={onContinue}
+          disabled={!selectedSkill || isLoading}
+          className="w-full"
+        >
+          {isLoading && <Loader2 className="animate-spin" aria-hidden="true" />}
+          {isLoading ? "Creating profile…" : "Continue"}
+        </Button>
+        {!selectedSkill && (
+          <p className="text-center text-xs text-muted-foreground">Pick a level to continue.</p>
+        )}
+      </div>
     </div>
   );
 };

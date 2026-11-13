@@ -1,12 +1,14 @@
 import { useEffect } from "react";
-import { messageDispatcher } from "@/services/websocketMessageDispatcher";
-
-type WebSocketMessage = { type: string; [key: string]: unknown };
+import type {
+  WebSocketMessage,
+  WebSocketMessageDispatcher,
+} from "@/services/websocketMessageDispatcher";
 
 /**
- * A reusable hook for subscribing to WebSocket message dispatcher events.
+ * Subscribes to one message type on a socket's dispatcher.
  * Automatically handles cleanup on unmount and re-subscribes when handler changes.
  *
+ * @param dispatcher - The socket's dispatcher (gameMessages, notificationMessages)
  * @param messageType - The type of message to subscribe to
  * @param handler - Callback function to handle the message (should be memoized with useCallback)
  *
@@ -16,15 +18,16 @@ type WebSocketMessage = { type: string; [key: string]: unknown };
  *   console.log('Move received:', message.move);
  * }, [dependencies]);
  *
- * useMessageDispatcher('move', handleMove);
+ * useMessageDispatcher(gameMessages, 'move', handleMove);
  * ```
  */
 export const useMessageDispatcher = <T extends WebSocketMessage>(
+  dispatcher: WebSocketMessageDispatcher,
   messageType: string,
   handler: (message: T) => void
 ) => {
   useEffect(() => {
-    const unsubscribe = messageDispatcher.subscribe<T>(messageType, handler);
+    const unsubscribe = dispatcher.subscribe<T>(messageType, handler);
     return unsubscribe;
-  }, [messageType, handler]);
+  }, [dispatcher, messageType, handler]);
 };

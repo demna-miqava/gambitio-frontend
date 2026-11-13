@@ -1,5 +1,6 @@
 import { useClock } from "../hooks/useClock";
-import { formatTime } from "@/features/game/utils/time-formatter";
+import { formatClock } from "@/features/game/utils/time-formatter";
+import { ClockFace } from "./ClockFace";
 
 const Clock = ({
   startingTime,
@@ -21,20 +22,11 @@ const Clock = ({
     gameEnded,
     serverTimeLeft,
   });
-  const formattedTime = formatTime(time, isLowTime);
 
   return (
-    <span
-      className={`rounded-md w-16 text-md text-center px-2 py-1 text-xs tracking-wider transition-colors ${
-        isActive
-          ? isLowTime
-            ? "bg-destructive text-destructive-foreground"
-            : "bg-primary text-primary-foreground"
-          : "bg-muted text-muted-foreground"
-      }`}
-    >
-      {formattedTime}
-    </span>
+    <ClockFace active={isActive} lowTime={isLowTime}>
+      {formatClock(time)}
+    </ClockFace>
   );
 };
 

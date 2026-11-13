@@ -1,69 +1,35 @@
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { cn } from "@/lib/utils";
 import type { Bot } from "../constants/bots";
-import { Bot as BotIcon, Trophy } from "lucide-react";
+import { BotAvatar } from "./BotAvatar";
 
-interface BotCardProps {
-  bot: Bot;
-  isSelected: boolean;
-  onSelect: (bot: Bot) => void;
-}
-
-const getDifficultyLevel = (rating: number) => {
-  if (rating < 800) return "Beginner";
-  if (rating < 1500) return "Intermediate";
-  if (rating < 2200) return "Advanced";
-  return "Expert";
-};
-
-export const BotCard = ({ bot, isSelected, onSelect }: BotCardProps) => {
-  const difficulty = getDifficultyLevel(bot.rating);
-
+/** One opponent in BotSelector's radio group (arrow keys move between them). */
+export const BotCard = ({ bot }: { bot: Bot }) => {
+  const descriptionId = `bot-${bot.id}-description`;
   return (
-    <button
-      onClick={() => onSelect(bot)}
+    <RadioGroupPrimitive.Item
+      value={bot.id}
+      aria-describedby={descriptionId}
       className={cn(
-        "relative w-full p-5 rounded-xl border-2 text-left transition-all",
-        "hover:shadow-lg",
-        isSelected
-          ? "border-primary bg-primary/5 shadow-md"
-          : "border-border bg-card hover:border-primary/50"
+        "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "border-border/70 hover:border-primary/40 hover:bg-accent/60",
+        "data-[state=checked]:border-primary data-[state=checked]:bg-brand-soft data-[state=checked]:hover:bg-brand-soft"
       )}
     >
-      {/* Avatar Circle */}
-      <div className="flex items-start gap-4 mb-3">
-        <div
-          className={cn(
-            "flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors",
-            isSelected
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground"
-          )}
-        >
-          <BotIcon className="h-6 w-6" />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-foreground truncate">
-              {bot.name}
-            </h3>
-            {isSelected && (
-              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Trophy className="h-3 w-3 text-muted-foreground" />
-            <span className="text-sm font-mono font-semibold text-foreground">
-              {bot.rating}
-            </span>
-            <span className="text-xs font-semibold">({difficulty})</span>
-          </div>
-        </div>
-      </div>
-
-      <p className="text-sm text-muted-foreground line-clamp-2">
-        {bot.description}
-      </p>
-    </button>
+      <BotAvatar rating={bot.rating} />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-baseline justify-between gap-2">
+          <span className="truncate font-semibold text-foreground">{bot.name}</span>
+          <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground/80">
+            <span className="sr-only">rated </span>
+            {bot.rating}
+          </span>
+        </span>
+        <span id={descriptionId} className="line-clamp-2 text-xs text-muted-foreground">
+          {bot.description}
+        </span>
+      </span>
+    </RadioGroupPrimitive.Item>
   );
 };

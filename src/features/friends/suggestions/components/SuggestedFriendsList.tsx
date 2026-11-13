@@ -9,29 +9,21 @@ interface SuggestedFriendsListProps extends FriendSuggestionActionHandlers {
 export const SuggestedFriendsList = ({
   items,
   emptyMessage = "No suggested friends",
-  onChallenge,
-  onMessage,
   onAddFriend,
 }: SuggestedFriendsListProps) => {
   if (items.length === 0 && emptyMessage) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        {emptyMessage}
-      </div>
+      <p className="py-8 text-center text-sm text-muted-foreground">{emptyMessage}</p>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <ul className="space-y-2">
       {items.map((suggestion) => (
-        <FriendCard
-          key={suggestion.id}
-          friend={suggestion}
-          onChallenge={onChallenge}
-          onMessage={onMessage}
-          onAddFriend={onAddFriend}
-        />
+        <li key={suggestion.id}>
+          <FriendCard friend={suggestion} onAddFriend={onAddFriend} />
+        </li>
       ))}
-    </div>
+    </ul>
   );
 };

@@ -1,17 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import type { TimeControlType } from "@/types";
 import {
   LOW_TIME_THRESHOLDS,
-  TIME_CONTROL_BOUNDARIES,
   CLOCK_TICK_INTERVAL_MS,
   ONE_SECOND_MS,
 } from "@/constants/time";
-
-const getTimeControlFormat = (timeInSeconds: number): TimeControlType => {
-  if (timeInSeconds < TIME_CONTROL_BOUNDARIES.bulletMax) return "bullet";
-  if (timeInSeconds < TIME_CONTROL_BOUNDARIES.blitzMax) return "blitz";
-  return "rapid";
-};
+import { getTimeControlFormat } from "@/features/create-game/constants/timeControls";
 
 export const useClock = ({
   startingTime,

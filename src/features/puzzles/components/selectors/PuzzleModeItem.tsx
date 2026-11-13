@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { type PuzzleModeConfig } from "../../config/puzzleModes";
@@ -8,41 +7,45 @@ interface PuzzleModeItemProps {
   mode: PuzzleModeConfig;
 }
 
-const buttonClasses = "h-auto w-full flex-col items-start gap-1 p-4";
-
 export const PuzzleModeItem = ({ mode }: PuzzleModeItemProps) => {
-  const innerContent = (
+  const content = (
     <>
-      <div className="flex w-full items-center justify-between">
-        <div className="flex items-center gap-2 font-semibold">
-          <mode.icon className={`size-6 ${mode.iconColor}`} />
-          {mode.title}
-        </div>
-        {!mode.disabled && (
-          <ArrowRight className="h-4 w-4 text-muted-foreground" />
-        )}
-      </div>
-      <span className="text-xs text-muted-foreground">{mode.description}</span>
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted">
+        <mode.icon className={cn("size-5", mode.iconColor)} aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold text-foreground">{mode.title}</span>
+        <span className="block text-sm text-muted-foreground">{mode.description}</span>
+      </span>
+      {!mode.disabled && (
+        <ArrowRight
+          className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
+          aria-hidden="true"
+        />
+      )}
     </>
   );
 
+  const className =
+    "group flex items-center gap-4 rounded-xl border border-border/70 p-4 text-left transition-colors";
+
   if (mode.disabled) {
     return (
-      <div className="cursor-not-allowed opacity-50">
-        <Button variant="outline" className={buttonClasses} disabled>
-          {innerContent}
-        </Button>
+      <div className={cn(className, "cursor-not-allowed opacity-50")} aria-disabled="true">
+        {content}
       </div>
     );
   }
 
   return (
-    <Button
-      variant="outline"
-      className={cn(buttonClasses, "cursor-pointer")}
-      asChild
+    <Link
+      to={`/puzzles/${mode.url}`}
+      className={cn(
+        className,
+        "hover:border-primary/40 hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      )}
     >
-      <Link to={mode.url}>{innerContent}</Link>
-    </Button>
+      {content}
+    </Link>
   );
 };

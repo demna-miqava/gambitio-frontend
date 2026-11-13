@@ -2,5 +2,5 @@
  * Default values used across the application
  */
 
-export const DEFAULT_AVATAR_URL =
-  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtb2ps4gYYHa5dwBB49DJGsUbQWVbtGAZHeQ&s";
+// Served from public/, so it can't disappear and doesn't leak referrers
+export const DEFAULT_AVATAR_URL = "/default-avatar.svg";

@@ -1,101 +1,120 @@
 import { useState } from "react";
-import { Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-
+import { Skeleton } from "@/components/ui/skeleton";
 import { TimeControlsSection } from "../TimeControlsSection";
 import { useGameSetup } from "../../GameSetupContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
 import type { PlayerColorOption } from "@/types/game.types";
+import { formatTimeControl } from "@/utils/timeControl";
+import { OutgoingChallengeCard } from "../OutgoingChallengeCard";
+import { SegmentedRadioGroup, type SegmentedOption } from "@/components/SegmentedRadioGroup";
 
-const COLOR_CHOICES: PlayerColorOption[] = ["white", "random", "black"];
+const COLOR_CHOICES: SegmentedOption<PlayerColorOption>[] = [
+  { value: "white", label: "White" },
+  { value: "random", label: "Random" },
+  { value: "black", label: "Black" },
+];
 
 export const FriendInviteOptions = () => {
   const [colorChoice, setColorChoice] = useState<PlayerColorOption>("random");
-  const { selectedFriend, timeControl } = useGameSetup();
+  const { selectedFriend, isSelectedFriendLoading, timeControl, goBack } =
+    useGameSetup();
+  const { sendChallenge, outgoingChallenge } = useChallenges();
 
-  const { sendChallenge } = useChallenges();
-  if (!selectedFriend) return;
+  if (isSelectedFriendLoading) {
+    return (
+      <div className="flex items-center gap-3 rounded-xl bg-muted/50 p-3" role="status" aria-label="Loading">
+        <Skeleton className="size-11 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-20" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedFriend) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-4 py-8 text-center">
+        <p className="text-sm text-muted-foreground">Couldn't load this player.</p>
+        <Button size="lg" variant="outline" onClick={goBack}>
+          Back to friends
+        </Button>
+      </div>
+    );
+  }
+
+  const rating = selectedFriend[`${timeControl.format}Rating`];
+  const isWaitingForThisFriend = outgoingChallenge?.challengedId === selectedFriend.id;
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3 rounded-xl bg-muted/50 p-3">
         <UserAvatar
-          src={selectedFriend.avatarUrl || ""}
+          src={selectedFriend.avatarUrl}
           username={selectedFriend.username}
-          className="size-20"
+          className="size-11 shrink-0"
         />
-        <div className="flex items-center gap-1">
-          <span className="text-md font-medium">{selectedFriend.username}</span>
-          <span className="text-md font-medium">
-            ({selectedFriend[`${timeControl.format}Rating`]})
-          </span>
+        <div className="min-w-0 leading-tight">
+          <p className="truncate font-semibold">{selectedFriend.username}</p>
+          {rating != null && (
+            <p className="text-xs capitalize text-muted-foreground tabular-nums">
+              {timeControl.format} {rating}
+            </p>
+          )}
         </div>
       </div>
 
-      <TimeControlsSection />
+      {isWaitingForThisFriend ? (
+        <OutgoingChallengeCard />
+      ) : (
+        <>
+          <TimeControlsSection showCustom={false} />
 
-      <section className="flex justify-between items-center">
-        <p className="text-sm font-semibold">I play as</p>
-        <div className="flex gap-3">
-          {COLOR_CHOICES.map((choice) => {
-            const isActive = colorChoice === choice;
-            const bgColor =
-              choice === "white"
-                ? "bg-white"
-                : choice === "black"
-                ? "bg-[#1a1a1a]"
-                : "bg-sidebar";
-            const borderColor = isActive
-              ? "border-lime-400 shadow-[0_0_0_1px_rgba(163,230,53,0.4)]"
-              : "border-sidebar-border hover:border-lime-300";
+          <section className="space-y-2">
+            <p
+              aria-hidden="true"
+              className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+            >
+              I play as
+            </p>
+            <SegmentedRadioGroup
+              label="I play as"
+              value={colorChoice}
+              onValueChange={setColorChoice}
+              options={COLOR_CHOICES}
+            />
+          </section>
 
-            return (
-              <Button
-                key={choice}
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => setColorChoice(choice)}
-                className={`relative size-12 flex items-center justify-center rounded-md border transition-all ${borderColor} ${bgColor}`}
-              >
-                {choice === "random" ? (
-                  <div className="absolute inset-0 grid grid-cols-2 overflow-hidden rounded-md">
-                    <span className="bg-white" />
-                    <span className="bg-[#1a1a1a]" />
-                  </div>
-                ) : (
-                  <Crown
-                    className={`size-6 ${
-                      choice === "white" ? "text-black" : "text-white"
-                    }`}
-                  />
-                )}
-              </Button>
-            );
-          })}
-        </div>
-      </section>
-
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold">Rated</p>
-        <Switch className="text-lime-400 bg-lime-400/10" />
-      </div>
-
-      <Button
-        variant="secondary"
-        size="lg"
-        onClick={() => {
-          sendChallenge({
-            challengedId: selectedFriend.id,
-            color: colorChoice,
-            time: timeControl.time,
-            increment: timeControl.increment,
-          });
-        }}
-      >
-        Send Challenge
-      </Button>
+          <Button
+            size="xl"
+            className="w-full"
+            onClick={() =>
+              sendChallenge(
+                {
+                  challengedId: selectedFriend.id,
+                  color: colorChoice,
+                  time: timeControl.time,
+                  increment: timeControl.increment,
+                },
+                { username: selectedFriend.username }
+              )
+            }
+          >
+            Send{" "}
+            <span className="tabular-nums">
+              {formatTimeControl(timeControl.time, timeControl.increment)}
+            </span>{" "}
+            challenge
+          </Button>
+          {outgoingChallenge && (
+            <p className="-mt-3 text-center text-xs text-muted-foreground">
+              Your open challenge to {outgoingChallenge.username} will be withdrawn.
+            </p>
+          )}
+        </>
+      )}
     </div>
   );
 };

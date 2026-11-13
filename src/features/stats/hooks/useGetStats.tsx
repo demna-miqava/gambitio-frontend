@@ -1,40 +1,50 @@
-export const useGetStats = () => {
-  const numberOfGames = 3800;
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/services";
+import { useProfileUserId } from "@/hooks/useProfileUserId";
+import { QKEY_USER_STATS_SUMMARY } from "@/constants/queryKeys";
+import type { Stats } from "../types";
 
-  const stats = {
-    bullet: {
-      rating: 1251,
-      delta: 83,
-      highestRating: 1300,
-      wins: 500,
-      losses: 300,
-      draws: 200,
-      highestDate: "Sep 28, 2025",
-      games: 1200,
-    },
-    blitz: {
-      rating: 1415,
-      delta: 292,
-      highestRating: 1500,
-      wins: 500,
-      losses: 300,
-      draws: 200,
-      highestDate: "Sep 18, 2025",
-      games: 1500,
-    },
-    rapid: {
-      rating: 1574,
-      delta: -9,
-      highestRating: 1600,
-      wins: 500,
-      losses: 300,
-      draws: 200,
-      highestDate: "Sep 28, 2025",
-      games: 1300,
-    },
-  };
-  return {
-    stats,
-    numberOfGames,
-  };
+const emptyVariant = {
+  rating: 0,
+  delta: 0,
+  highestRating: 0,
+  highestDate: "",
+  wins: 0,
+  losses: 0,
+  draws: 0,
+  games: 0,
+};
+/** Puzzle rating card (absent from servers older than migration 008) */
+export interface PuzzleStats {
+  rating: number;
+  highestRating: number;
+  /** Rated puzzle attempts */
+  attempts: number;
+  solved: number;
+  /** Rating change over the last 30 days */
+  delta: number;
+}
+
+interface StatsSummary {
+  numberOfGames: number;
+  stats: Stats;
+  puzzle?: PuzzleStats;
+}
+
+const EMPTY: StatsSummary = {
+  numberOfGames: 0,
+  stats: { bullet: emptyVariant, blitz: emptyVariant, rapid: emptyVariant },
+};
+
+/** Per-variant rating cards for the profile being viewed. */
+export const useGetStats = () => {
+  const userId = useProfileUserId();
+  const { data, isPending, isError, refetch } = useQuery({
+    queryKey: [QKEY_USER_STATS_SUMMARY, userId],
+    queryFn: () =>
+      apiRequest<StatsSummary>("get", `/users/${userId}/stats/summary`),
+    enabled: userId > 0,
+  });
+
+  return { ...(data ?? EMPTY), isPending, isError, refetch };
 };

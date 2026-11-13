@@ -1,36 +1,63 @@
-import { useEffect } from "react";
-import useWebSocket from "react-use-websocket";
+import { useState } from "react";
+import useWebSocket, { ReadyState } from "react-use-websocket";
 import { BOARD_CONFIG } from "../constants/board-config";
 import { useParams } from "react-router-dom";
-import { useAuthenticatedWebSocketUrl } from "@/hooks/useAuthenticatedWebSocketUrl";
+import { useAuthenticatedWebSocket, useSocketReauth } from "@/hooks/useAuthenticatedWebSocket";
 import { parseWebSocketMessage } from "../utils/websocket-helpers";
-import { messageDispatcher } from "@/services/websocketMessageDispatcher";
+import { gameMessages } from "@/services/websocketMessageDispatcher";
+import { RECONNECT_OPTIONS } from "@/constants/websocket";
 import type { GameWebSocketMessage } from "../types/websocket-messages";
 
 /**
- * Hook to manage WebSocket connection for a live chess game
- * Parses incoming messages once and dispatches them to all subscribers
+ * connecting: first connection not open yet
+ * open: connected
+ * reconnecting: was open, dropped, retrying
+ * lost: gave up retrying; only a reload helps
+ */
+export type GameConnectionStatus = "connecting" | "open" | "reconnecting" | "lost";
+
+/**
+ * Hook to manage WebSocket connection for a live chess game.
+ * Every message is dispatched as it arrives (onMessage), so two messages that
+ * land in the same render, like a move followed by game_ended, are both handled.
+ * On reconnect the server sends initial_game_state again, which resyncs the board.
  *
  * IMPORTANT: This hook should only be called ONCE per game (in LiveGameContext)
- * to avoid duplicate message processing. Other components should get sendMessage
+ * to avoid duplicate connections. Other components should get sendMessage
  * from useLiveGame() context instead of calling this hook directly.
  */
 export const useGameWebSocket = () => {
   const { gameId } = useParams();
+  const [hasConnected, setHasConnected] = useState(false);
+  const [gaveUp, setGaveUp] = useState(false);
 
   const baseUrl = gameId ? `${BOARD_CONFIG.WEBSOCKET_BASE_URL}/game/${gameId}` : null;
-  const wsUrl = useAuthenticatedWebSocketUrl(baseUrl, true);
+  const { getUrl, protocols } = useAuthenticatedWebSocket(baseUrl, true);
 
-  const { lastMessage, sendMessage } = useWebSocket(wsUrl, { share: true });
+  const { sendMessage, readyState, getWebSocket } = useWebSocket(getUrl, {
+    ...RECONNECT_OPTIONS,
+    protocols,
+    onOpen: () => {
+      setHasConnected(true);
+      setGaveUp(false);
+    },
+    onReconnectStop: () => setGaveUp(true),
+    onMessage: (event) => {
+      const data = parseWebSocketMessage<GameWebSocketMessage>(event);
+      if (data) gameMessages.dispatch(data);
+    },
+  });
 
-  useEffect(() => {
-    if (!lastMessage) return;
+  useSocketReauth(sendMessage, readyState);
 
-    const data = parseWebSocketMessage<GameWebSocketMessage>(lastMessage);
-    if (!data) return;
+  const status: GameConnectionStatus =
+    readyState === ReadyState.OPEN
+      ? "open"
+      : gaveUp
+        ? "lost"
+        : hasConnected
+          ? "reconnecting"
+          : "connecting";
 
-    messageDispatcher.dispatch(data);
-  }, [lastMessage]);
-
-  return { sendMessage, lastMessage };
+  return { sendMessage, readyState, status, getWebSocket };
 };

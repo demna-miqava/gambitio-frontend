@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { usePuzzleQuery } from "./usePuzzleQuery";
-import { usePuzzleGame } from "./usePuzzleGame";
+import { usePuzzleQuery, type PuzzleFeedOptions } from "./usePuzzleQuery";
+import { usePuzzleGame, type PuzzleVerifier } from "./usePuzzleGame";
 import { PUZZLE_CONFIG, PUZZLE_MESSAGES } from "../constants/puzzle.constants";
 import type { usePuzzleState } from "./usePuzzleState";
 import type { Puzzle } from "../types/puzzle.types";
@@ -10,15 +10,18 @@ interface UsePuzzleLoaderProps {
   puzzleState: ReturnType<typeof usePuzzleState>;
   onSolve: () => void;
   onFail: () => void;
+  /** Rated mode: moves of hidden puzzles are checked by the server */
+  verifier?: PuzzleVerifier;
   isEnabled?: boolean;
+  feed?: PuzzleFeedOptions;
 }
 
 interface UsePuzzleLoaderReturn {
   loadNextPuzzle: () => Promise<void>;
   retryPuzzle: () => void;
   resetBoard: (puzzle: Puzzle) => void;
-  onHint: () => void;
-  onShowSolution: () => void;
+  onHint: (revealed?: Puzzle) => void;
+  onShowSolution: (revealed?: Puzzle) => void;
   queryResult: ReturnType<typeof usePuzzleQuery>;
 }
 
@@ -27,6 +30,8 @@ export const usePuzzleLoader = ({
   onSolve,
   onFail,
   isEnabled = true,
+  feed,
+  verifier,
 }: UsePuzzleLoaderProps): UsePuzzleLoaderReturn => {
   const {
     puzzle,
@@ -37,13 +42,14 @@ export const usePuzzleLoader = ({
     setIsLoading,
   } = puzzleState;
 
-  const queryResult = usePuzzleQuery();
+  const queryResult = usePuzzleQuery(feed);
   const { data, fetchNextPage, hasNextPage, isFetching } = queryResult;
 
   const { resetBoard, onHint, showSolution } = usePuzzleGame({
     puzzleState,
     onSolve,
     onFail,
+    verifier,
   });
 
   // Prevent race conditions from rapid calls
@@ -66,7 +72,8 @@ export const usePuzzleLoader = ({
         const newPuzzle = allPuzzles[nextIndex];
 
         // Validate puzzle data
-        if (!newPuzzle?.fen || !newPuzzle?.moves?.length) {
+        // A hidden (rated) puzzle comes without its solution
+        if (!newPuzzle?.fen || (!newPuzzle.hidden && !newPuzzle.moves?.length)) {
           console.error("Invalid puzzle data", newPuzzle);
           toast.error(PUZZLE_MESSAGES.INVALID_DATA);
           return;

@@ -1,15 +1,14 @@
 import { useClerk } from "@clerk/clerk-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
 export const useLogout = () => {
   const { signOut } = useClerk();
-  const queryClient = useQueryClient();
 
+  // The cache is dropped by ResetCacheOnUserChange once Clerk reports the
+  // sign-out. Clearing it here first let still-mounted queries refetch with
+  // the old session and cache the old account's data again.
   const { mutate: logout, isPending: isLoading } = useMutation({
-    mutationFn: async () => {
-      queryClient.clear();
-      await signOut();
-    },
+    mutationFn: () => signOut(),
   });
 
   return { logout, isLoading };

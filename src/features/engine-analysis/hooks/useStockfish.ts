@@ -22,10 +22,11 @@ export function useStockfish(options: UseStockfishOptions = {}) {
     setIsReady(true);
   }, [depth, moveTime, skillLevel, multiPv]);
 
-  // Auto-initialize on mount
+  // Auto-initialize once on mount with the options at that time
+  const mountRef = useRef({ autoInit, init });
   useEffect(() => {
-    if (autoInit) {
-      init();
+    if (mountRef.current.autoInit) {
+      mountRef.current.init();
     }
     return () => {
       engineRef.current?.destroy();

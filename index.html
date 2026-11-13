@@ -4,11 +4,51 @@
     <meta charset="UTF-8" />
     <meta
       name="description"
-      content="GambitFlow is the ultimate platform to play chess online with friends. Analyze your games, solve puzzles, track your rating progress, and improve your skills. Join our community today!"
+      content="Play chess online with friends on Gambitio. Analyze your games, solve puzzles, track your rating and improve your skills."
     />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GambitFlow</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
+    <link rel="icon" type="image/png" href="/favicon.png?v=2" />
+    <link rel="apple-touch-icon" href="/logo-mark.png?v=2" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <!-- Follows the in-app theme: set by the script below, then by ThemeColorMeta -->
+    <meta name="theme-color" content="#faf8f1" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..700,0,0;1,9..144,400..700,0,0&family=Inter:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <title>Gambitio</title>
+    <script>
+      // Apply the saved (or system) theme and palette before first paint to avoid a flash
+      (function () {
+        try {
+          var stored = JSON.parse(localStorage.getItem("theme"));
+          var dark =
+            stored === "dark" ||
+            (stored !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (dark) document.documentElement.classList.add("dark");
+          // Page backgrounds per palette, as in src/constants/palettes.ts
+          var backgrounds = {
+            emerald: ["#faf8f1", "#06120e"],
+            club: ["#fbf8f1", "#120f0c"],
+            midnight: ["#faf8f3", "#0a0f1a"],
+            walnut: ["#fdf7f0", "#150e0a"],
+          };
+          var palette = JSON.parse(localStorage.getItem("palette"));
+          if (!Object.prototype.hasOwnProperty.call(backgrounds, palette)) palette = "emerald";
+          document.documentElement.dataset.palette = palette;
+          document
+            .querySelector('meta[name="theme-color"]')
+            .setAttribute("content", backgrounds[palette][dark ? 1 : 0]);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

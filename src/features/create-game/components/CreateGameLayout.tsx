@@ -6,7 +6,11 @@ import { GameLayout } from "@/features/game/components/GameLayout";
 export const CreateGameLayout = () => {
   return (
     <GameSetupProvider>
-      <GameLayout board={<PlayBoard />} sidebar={<CreateGameSidebar />} />
+      <GameLayout
+        board={<PlayBoard />}
+        sidebar={<CreateGameSidebar />}
+        boardIsDecorative
+      />
     </GameSetupProvider>
   );
 };

@@ -1,45 +1,67 @@
 import { useUserProfile } from "../hooks/useUserProfile";
 import InfoSection from "./InfoSection";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileActions } from "./ProfileActions";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DEFAULT_AVATAR_URL } from "@/constants/defaults";
+import { useProfileUserId } from "@/hooks/useProfileUserId";
+import { useUser } from "@/hooks/useUser";
+import { useAvatarSrc } from "@/hooks/useAvatarSrc";
+import { useFriendLiveGameIds } from "@/features/watch/hooks/useLiveGames";
 
+/** Avatar, name and join date, with the actions for this player beside them. */
 const ProfileHeader = () => {
   const { profile, isPending } = useUserProfile();
-  const username = profile?.username || "";
-  const avatarUrl = profile?.avatarUrl || DEFAULT_AVATAR_URL;
-  const joinedAt = profile?.createdAt || "";
-  const friendsCount = profile?.friendCount || 0;
+  const profileUserId = useProfileUserId();
+  const { id: currentUserId } = useUser();
+  const isOwnProfile = profileUserId === currentUserId;
+  const avatarSrc = useAvatarSrc();
+  // Known only for the signed-in user's friends
+  const liveGameId = useFriendLiveGameIds({ enabled: !isOwnProfile }).get(profileUserId);
 
-  if (isPending) {
+  // Same boxes as the loaded header (avatar, name and meta lines, the action
+  // row that wraps below on phones), so nothing moves when it loads
+  if (isPending || !profile) {
     return (
-      <header className="w-full flex flex-wrap items-start gap-6 border p-4 rounded-lg">
-        <Skeleton className="size-40 sm:size-48 rounded-full" />
-        <div className="flex h-full flex-col gap-2">
-          <div className="space-y-1">
-            <Skeleton className="h-8 w-48" />
-          </div>
-          <div className="mt-auto flex items-center gap-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-4 rounded-full" />
-            <Skeleton className="h-4 w-24" />
+      <header
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
+        role="status"
+        aria-label="Loading profile"
+      >
+        <div className="flex min-w-0 items-center gap-4 sm:gap-6">
+          <Skeleton className="size-20 shrink-0 rounded-2xl sm:size-28" />
+          <div className="space-y-1.5">
+            <div className="flex h-9 items-center sm:h-10">
+              <Skeleton className="h-7 w-40 sm:h-8 sm:w-48" />
+            </div>
+            <div className="flex h-5 items-center">
+              <Skeleton className="h-4 w-36" />
+            </div>
           </div>
         </div>
+        <Skeleton className="h-10 w-full shrink-0 rounded-md sm:w-32" />
       </header>
     );
   }
 
   return (
-    <header className="w-full flex flex-wrap items-start gap-6 border p-4 rounded-lg">
-      <Avatar className="size-40 sm:size-48">
-        <AvatarImage src={avatarUrl} alt={username} />
-        <AvatarFallback>{username.charAt(0)}</AvatarFallback>
-      </Avatar>
-      <InfoSection
-        username={username}
-        joinedAt={joinedAt}
-        friendsCount={friendsCount}
-      />
+    <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+      <div className="flex min-w-0 items-center gap-4 sm:gap-6">
+        <UserAvatar
+          // Your own profile shows the same image as the sidebar
+          src={avatarSrc(profile.id, profile.avatarUrl)}
+          username={profile.username}
+          className="size-20 shrink-0 rounded-2xl ring-1 ring-border sm:size-28"
+          fallbackClassName="text-2xl"
+        />
+        <InfoSection
+          username={profile.username}
+          joinedAt={profile.createdAt || ""}
+          friendsCount={profile.friendCount || 0}
+        />
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">
+        <ProfileActions profile={profile} liveGameId={liveGameId} />
+      </div>
     </header>
   );
 };

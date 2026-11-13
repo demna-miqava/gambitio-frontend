@@ -1,39 +1,25 @@
-import StatsCardList from "@/features/stats/components/card/StatsCardList";
 import ComprehensiveStats from "@/features/stats/components/comprehensive-stats/ComprehensiveStats";
-import SimpleStatsGrid from "@/features/stats/components/simple-stats/SimpleStatsGrid";
+import PerformanceShowcase from "@/features/stats/components/performance/PerformanceShowcase";
 import StatsDaysSelect from "@/features/stats/components/StatsDaysSelect";
-import StatsVariantSelect from "@/features/stats/components/StatsVariantSelect";
+import StatsVariantPicker from "@/features/stats/components/StatsVariantPicker";
 import { useQueryParams } from "@/hooks/useQueryParams";
-import { useCallback } from "react";
 
+/**
+ * Filters in one row at the top (time control, period), then the rating,
+ * its chart and the results for that selection. "All" also shows each time
+ * control's current rating first.
+ */
 const ProfileStats = () => {
-  const [variant, setVariant] = useQueryParams("variant", "all");
-
-  const onGameTypeClick = useCallback(
-    (gameType: string) => {
-      setVariant(gameType);
-    },
-    [setVariant]
-  );
+  const [variant] = useQueryParams("variant", "all");
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-        <main className="space-y-4">
-          <div className="flex gap-4">
-            <StatsVariantSelect />
-            <StatsDaysSelect />
-          </div>
-          {variant === "all" ? <SimpleStatsGrid /> : <ComprehensiveStats />}
-        </main>
-        <aside>
-          <StatsCardList onGameTypeClick={onGameTypeClick}>
-            <StatsCardList.Header showLink={false} />
-            <StatsCardList.General />
-            <StatsCardList.ButtonsList />
-          </StatsCardList>
-        </aside>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <StatsVariantPicker />
+        <StatsDaysSelect />
       </div>
+      {variant === "all" && <PerformanceShowcase />}
+      <ComprehensiveStats />
     </div>
   );
 };

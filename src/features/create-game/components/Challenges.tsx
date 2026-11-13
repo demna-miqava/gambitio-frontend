@@ -1,67 +1,97 @@
+import { useEffect, useState } from "react";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
+import { useIncomingChallenges } from "@/features/notifications/hooks/useIncomingChallenges";
+import { describeChallengeColor } from "@/features/notifications/utils/challengeLabels";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatTimeControl } from "@/utils/timeControl";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistance } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
-import { getChallenges } from "@/services/challenges";
-import { QKEY_CHALLENGES } from "@/constants/queryKeys";
-import { TWO_MINUTES_MS } from "@/constants/time";
+
+const REFRESH_MS = 30_000;
+
+/** Re-renders every interval so relative times ("2 minutes ago") stay current. */
+const useNow = (intervalMs: number, enabled: boolean) => {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!enabled) return;
+    const id = window.setInterval(() => setNow(Date.now()), intervalMs);
+    return () => window.clearInterval(id);
+  }, [enabled, intervalMs]);
+  return now;
+};
 
 export const Challenges = () => {
-  const { data: challenges = [], isLoading } = useQuery({
-    queryKey: [QKEY_CHALLENGES],
-    queryFn: getChallenges,
-    staleTime: TWO_MINUTES_MS,
-  });
+  const { data: challenges = [], isLoading } = useIncomingChallenges();
   const { handleAcceptChallenge, handleDeclineChallenge } = useChallenges();
+  const now = useNow(REFRESH_MS, challenges.length > 0);
 
   if (isLoading || challenges.length === 0) {
     return null;
   }
   return (
-    <>
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-sidebar-foreground/70">
-        Challenges
-      </h3>
-      <div className="space-y-3">
+    <section
+      aria-labelledby="incoming-challenges-title"
+      className="space-y-3 border-t border-border/70 pt-5"
+    >
+      <h2
+        id="incoming-challenges-title"
+        className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+      >
+        Challenges for you
+      </h2>
+      <ul className="space-y-3">
         {challenges.map((challenge) => (
-          <div
-            key={challenge.challengerId}
-            className="flex items-center justify-between rounded-xl border border-sidebar-border bg-sidebar px-4 py-3"
+          <li
+            key={challenge.id}
+            className="flex flex-col gap-3 rounded-xl border border-border/70 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <UserAvatar
                 src={challenge.avatarUrl}
                 username={challenge.username}
+                className="size-9 shrink-0"
               />
-              <div className="leading-tight">
-                <p className="font-semibold">{challenge.username}</p>
-                <p className="text-xs text-sidebar-foreground/70">
-                  {formatTimeControl(challenge.time, challenge.increment)} •{" "}
-                  {formatDistanceToNow(new Date(challenge.createdAt), {
+              <div className="min-w-0 leading-tight">
+                <p className="truncate text-sm font-semibold">
+                  {challenge.username}
+                  {challenge.rating != null && (
+                    <span className="font-normal text-muted-foreground tabular-nums">
+                      {" "}
+                      ({challenge.rating})
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="tabular-nums">
+                    {formatTimeControl(challenge.time, challenge.increment)}
+                  </span>
+                  {" · "}
+                  {describeChallengeColor(challenge.color)}
+                  {" · "}
+                  {formatDistance(new Date(challenge.createdAt), now, {
                     addSuffix: true,
                   })}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
+            <div className="grid shrink-0 grid-cols-2 gap-2">
+              <Button size="md"
+                variant="outline"
                 onClick={() => handleDeclineChallenge(challenge.challengerId)}
-                className="rounded-lg bg-destructive px-3 py-1 text-xs text-white hover:bg-destructive/90 transition-colors"
+                aria-label={`Decline ${challenge.username}'s challenge`}
               >
                 Decline
               </Button>
-              <Button
+              <Button size="md"
                 onClick={() => handleAcceptChallenge(challenge.challengerId)}
-                className="rounded-lg bg-win px-3 py-1 text-xs font-semibold text-win-foreground hover:bg-win/90 transition-colors"
+                aria-label={`Accept ${challenge.username}'s challenge`}
               >
                 Accept
               </Button>
             </div>
-          </div>
+          </li>
         ))}
-      </div>
-    </>
+      </ul>
+    </section>
   );
 };

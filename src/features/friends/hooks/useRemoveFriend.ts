@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { removeFriend } from "@/services/friends";
-import { QKEY_USER_FRIENDS } from "@/constants/queryKeys";
+import { QKEY_USER_FRIENDS, QKEY_USER_PROFILE } from "@/constants/queryKeys";
+import { getApiErrorMessage } from "@/lib/utils";
 
 export const useRemoveFriend = () => {
   const queryClient = useQueryClient();
@@ -8,8 +10,13 @@ export const useRemoveFriend = () => {
   return useMutation({
     mutationFn: removeFriend,
     onSuccess: () => {
-      // Invalidate friends list to refresh
+      toast.success("Friend removed");
       queryClient.invalidateQueries({ queryKey: [QKEY_USER_FRIENDS] });
+      // Friend counts on profile headers
+      queryClient.invalidateQueries({ queryKey: [QKEY_USER_PROFILE] });
+    },
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error, "Couldn't remove this friend"));
     },
   });
 };

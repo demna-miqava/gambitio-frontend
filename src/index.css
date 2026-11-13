@@ -3,80 +3,170 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * On touch screens, grows the element's hit area to at least 44x44px with
+ * an invisible ::after, without changing layout. The element must be
+ * positioned (relative/absolute) and not use ::after itself.
+ */
+@utility touch-target {
+  @media (pointer: coarse) {
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+  }
+}
+
+/*
+ * Gambitio design tokens
+ *
+ * Warm paper and ink: neutrals are low-chroma, tinted toward the palette,
+ * never pure grey. One main accent, --primary (text, links, selection) with
+ * --primary-solid for filled buttons; one supporting accent, --gold, used
+ * sparingly for distinction. The default palette, "emerald", adds cream
+ * (--cream*) for hover and active surfaces, tracks, hairlines and, in dark
+ * mode, headings and active labels; other palettes map the cream tokens to
+ * their own neutrals. The values here are "emerald"; the other palettes are
+ * further down.
+ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.45 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.145 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.5rem;
 
-  /* Semantic Colors - Vibrant & Accessible */
-  --success: oklch(0.5 0.18 140);
-  --success-foreground: oklch(1 0 0);
-  --success-bg: oklch(0.94 0.08 140);
-  --error: oklch(0.55 0.22 25);
-  --error-foreground: oklch(1 0 0);
-  --error-bg: oklch(0.94 0.09 25);
-  --warning: oklch(0.65 0.22 80);
-  --warning-foreground: oklch(0.1 0 0);
-  --warning-bg: oklch(0.94 0.09 80);
-  --info: oklch(0.55 0.18 240);
-  --info-foreground: oklch(1 0 0);
-  --info-bg: oklch(0.94 0.08 240);
+  --background: oklch(0.979 0.01 95);
+  --foreground: oklch(0.21 0.015 165);
+  --card: oklch(0.996 0.004 95);
+  --card-foreground: oklch(0.21 0.015 165);
+  --popover: oklch(0.996 0.004 95);
+  --popover-foreground: oklch(0.21 0.015 165);
 
-  /* Chess-Specific Colors - Vibrant */
-  --win: oklch(0.5 0.18 140);
-  --win-foreground: oklch(1 0 0);
-  --win-bg: oklch(0.94 0.08 140);
-  --loss: oklch(0.55 0.22 25);
-  --loss-foreground: oklch(1 0 0);
-  --loss-bg: oklch(0.94 0.09 25);
-  --draw: oklch(0.5 0.02 240);
-  --draw-foreground: oklch(1 0 0);
-  --draw-bg: oklch(0.93 0.01 240);
+  --primary: oklch(0.47 0.12 168);
+  --primary-foreground: oklch(0.98 0.01 90);
+  /* Filled buttons. Separate from --primary because a colour that works
+     as text on the page isn't always the best fill (in dark mode a light
+     text green would make a pastel button) */
+  --primary-solid: oklch(0.45 0.11 168);
+  --primary-solid-foreground: oklch(0.98 0.01 90);
+  --brand: oklch(0.6 0.13 165);
+  --brand-soft: oklch(0.935 0.04 165);
 
-  /* Time Control Colors - Vibrant & Distinct */
-  --bullet: oklch(0.55 0.22 25);
-  --bullet-foreground: oklch(1 0 0);
-  --blitz: oklch(0.6 0.18 80);
-  --blitz-foreground: oklch(0.15 0 0);
-  --rapid: oklch(0.5 0.18 140);
-  --rapid-foreground: oklch(1 0 0);
+  /* Gold: the supporting accent */
+  --gold: oklch(0.68 0.13 78);
+  --gold-foreground: oklch(0.2 0.04 78);
+  --gold-soft: oklch(0.945 0.045 85);
 
-  /* Rating Change Indicators - Vibrant */
-  --rating-up: oklch(0.5 0.18 140);
-  --rating-up-foreground: oklch(1 0 0);
-  --rating-down: oklch(0.55 0.22 25);
-  --rating-down-foreground: oklch(1 0 0);
+  /* Cream: the third accent, alongside emerald and gold. --cream is the
+     colour itself (also text on dark ink, like tooltips), --cream-soft a
+     tinted track behind tabs and segmented controls, --cream-border a
+     warm hairline for cards and overlays */
+  --cream: oklch(0.955 0.032 88);
+  --cream-foreground: oklch(0.3 0.045 72);
+  --cream-soft: oklch(0.952 0.026 88);
+  --cream-border: oklch(0.885 0.032 86);
 
-  /* Interactive States */
-  --hover-bg: oklch(0.95 0 0);
-  --active-bg: oklch(0.9 0 0);
-  --focus-ring: oklch(0.55 0.18 240);
-  --disabled-bg: oklch(0.97 0 0);
-  --disabled-foreground: oklch(0.7 0 0);
+  /* Secondary, accent (hover) and the active sidebar row lean cream */
+  --secondary: oklch(0.946 0.024 88);
+  --secondary-foreground: oklch(0.25 0.015 165);
+  --muted: oklch(0.954 0.01 95);
+  --muted-foreground: oklch(0.47 0.017 165);
+  --accent: oklch(0.944 0.024 88);
+  --accent-foreground: oklch(0.21 0.015 165);
+  --destructive: oklch(0.53 0.15 28);
+  --border: oklch(0.9 0.013 95);
+  --input: oklch(0.88 0.015 95);
+  --ring: oklch(0.55 0.11 168);
+
+  --sidebar: oklch(0.965 0.011 95);
+  --sidebar-foreground: oklch(0.3 0.015 165);
+  --sidebar-primary: oklch(0.47 0.12 168);
+  --sidebar-primary-foreground: oklch(0.98 0.01 90);
+  --sidebar-accent: oklch(0.935 0.03 86);
+  --sidebar-accent-foreground: oklch(0.2 0.015 165);
+  --sidebar-border: oklch(0.9 0.013 95);
+  --sidebar-ring: oklch(0.55 0.11 168);
+
+  /* Semantic colors: calm, still readable */
+  --success: oklch(0.5 0.1 158);
+  --success-foreground: oklch(0.98 0.01 90);
+  --success-bg: oklch(0.94 0.03 158);
+  --error: oklch(0.52 0.14 28);
+  --error-foreground: oklch(0.98 0.01 90);
+  --error-bg: oklch(0.95 0.025 35);
+  --warning: oklch(0.7 0.12 75);
+  --warning-foreground: oklch(0.22 0.03 75);
+  --warning-bg: oklch(0.955 0.04 85);
+  --info: oklch(0.52 0.08 240);
+  --info-foreground: oklch(0.98 0.01 90);
+  --info-bg: oklch(0.95 0.02 240);
+
+  /* Game results */
+  --win: oklch(0.5 0.1 158);
+  --win-foreground: oklch(0.98 0.01 90);
+  --win-bg: oklch(0.94 0.03 158);
+  --loss: oklch(0.52 0.14 28);
+  --loss-foreground: oklch(0.98 0.01 90);
+  --loss-bg: oklch(0.95 0.025 35);
+  --draw: oklch(0.55 0.015 70);
+  --draw-foreground: oklch(0.98 0.01 90);
+  --draw-bg: oklch(0.935 0.008 85);
+
+  /* Time controls */
+  --bullet: oklch(0.57 0.12 42);
+  --bullet-foreground: oklch(0.98 0.01 90);
+  --blitz: oklch(0.68 0.11 80);
+  --blitz-foreground: oklch(0.2 0.03 80);
+  --rapid: oklch(0.52 0.095 162);
+  --rapid-foreground: oklch(0.98 0.01 90);
+
+  /* Rating change */
+  --rating-up: oklch(0.5 0.1 158);
+  --rating-up-foreground: oklch(0.98 0.01 90);
+  --rating-down: oklch(0.53 0.14 28);
+  --rating-down-foreground: oklch(0.98 0.01 90);
+
+  /* Interactive states */
+  --hover-bg: oklch(0.946 0.022 88);
+  --active-bg: oklch(0.918 0.028 86);
+  --focus-ring: oklch(0.55 0.11 168);
+  --disabled-bg: oklch(0.95 0.01 95);
+  --disabled-foreground: oklch(0.68 0.011 95);
+
+  /* Soft, warm elevation for raised surfaces (popovers, dialogs, cards
+     that should lift off the page) */
+  --shadow-color: 40 30% 20%;
+
+  /* Chess board: ivory and deep sage, brass for the last move */
+  --board-light: #f1e9d4;
+  --board-dark: #4f8a70;
+  --board-last-move: rgba(232, 200, 100, 0.45);
+  --board-selected: rgba(30, 100, 72, 0.45);
+  --board-dest: rgba(20, 80, 58, 0.42);
+  --board-arrow: #17573f;
+  --board-coord-on-light: #4a7a63;
+  --board-coord-on-dark: #f6f0df;
+}
+
+@theme {
+  --shadow-xs: 0 1px 2px hsl(var(--shadow-color) / 0.05);
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.05),
+    0 2px 6px -2px hsl(var(--shadow-color) / 0.06);
+  --shadow-md: 0 1px 2px hsl(var(--shadow-color) / 0.05),
+    0 4px 12px -4px hsl(var(--shadow-color) / 0.1);
+  --shadow-lg: 0 2px 4px hsl(var(--shadow-color) / 0.05),
+    0 12px 28px -8px hsl(var(--shadow-color) / 0.16);
+  --shadow-xl: 0 4px 8px hsl(var(--shadow-color) / 0.06),
+    0 24px 48px -12px hsl(var(--shadow-color) / 0.2);
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+  /* The two sides' colours (player dots in summaries): the same in both
+     themes, like the pieces; pair with a ring for contrast on cards */
+  --color-piece-white: oklch(0.97 0.004 90);
+  --color-piece-black: oklch(0.24 0.008 250);
 }
 
 @theme inline {
@@ -84,6 +174,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 6px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -92,6 +183,17 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-solid: var(--primary-solid);
+  --color-primary-solid-foreground: var(--primary-solid-foreground);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-soft: var(--gold-soft);
+  --color-cream: var(--cream);
+  --color-cream-foreground: var(--cream-foreground);
+  --color-cream-soft: var(--cream-soft);
+  --color-cream-border: var(--cream-border);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -159,103 +261,829 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.17 0.02 170);
+  --foreground: oklch(0.94 0.008 150);
+  --card: oklch(0.205 0.022 170);
+  --card-foreground: oklch(0.94 0.008 150);
+  --popover: oklch(0.225 0.024 170);
+  --popover-foreground: oklch(0.94 0.008 150);
 
-  /* Semantic Colors - Dark Mode Vibrant */
-  --success: oklch(0.65 0.2 140);
-  --success-foreground: oklch(0.1 0 0);
-  --success-bg: oklch(0.22 0.1 140);
-  --error: oklch(0.65 0.24 25);
-  --error-foreground: oklch(0.1 0 0);
-  --error-bg: oklch(0.22 0.12 25);
-  --warning: oklch(0.75 0.24 80);
-  --warning-foreground: oklch(0.1 0 0);
-  --warning-bg: oklch(0.25 0.12 80);
-  --info: oklch(0.65 0.2 240);
-  --info-foreground: oklch(0.1 0 0);
-  --info-bg: oklch(0.22 0.1 240);
+  --primary: oklch(0.78 0.12 165);
+  --primary-foreground: oklch(0.18 0.03 165);
+  --primary-solid: oklch(0.78 0.12 82);
+  --primary-solid-foreground: oklch(0.2 0.04 80);
+  --brand: oklch(0.72 0.13 163);
+  --brand-soft: oklch(0.3 0.05 165);
 
-  /* Chess-Specific Colors - Dark Mode Vibrant */
-  --win: oklch(0.65 0.2 140);
-  --win-foreground: oklch(0.1 0 0);
-  --win-bg: oklch(0.22 0.1 140);
-  --loss: oklch(0.65 0.24 25);
-  --loss-foreground: oklch(0.1 0 0);
-  --loss-bg: oklch(0.22 0.12 25);
-  --draw: oklch(0.6 0.02 240);
-  --draw-foreground: oklch(0.1 0 0);
-  --draw-bg: oklch(0.23 0.01 240);
+  --gold: oklch(0.8 0.12 82);
+  --gold-foreground: oklch(0.2 0.04 80);
+  --gold-soft: oklch(0.31 0.055 80);
 
-  /* Time Control Colors - Dark Mode Vibrant */
-  --bullet: oklch(0.65 0.24 25);
-  --bullet-foreground: oklch(0.1 0 0);
-  --blitz: oklch(0.7 0.2 80);
-  --blitz-foreground: oklch(0.1 0 0);
-  --rapid: oklch(0.65 0.2 140);
-  --rapid-foreground: oklch(0.1 0 0);
+  /* Cream reads as ivory on the deep green: translucent for tracks and
+     hairlines, solid for headings, active labels and tooltips */
+  --cream: oklch(0.92 0.04 88);
+  --cream-foreground: oklch(0.25 0.04 75);
+  --cream-soft: oklch(0.92 0.04 88 / 6%);
+  --cream-border: oklch(0.92 0.04 88 / 14%);
 
-  /* Rating Change Indicators - Dark Mode Vibrant */
-  --rating-up: oklch(0.65 0.2 140);
-  --rating-up-foreground: oklch(0.1 0 0);
-  --rating-down: oklch(0.65 0.24 25);
-  --rating-down-foreground: oklch(0.1 0 0);
+  --secondary: oklch(0.25 0.022 170);
+  --secondary-foreground: oklch(0.94 0.008 150);
+  --muted: oklch(0.24 0.02 170);
+  --muted-foreground: oklch(0.7 0.012 150);
+  --accent: oklch(0.265 0.024 170);
+  --accent-foreground: oklch(0.94 0.008 150);
+  --destructive: oklch(0.66 0.15 28);
+  --border: oklch(0.95 0.02 150 / 9%);
+  --input: oklch(0.95 0.02 150 / 13%);
+  --ring: oklch(0.68 0.11 165);
 
-  /* Interactive States - Dark Mode */
-  --hover-bg: oklch(0.25 0 0);
-  --active-bg: oklch(0.3 0 0);
-  --focus-ring: oklch(0.65 0.2 240);
-  --disabled-bg: oklch(0.2 0 0);
-  --disabled-foreground: oklch(0.45 0 0);
+  --sidebar: oklch(0.186 0.02 170);
+  --sidebar-foreground: oklch(0.87 0.008 150);
+  --sidebar-primary: oklch(0.78 0.12 165);
+  --sidebar-primary-foreground: oklch(0.18 0.03 165);
+  --sidebar-accent: oklch(0.25 0.024 170);
+  --sidebar-accent-foreground: oklch(0.93 0.035 88);
+  --sidebar-border: oklch(0.95 0.02 150 / 8%);
+  --sidebar-ring: oklch(0.68 0.11 165);
+
+  --success: oklch(0.73 0.11 158);
+  --success-foreground: oklch(0.18 0.025 158);
+  --success-bg: oklch(0.28 0.04 158);
+  --error: oklch(0.7 0.13 30);
+  --error-foreground: oklch(0.18 0.03 30);
+  --error-bg: oklch(0.29 0.05 30);
+  --warning: oklch(0.8 0.12 80);
+  --warning-foreground: oklch(0.2 0.03 80);
+  --warning-bg: oklch(0.3 0.045 80);
+  --info: oklch(0.7 0.08 240);
+  --info-foreground: oklch(0.18 0.03 240);
+  --info-bg: oklch(0.28 0.035 240);
+
+  --win: oklch(0.73 0.11 158);
+  --win-foreground: oklch(0.18 0.025 158);
+  --win-bg: oklch(0.28 0.04 158);
+  --loss: oklch(0.7 0.13 30);
+  --loss-foreground: oklch(0.18 0.03 30);
+  --loss-bg: oklch(0.29 0.05 30);
+  --draw: oklch(0.7 0.012 80);
+  --draw-foreground: oklch(0.18 0.01 70);
+  --draw-bg: oklch(0.265 0.008 70);
+
+  --bullet: oklch(0.72 0.12 45);
+  --bullet-foreground: oklch(0.18 0.03 45);
+  --blitz: oklch(0.8 0.11 85);
+  --blitz-foreground: oklch(0.2 0.03 85);
+  --rapid: oklch(0.73 0.11 158);
+  --rapid-foreground: oklch(0.18 0.025 160);
+
+  --rating-up: oklch(0.73 0.11 158);
+  --rating-up-foreground: oklch(0.18 0.025 158);
+  --rating-down: oklch(0.7 0.13 30);
+  --rating-down-foreground: oklch(0.18 0.03 30);
+
+  --hover-bg: oklch(0.245 0.022 170);
+  --active-bg: oklch(0.285 0.026 170);
+  --focus-ring: oklch(0.68 0.11 165);
+  --disabled-bg: oklch(0.215 0.02 170);
+  --disabled-foreground: oklch(0.5 0.01 170);
+
+  --shadow-color: 30 20% 3%;
+
+  --board-light: #e2d8bf;
+  --board-dark: #3f7a60;
+  --board-coord-on-light: #456f5a;
+  --board-coord-on-dark: #f0e9d6;
+  --board-arrow: #1e6a4c;
+  --board-last-move: rgba(214, 182, 94, 0.5);
+  --board-selected: rgba(30, 100, 72, 0.45);
+  --board-dest: rgba(20, 80, 58, 0.45);
+}
+
+/*
+ * Cream is emerald's accent: every other palette maps the cream tokens back
+ * to the neutrals those spots used before, so they look as they always have.
+ */
+:root[data-palette]:not([data-palette="emerald"]) {
+  --cream: var(--background);
+  --cream-foreground: var(--foreground);
+  --cream-soft: var(--muted);
+  --cream-border: var(--border);
+}
+
+:root[data-palette]:not([data-palette="emerald"]).dark {
+  --cream: var(--foreground);
+  --cream-foreground: var(--background);
+}
+
+/*
+ * Colour palettes (Settings → Interface). :root/.dark above are the default,
+ * "emerald". Each other palette overrides the colours that carry its
+ * character, in light and dark, keyed on <html data-palette="…">, which
+ * ThemeContext sets (and the pre-paint script in index.html, so there's no
+ * flash). Semantic colours (wins, losses, time controls) stay the same in
+ * every palette. Swatches and browser-chrome colours in
+ * src/constants/palettes.ts mirror these values.
+ */
+:root[data-palette="club"]:not(.dark) {
+  --background: oklch(0.979 0.009 88);
+  --foreground: oklch(0.21 0.014 60);
+  --card: oklch(0.996 0.004 88);
+  --card-foreground: oklch(0.21 0.014 60);
+  --popover: oklch(0.996 0.004 88);
+  --popover-foreground: oklch(0.21 0.014 60);
+  --secondary: oklch(0.948 0.01 88);
+  --secondary-foreground: oklch(0.25 0.014 60);
+  --muted: oklch(0.954 0.009 88);
+  --muted-foreground: oklch(0.47 0.015 60);
+  --accent: oklch(0.94 0.012 88);
+  --accent-foreground: oklch(0.21 0.014 60);
+  --border: oklch(0.9 0.012 88);
+  --input: oklch(0.88 0.013 88);
+  --sidebar: oklch(0.965 0.01 88);
+  --sidebar-foreground: oklch(0.3 0.014 60);
+  --sidebar-accent: oklch(0.932 0.013 88);
+  --sidebar-accent-foreground: oklch(0.2 0.014 60);
+  --sidebar-border: oklch(0.9 0.012 88);
+  --hover-bg: oklch(0.943 0.011 88);
+  --active-bg: oklch(0.915 0.013 88);
+  --disabled-bg: oklch(0.95 0.009 88);
+  --disabled-foreground: oklch(0.68 0.01 88);
+  --primary: oklch(0.47 0.095 162);
+  --primary-foreground: oklch(0.98 0.01 90);
+  --primary-solid: oklch(0.47 0.095 162);
+  --primary-solid-foreground: oklch(0.98 0.01 90);
+  --brand: oklch(0.58 0.11 160);
+  --brand-soft: oklch(0.935 0.035 162);
+  --gold: oklch(0.64 0.12 70);
+  --gold-foreground: oklch(0.2 0.03 78);
+  --gold-soft: oklch(0.945 0.04 82);
+  --ring: oklch(0.55 0.1 162);
+  --focus-ring: oklch(0.55 0.1 162);
+  --sidebar-primary: oklch(0.47 0.095 162);
+  --sidebar-primary-foreground: oklch(0.98 0.01 90);
+  --sidebar-ring: oklch(0.55 0.1 162);
+  --board-light: #eee6d2;
+  --board-dark: #6a8f76;
+  --board-last-move: rgba(222, 184, 90, 0.4);
+  --board-selected: rgba(38, 96, 70, 0.42);
+  --board-dest: rgba(30, 78, 56, 0.4);
+  --board-coord-on-light: #557560;
+  --board-coord-on-dark: #f4efe2;
+  --board-arrow: #1d5c40;
+}
+
+:root[data-palette="club"].dark {
+  --background: oklch(0.17 0.008 65);
+  --foreground: oklch(0.94 0.008 85);
+  --card: oklch(0.205 0.009 65);
+  --card-foreground: oklch(0.94 0.008 85);
+  --popover: oklch(0.225 0.01 65);
+  --popover-foreground: oklch(0.94 0.008 85);
+  --secondary: oklch(0.25 0.009 65);
+  --secondary-foreground: oklch(0.94 0.008 85);
+  --muted: oklch(0.24 0.008 65);
+  --muted-foreground: oklch(0.7 0.012 85);
+  --accent: oklch(0.265 0.01 65);
+  --accent-foreground: oklch(0.94 0.008 85);
+  --border: oklch(0.95 0.02 85 / 9%);
+  --input: oklch(0.95 0.02 85 / 13%);
+  --sidebar: oklch(0.186 0.008 65);
+  --sidebar-foreground: oklch(0.87 0.008 85);
+  --sidebar-accent: oklch(0.25 0.01 65);
+  --sidebar-accent-foreground: oklch(0.96 0.008 85);
+  --sidebar-border: oklch(0.95 0.02 85 / 8%);
+  --hover-bg: oklch(0.245 0.009 65);
+  --active-bg: oklch(0.285 0.01 65);
+  --disabled-bg: oklch(0.215 0.008 65);
+  --disabled-foreground: oklch(0.5 0.01 65);
+  --primary: oklch(0.73 0.11 158);
+  --primary-foreground: oklch(0.18 0.025 160);
+  --primary-solid: oklch(0.52 0.1 160);
+  --primary-solid-foreground: oklch(0.97 0.012 90);
+  --brand: oklch(0.7 0.12 157);
+  --brand-soft: oklch(0.3 0.045 160);
+  --gold: oklch(0.8 0.115 80);
+  --gold-foreground: oklch(0.2 0.03 80);
+  --gold-soft: oklch(0.31 0.05 78);
+  --ring: oklch(0.66 0.1 158);
+  --focus-ring: oklch(0.66 0.1 158);
+  --sidebar-primary: oklch(0.73 0.11 158);
+  --sidebar-primary-foreground: oklch(0.18 0.025 160);
+  --sidebar-ring: oklch(0.66 0.1 158);
+  --board-light: #d8cfba;
+  --board-dark: #5b7c66;
+  --board-last-move: rgba(212, 170, 72, 0.42);
+  --board-selected: rgba(38, 96, 70, 0.42);
+  --board-dest: rgba(30, 78, 56, 0.4);
+  --board-coord-on-light: #52695a;
+  --board-coord-on-dark: #efeadc;
+  --board-arrow: #24654a;
+}
+
+:root[data-palette="midnight"]:not(.dark) {
+  --background: oklch(0.979 0.007 85);
+  --foreground: oklch(0.21 0.025 262);
+  --card: oklch(0.996 0.003 85);
+  --card-foreground: oklch(0.21 0.025 262);
+  --popover: oklch(0.996 0.003 85);
+  --popover-foreground: oklch(0.21 0.025 262);
+  --secondary: oklch(0.948 0.008 85);
+  --secondary-foreground: oklch(0.25 0.025 262);
+  --muted: oklch(0.954 0.007 85);
+  --muted-foreground: oklch(0.47 0.028 262);
+  --accent: oklch(0.94 0.009 85);
+  --accent-foreground: oklch(0.21 0.025 262);
+  --border: oklch(0.9 0.009 85);
+  --input: oklch(0.88 0.011 85);
+  --sidebar: oklch(0.965 0.008 85);
+  --sidebar-foreground: oklch(0.3 0.025 262);
+  --sidebar-accent: oklch(0.932 0.01 85);
+  --sidebar-accent-foreground: oklch(0.2 0.025 262);
+  --sidebar-border: oklch(0.9 0.009 85);
+  --hover-bg: oklch(0.943 0.008 85);
+  --active-bg: oklch(0.915 0.01 85);
+  --disabled-bg: oklch(0.95 0.007 85);
+  --disabled-foreground: oklch(0.68 0.008 85);
+  --primary: oklch(0.42 0.09 258);
+  --primary-foreground: oklch(0.98 0.01 90);
+  --primary-solid: oklch(0.33 0.075 260);
+  --primary-solid-foreground: oklch(0.97 0.012 90);
+  --brand: oklch(0.55 0.1 255);
+  --brand-soft: oklch(0.94 0.02 255);
+  --gold: oklch(0.64 0.12 72);
+  --gold-foreground: oklch(0.2 0.03 78);
+  --gold-soft: oklch(0.945 0.04 82);
+  --ring: oklch(0.52 0.1 258);
+  --focus-ring: oklch(0.52 0.1 258);
+  --sidebar-primary: oklch(0.42 0.09 258);
+  --sidebar-primary-foreground: oklch(0.98 0.01 90);
+  --sidebar-ring: oklch(0.52 0.1 258);
+  --board-light: #ece4d2;
+  --board-dark: #7489a0;
+  --board-last-move: rgba(226, 190, 100, 0.45);
+  --board-selected: rgba(40, 60, 110, 0.4);
+  --board-dest: rgba(30, 45, 90, 0.38);
+  --board-coord-on-light: #5a6e86;
+  --board-coord-on-dark: #f4efe2;
+  --board-arrow: #2c4572;
+}
+
+:root[data-palette="midnight"].dark {
+  --background: oklch(0.17 0.024 262);
+  --foreground: oklch(0.94 0.008 255);
+  --card: oklch(0.205 0.026 262);
+  --card-foreground: oklch(0.94 0.008 255);
+  --popover: oklch(0.225 0.029 262);
+  --popover-foreground: oklch(0.94 0.008 255);
+  --secondary: oklch(0.25 0.026 262);
+  --secondary-foreground: oklch(0.94 0.008 255);
+  --muted: oklch(0.24 0.024 262);
+  --muted-foreground: oklch(0.7 0.012 255);
+  --accent: oklch(0.265 0.029 262);
+  --accent-foreground: oklch(0.94 0.008 255);
+  --border: oklch(0.95 0.02 255 / 9%);
+  --input: oklch(0.95 0.02 255 / 13%);
+  --sidebar: oklch(0.186 0.024 262);
+  --sidebar-foreground: oklch(0.87 0.008 255);
+  --sidebar-accent: oklch(0.25 0.029 262);
+  --sidebar-accent-foreground: oklch(0.96 0.008 255);
+  --sidebar-border: oklch(0.95 0.02 255 / 8%);
+  --hover-bg: oklch(0.245 0.026 262);
+  --active-bg: oklch(0.285 0.031 262);
+  --disabled-bg: oklch(0.215 0.024 262);
+  --disabled-foreground: oklch(0.5 0.01 262);
+  --primary: oklch(0.8 0.1 82);
+  --primary-foreground: oklch(0.2 0.04 80);
+  --primary-solid: oklch(0.78 0.11 80);
+  --primary-solid-foreground: oklch(0.2 0.04 80);
+  --brand: oklch(0.78 0.08 250);
+  --brand-soft: oklch(0.3 0.04 258);
+  --gold: oklch(0.8 0.11 82);
+  --gold-foreground: oklch(0.2 0.04 80);
+  --gold-soft: oklch(0.31 0.05 80);
+  --ring: oklch(0.7 0.09 82);
+  --focus-ring: oklch(0.7 0.09 82);
+  --sidebar-primary: oklch(0.8 0.1 82);
+  --sidebar-primary-foreground: oklch(0.2 0.04 80);
+  --sidebar-ring: oklch(0.7 0.09 82);
+  --board-light: #dcd4c1;
+  --board-dark: #5a7290;
+  --board-last-move: rgba(199, 173, 102, 0.5);
+  --board-selected: rgba(40, 60, 110, 0.45);
+  --board-dest: rgba(30, 45, 90, 0.42);
+  --board-coord-on-light: #4f6680;
+  --board-coord-on-dark: #efeadc;
+  --board-arrow: #34507f;
+}
+
+:root[data-palette="walnut"]:not(.dark) {
+  --background: oklch(0.979 0.011 70);
+  --foreground: oklch(0.21 0.02 45);
+  --card: oklch(0.996 0.004 70);
+  --card-foreground: oklch(0.21 0.02 45);
+  --popover: oklch(0.996 0.004 70);
+  --popover-foreground: oklch(0.21 0.02 45);
+  --secondary: oklch(0.948 0.012 70);
+  --secondary-foreground: oklch(0.25 0.02 45);
+  --muted: oklch(0.954 0.011 70);
+  --muted-foreground: oklch(0.47 0.022 45);
+  --accent: oklch(0.94 0.014 70);
+  --accent-foreground: oklch(0.21 0.02 45);
+  --border: oklch(0.9 0.014 70);
+  --input: oklch(0.88 0.017 70);
+  --sidebar: oklch(0.965 0.012 70);
+  --sidebar-foreground: oklch(0.3 0.02 45);
+  --sidebar-accent: oklch(0.932 0.015 70);
+  --sidebar-accent-foreground: oklch(0.2 0.02 45);
+  --sidebar-border: oklch(0.9 0.014 70);
+  --hover-bg: oklch(0.943 0.013 70);
+  --active-bg: oklch(0.915 0.015 70);
+  --disabled-bg: oklch(0.95 0.011 70);
+  --disabled-foreground: oklch(0.68 0.012 70);
+  --primary: oklch(0.48 0.1 45);
+  --primary-foreground: oklch(0.98 0.01 90);
+  --primary-solid: oklch(0.42 0.09 42);
+  --primary-solid-foreground: oklch(0.97 0.012 85);
+  --brand: oklch(0.6 0.11 50);
+  --brand-soft: oklch(0.94 0.03 60);
+  --gold: oklch(0.66 0.12 72);
+  --gold-foreground: oklch(0.2 0.03 78);
+  --gold-soft: oklch(0.945 0.04 82);
+  --ring: oklch(0.55 0.1 45);
+  --focus-ring: oklch(0.55 0.1 45);
+  --sidebar-primary: oklch(0.48 0.1 45);
+  --sidebar-primary-foreground: oklch(0.98 0.01 90);
+  --sidebar-ring: oklch(0.55 0.1 45);
+  --board-light: #ecd8b4;
+  --board-dark: #a77a52;
+  --board-last-move: rgba(230, 196, 96, 0.5);
+  --board-selected: rgba(90, 60, 30, 0.4);
+  --board-dest: rgba(70, 45, 20, 0.4);
+  --board-coord-on-light: #8a6040;
+  --board-coord-on-dark: #f6ead2;
+  --board-arrow: #1f5a40;
+}
+
+:root[data-palette="walnut"].dark {
+  --background: oklch(0.17 0.014 50);
+  --foreground: oklch(0.94 0.008 75);
+  --card: oklch(0.205 0.015 50);
+  --card-foreground: oklch(0.94 0.008 75);
+  --popover: oklch(0.225 0.017 50);
+  --popover-foreground: oklch(0.94 0.008 75);
+  --secondary: oklch(0.25 0.015 50);
+  --secondary-foreground: oklch(0.94 0.008 75);
+  --muted: oklch(0.24 0.014 50);
+  --muted-foreground: oklch(0.7 0.012 75);
+  --accent: oklch(0.265 0.017 50);
+  --accent-foreground: oklch(0.94 0.008 75);
+  --border: oklch(0.95 0.02 75 / 9%);
+  --input: oklch(0.95 0.02 75 / 13%);
+  --sidebar: oklch(0.186 0.014 50);
+  --sidebar-foreground: oklch(0.87 0.008 75);
+  --sidebar-accent: oklch(0.25 0.017 50);
+  --sidebar-accent-foreground: oklch(0.96 0.008 75);
+  --sidebar-border: oklch(0.95 0.02 75 / 8%);
+  --hover-bg: oklch(0.245 0.015 50);
+  --active-bg: oklch(0.285 0.018 50);
+  --disabled-bg: oklch(0.215 0.014 50);
+  --disabled-foreground: oklch(0.5 0.01 50);
+  --primary: oklch(0.78 0.1 62);
+  --primary-foreground: oklch(0.2 0.03 60);
+  --primary-solid: oklch(0.55 0.11 45);
+  --primary-solid-foreground: oklch(0.97 0.012 85);
+  --brand: oklch(0.75 0.1 60);
+  --brand-soft: oklch(0.31 0.045 50);
+  --gold: oklch(0.8 0.11 78);
+  --gold-foreground: oklch(0.2 0.03 78);
+  --gold-soft: oklch(0.31 0.05 75);
+  --ring: oklch(0.68 0.1 55);
+  --focus-ring: oklch(0.68 0.1 55);
+  --sidebar-primary: oklch(0.78 0.1 62);
+  --sidebar-primary-foreground: oklch(0.2 0.03 60);
+  --sidebar-ring: oklch(0.68 0.1 55);
+  --board-light: #d9c39e;
+  --board-dark: #8d6443;
+  --board-last-move: rgba(201, 166, 80, 0.5);
+  --board-selected: rgba(90, 60, 30, 0.45);
+  --board-dest: rgba(70, 45, 20, 0.45);
+  --board-coord-on-light: #7a5538;
+  --board-coord-on-dark: #f2e4c8;
+  --board-arrow: #24654a;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background-color: color-mix(in oklch, var(--primary) 25%, transparent);
+  }
+  /* A faint paper grain over the page background, so large empty areas
+     feel like a surface rather than flat colour. Cards sit above it. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  .dark body::before {
+    opacity: 0.05;
+    filter: invert(1);
   }
 }
 
-/* Chessground coordinates styling */
-.cg-wrap coords.ranks,
-.cg-wrap coords.files {
-  font-size: 14px !important; /* Increase from default ~10px */
+/*
+ * Expand/collapse for accordions and collapsibles. Height runs from 0 to the
+ * content height Radix measures (each component sets --disclosure-height to
+ * its own variable), on a curve that starts quick and settles gently; the
+ * content fades with it so it doesn't appear clipped mid-way. Closing is a
+ * little faster than opening. The chevrons use the same curve
+ * (ease-disclosure, duration-disclosure).
+ */
+@theme {
+  --ease-disclosure: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes disclosure-open {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--disclosure-height);
+    opacity: 1;
+  }
+}
+
+@keyframes disclosure-close {
+  from {
+    height: var(--disclosure-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+@utility disclosure {
+  overflow: hidden;
+  &[data-state="open"] {
+    animation: disclosure-open 300ms var(--ease-disclosure);
+  }
+  &[data-state="closed"] {
+    animation: disclosure-close 220ms var(--ease-disclosure);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &[data-state] {
+      animation: none;
+    }
+  }
+}
+
+@layer utilities {
+  /* Serif used for page titles and hero text */
+  .font-display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 0, "WONK" 0;
+    letter-spacing: -0.015em;
+  }
+  /* Large numbers (ratings, win rate) in the display serif, lining and
+     evenly spaced so they don't jump as they change */
+  .font-display-num {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ---------- Chess board (overrides chessground's brown theme) ---------- */
+
+.cg-wrap cg-board {
+  background-color: var(--board-light);
+  background-image: none;
+}
+
+/*
+ * On a board you can move pieces on, a touch is always for the board: never
+ * scroll, zoom or pull-to-refresh the page while picking up or dragging a
+ * piece. Chessground cancels touchstart itself, but only for some touches and
+ * only once its handler has run, so on phones (and in devtools' device mode)
+ * the page could still pan along with the piece. View-only boards (previews)
+ * don't get .manipulable and keep normal scrolling.
+ */
+.cg-wrap.manipulable cg-board {
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+/* Dark squares are drawn with a mask so their color can follow the theme */
+.cg-wrap cg-board::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: var(--board-dark);
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'><path d='M1 0h1v1H1zM3 0h1v1H3zM5 0h1v1H5zM7 0h1v1H7zM0 1h1v1H0zM2 1h1v1H2zM4 1h1v1H4zM6 1h1v1H6zM1 2h1v1H1zM3 2h1v1H3zM5 2h1v1H5zM7 2h1v1H7zM0 3h1v1H0zM2 3h1v1H2zM4 3h1v1H4zM6 3h1v1H6zM1 4h1v1H1zM3 4h1v1H3zM5 4h1v1H5zM7 4h1v1H7zM0 5h1v1H0zM2 5h1v1H2zM4 5h1v1H4zM6 5h1v1H6zM1 6h1v1H1zM3 6h1v1H3zM5 6h1v1H5zM7 6h1v1H7zM0 7h1v1H0zM2 7h1v1H2zM4 7h1v1H4zM6 7h1v1H6z'/></svg>")
+    0 0 / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'><path d='M1 0h1v1H1zM3 0h1v1H3zM5 0h1v1H5zM7 0h1v1H7zM0 1h1v1H0zM2 1h1v1H2zM4 1h1v1H4zM6 1h1v1H6zM1 2h1v1H1zM3 2h1v1H3zM5 2h1v1H5zM7 2h1v1H7zM0 3h1v1H0zM2 3h1v1H2zM4 3h1v1H4zM6 3h1v1H6zM1 4h1v1H1zM3 4h1v1H3zM5 4h1v1H5zM7 4h1v1H7zM0 5h1v1H0zM2 5h1v1H2zM4 5h1v1H4zM6 5h1v1H6zM1 6h1v1H1zM3 6h1v1H3zM5 6h1v1H5zM7 6h1v1H7zM0 7h1v1H0zM2 7h1v1H2zM4 7h1v1H4zM6 7h1v1H6z'/></svg>")
+    0 0 / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+/* Chessground's green arrows/circles (#15781B) in the theme's deep green */
+.cg-wrap svg [stroke="#15781B"] {
+  stroke: var(--board-arrow);
+}
+.cg-wrap svg [fill="#15781B"] {
+  fill: var(--board-arrow);
+}
+
+.cg-wrap cg-board square.last-move {
+  background-color: var(--board-last-move);
+}
+.cg-wrap cg-board square.selected {
+  background-color: var(--board-selected);
+}
+.cg-wrap cg-board square.move-dest {
+  background: radial-gradient(var(--board-dest) 21%, transparent 22%);
+}
+.cg-wrap cg-board square.oc.move-dest {
+  background: radial-gradient(transparent 0%, transparent 79%, var(--board-dest) 80%);
+}
+/* Only on real hover: on touch screens :hover sticks to the last tapped square */
+@media (hover: hover) {
+  .cg-wrap cg-board square.move-dest:hover {
+    background: var(--board-dest);
+    opacity: 0.6;
+  }
+}
+
+/* Coordinates sit inside the board, tucked into the corner of the square:
+   ranks at the top-left of the left column, files at the bottom-right of the
+   bottom row, where pieces leave the square empty. Each label takes the
+   color of the opposite square so it stays readable (both themes set
+   --board-coord-on-*). The size follows the board (BoardLayout's board is a
+   size container): 2.4% of its width, 9px on phones (~49px squares) up to
+   13px on large boards; without a container it follows the viewport. */
+.cg-wrap coords {
+  font-family: var(--font-sans);
+  font-size: clamp(9px, 2.4cqi, 13px) !important;
   font-weight: 600 !important;
-  bottom: 1px !important;
+  line-height: 1;
+  opacity: 1 !important;
   z-index: 9 !important;
 }
 
-.cg-wrap coords.files {
-  left: 5% !important;
+.cg-wrap coords.ranks {
+  top: 0 !important;
+  bottom: auto !important;
+  left: 0 !important;
+  width: 12.5% !important;
+  height: 100% !important;
 }
 
+.cg-wrap coords.ranks coord {
+  flex: 1 1 0;
+  transform: none !important;
+  padding: 0.2em 0 0 0.3em;
+}
+
+.cg-wrap coords.files {
+  top: auto !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  text-transform: none !important;
+}
+
+.cg-wrap coords.files coord {
+  flex: 1 1 0;
+  text-align: right;
+  padding: 0 0.3em 0.15em 0;
+}
+
+.cg-wrap.orientation-white coords.ranks coord:nth-child(odd),
+.cg-wrap.orientation-white coords.files coord:nth-child(odd),
+.cg-wrap.orientation-black coords.ranks coord:nth-child(even),
+.cg-wrap.orientation-black coords.files coord:nth-child(even) {
+  color: var(--board-coord-on-dark);
+}
+
+.cg-wrap.orientation-white coords.ranks coord:nth-child(even),
+.cg-wrap.orientation-white coords.files coord:nth-child(even),
+.cg-wrap.orientation-black coords.ranks coord:nth-child(odd),
+.cg-wrap.orientation-black coords.files coord:nth-child(odd) {
+  color: var(--board-coord-on-light);
+}
+
+/* One square is 1/8 of the board; pieces are anchored at the square's corner,
+   so anything smaller sits off-center */
 .cg-wrap piece {
-  width: 12% !important;
-  height: 12% !important;
+  width: 12.5% !important;
+  height: 12.5% !important;
+}
+
+/* Long presses on the board never bring up the iOS callout or text selection
+   (the coordinates are text and sit outside cg-board's user-select: none) */
+.cg-wrap.manipulable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Touch drags (see touchDragAssist.ts): chessground keeps the dragged piece
+   centred on the touch point, where the finger hides it. Draw it at twice
+   the size, centred across and lifted so the finger sits at about 65% of
+   its height. The drop square is still the one under the finger, which
+   <cg-drag-target> marks. Offsets are % of the (square) board: the piece
+   grows by one square, so -6.25% re-centres it and -10% lifts it. */
+.cg-wrap.touch-dragging cg-board piece.dragging {
+  width: 25% !important;
+  height: 25% !important;
+  left: -6.25%;
+  top: -10%;
+}
+
+/* A halo around the square under the finger, below the pieces (z-index 2)
+   and the coordinates. Positioned by translate in whole squares. */
+.cg-wrap cg-drag-target {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: block;
+  width: 12.5%;
+  height: 12.5%;
+  pointer-events: none;
+}
+.cg-wrap cg-drag-target::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  border-radius: 50%;
+  background-color: var(--board-selected);
+}
+
+/* ---------- Game layout (board + side panel), see GameLayout.tsx ----------
+   One sizing rule for every board page:
+     board edge = min(width of the board column, --board-max)
+     --board-max = 100svh - top bar - page padding - player rows - reserve
+   The board column is sized to --board-max (plus --board-extra when an
+   evaluation bar sits beside the board), so the board fills the column's
+   width until the viewport height caps it, and the whole board card
+   (player rows included) always fits on screen.
+     --app-top-bar-height  set by AppLayout (0px from 768px)
+     --board-chrome   main's padding above and below (py-5, lg:py-8; the
+                      phone board is flush with the top bar) plus slack;
+                      bare boards pull into it with lg:-my-4
+     --board-rows     BoardLayout's player rows (min-h-12, sm:min-h-16) and
+                      the card's 2px border; just the border for bare boards
+     --board-reserve  portrait tablets, stacked: room kept below the board
+                      so the panel's status, moves and actions stay on screen
+   Layouts:
+     < 768px                 stacked, phones edge to edge
+     768-1023px portrait     stacked, board capped by --board-reserve
+     768-1023px landscape,
+     >= 1024px               board + panel side by side; panel 20rem,
+                             22.5rem from 1280px, 25rem from 1536px
+   Decorative boards (data-decorative-board) only show side by side.
+   Unlayered on purpose, so it wins over the utilities on the elements. */
+.game-layout {
+  --board-chrome: 0.5rem;
+  --board-rows: 6rem;
+  --board-reserve: 0px;
+  --board-extra: 0px;
+  --board-max: calc(
+    100svh - var(--app-top-bar-height, 0px) - var(--board-chrome) - var(--board-rows) -
+      var(--board-reserve)
+  );
+}
+.game-layout[data-bare-board] {
+  --board-rows: 0px;
+}
+.game-layout-board > * {
+  max-width: calc(var(--board-max) + var(--board-extra));
+}
+.game-layout[data-decorative-board] .game-layout-board {
+  display: none;
+}
+.game-layout-panel {
+  /* Level with the board's top, below the app's top bar if there is one */
+  --panel-top: calc(var(--app-top-bar-height, 0px) + 1.25rem);
+}
+
+@media (width >= 40rem) {
+  .game-layout {
+    --board-chrome: 2.5rem;
+    --board-rows: calc(8rem + 2px);
+  }
+  .game-layout[data-bare-board] {
+    --board-rows: 2px;
+  }
+  /* Stacked: the panel is as wide as the board above it (at least 20rem,
+     for short landscape screens where the board gets small) */
+  .game-layout:not([data-decorative-board]) .game-layout-panel {
+    justify-self: center;
+    width: 100%;
+    max-width: max(calc(var(--board-max) + var(--board-extra)), 20rem);
+  }
+}
+
+@media (width >= 48rem) and (width < 64rem) and (orientation: portrait) {
+  .game-layout {
+    /* About 16rem of panel below the board, plus the gap */
+    --board-reserve: 17rem;
+  }
+}
+
+@media (width >= 64rem) {
+  .game-layout {
+    --board-chrome: 4rem;
+  }
+  .game-layout[data-bare-board] {
+    --board-chrome: 2rem;
+  }
+  /* w-7 bar + gap-3 beside the board (shown from lg) */
+  .game-layout:has(.game-layout-eval) {
+    --board-extra: 2.5rem;
+  }
+  .game-layout-panel {
+    --panel-top: calc(var(--app-top-bar-height, 0px) + 2rem);
+  }
+  .game-layout[data-bare-board] .game-layout-panel {
+    --panel-top: calc(var(--app-top-bar-height, 0px) + 1rem);
+  }
+}
+
+@media (width >= 64rem), (width >= 48rem) and (orientation: landscape) {
+  .game-layout {
+    grid-template-columns:
+      minmax(0, calc(var(--board-max) + var(--board-extra)))
+      var(--panel-width, 20rem);
+    column-gap: 1rem;
+    align-items: start;
+    justify-content: center;
+  }
+  .game-layout[data-decorative-board] .game-layout-board {
+    display: flex;
+  }
+  .game-layout:not([data-decorative-board]) .game-layout-panel {
+    justify-self: stretch;
+    max-width: none;
+  }
+  .game-layout-panel {
+    position: sticky;
+    top: var(--panel-top);
+  }
+}
+
+@media (width >= 64rem) {
+  .game-layout {
+    column-gap: 1.5rem;
+  }
+  /* fitPanel: the row is as tall as the board column, and the panel
+     stretches to it. Size containment keeps the panel's own content from
+     making the row (and the page) taller; the panel scrolls inside. */
+  .game-layout[data-fit-panel] {
+    align-items: stretch;
+  }
+  .game-layout[data-fit-panel] .game-layout-panel {
+    contain: size;
+    position: static;
+  }
+}
+@media (width >= 80rem) {
+  .game-layout {
+    --panel-width: 22.5rem;
+  }
+}
+@media (width >= 96rem) {
+  .game-layout {
+    --panel-width: 25rem;
+  }
 }

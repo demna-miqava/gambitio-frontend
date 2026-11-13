@@ -1,3 +1,4 @@
+import { CalendarDays } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -6,52 +7,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useQueryParams } from "@/hooks/useQueryParams";
-import { Calendar, CalendarDays } from "lucide-react";
-import { useMemo } from "react";
 
-const STATS_DAYS_OPTIONS = [
-  {
-    label: "All time",
-    value: "all-time",
-  },
-  {
-    label: "30 days",
-    value: "30",
-  },
-  {
-    label: "90 days",
-    value: "90",
-  },
-  {
-    label: "1 year",
-    value: "365",
-  },
+const OPTIONS = [
+  { label: "All time", value: "all-time" },
+  { label: "Last 30 days", value: "30" },
+  { label: "Last 90 days", value: "90" },
+  { label: "Last year", value: "365" },
 ];
 
+/** The period the stats cover; kept in the URL (?days=). */
 const StatsDaysSelect = () => {
-  const [selectedDays, setSelectedDays] = useQueryParams("days", "all-time");
-
-  const label = useMemo(
-    () =>
-      STATS_DAYS_OPTIONS.find((option) => option.value === selectedDays)?.label,
-    [selectedDays]
-  );
+  const [days, setDays] = useQueryParams("days", "all-time");
+  const value = OPTIONS.some((o) => o.value === days) ? days : "all-time";
 
   return (
     <Select
-      value={selectedDays}
-      onValueChange={(value) => {
-        setSelectedDays(value);
-      }}
+      value={value}
+      onValueChange={(next) => setDays(next === "all-time" ? undefined : next)}
     >
-      <SelectTrigger className="w-40 py-4">
-        <SelectValue placeholder="All stats">
-          {selectedDays === "all-time" ? <Calendar /> : <CalendarDays />}{" "}
-          {label}
-        </SelectValue>
+      <SelectTrigger aria-label="Period" className="w-full justify-start gap-2 bg-card data-[size=default]:h-12 sm:w-44 [&>svg:last-child]:ml-auto">
+        <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
+        <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {STATS_DAYS_OPTIONS.map((option) => (
+        {OPTIONS.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}
           </SelectItem>

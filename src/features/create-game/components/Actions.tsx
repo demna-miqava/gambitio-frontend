@@ -1,38 +1,33 @@
-import { Plus, UserPlus } from "lucide-react";
-import {
-  useGameSetup,
-  type GameSection,
-} from "@/features/create-game/GameSetupContext";
+import { Loader2 } from "lucide-react";
+import { useGameSetup } from "@/features/create-game/GameSetupContext";
 import { Button } from "@/components/ui/button";
-
-const actionItems = [
-  {
-    title: "Custom Challenge",
-    description: "Choose time controls",
-    icon: Plus,
-    section: "custom",
-  },
-  {
-    title: "Play a Friend",
-    description: "Invite someone you know",
-    icon: UserPlus,
-    section: "friends",
-  },
-];
+import { formatTimeControl } from "@/utils/timeControl";
 
 export const Actions = () => {
-  const { setActiveSection, timeControl, setShouldConnect, isSearching } =
+  const { timeControl, setShouldConnect, isSearching, isConnecting } =
     useGameSetup();
+  const label = formatTimeControl(timeControl.time, timeControl.increment);
 
   if (isSearching) {
     return (
-      <div className="h-full flex flex-col justify-center items-center gap-4 animate-pulse border rounded-2xl p-4">
-        <p>Searching for a game...</p>
-        <Button
-          className="cursor-pointer"
-          onClick={() => {
-            setShouldConnect(false);
-          }}
+      <div
+        className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-border bg-muted/40 px-4 py-10 text-center"
+        role="status"
+        aria-live="polite"
+      >
+        <Loader2 className="size-6 animate-spin text-primary" aria-hidden="true" />
+        <div>
+          <p className="font-medium">
+            {isConnecting ? "Connecting…" : "Finding an opponent…"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            <span className="tabular-nums">{label}</span> ·{" "}
+            <span className="capitalize">{timeControl.format}</span>
+          </p>
+        </div>
+        <Button size="lg"
+          variant="outline"
+          onClick={() => setShouldConnect(false)}
         >
           Cancel
         </Button>
@@ -41,47 +36,13 @@ export const Actions = () => {
   }
 
   return (
-    <>
-      <Button
-        disabled={isSearching || !timeControl.format}
-        onClick={() => {
-          setShouldConnect(true);
-        }}
-        className="w-full py-6"
-        aria-label="Start a new game"
-      >
-        Start Game
-      </Button>
-      {actionItems.map((item) => {
-        const Icon = item.icon;
-        return (
-          <button
-            key={item.title}
-            type="button"
-            className={`flex w-full items-center justify-between rounded-xl border border-sidebar-border px-4 py-4 text-left transition hover:border-sidebar-ring/60 hover:bg-sidebar-accent/50 "bg-sidebar text-sidebar-foreground cursor-pointer`}
-            onClick={() => {
-              if (item.section) {
-                setActiveSection(item.section as GameSection);
-              }
-            }}
-            aria-label={`${item.title}: ${item.description}`}
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className={`flex size-9 items-center justify-center rounded-lg bg-sidebar-accent/60 text-sidebar-accent-foreground`}
-              >
-                <Icon className="size-5" />
-              </span>
-              <div className="leading-tight">
-                <p className="font-semibold">{item.title}</p>
-                <p className="text-xs text-sidebar-foreground/70">
-                  {item.description}
-                </p>
-              </div>
-            </div>
-          </button>
-        );
-      })}
-    </>
+    <Button
+      disabled={!timeControl.format}
+      onClick={() => setShouldConnect(true)}
+      size="xl"
+      className="w-full"
+    >
+      Play <span className="tabular-nums">{label}</span>
+    </Button>
   );
 };

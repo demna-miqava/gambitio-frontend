@@ -29,6 +29,7 @@ interface DataTableProps<TData, TValue> {
   onPageChange: (page: number) => void;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
+  emptyState?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -42,6 +43,7 @@ export function DataTable<TData, TValue>({
   onPageChange,
   hasNextPage,
   hasPreviousPage,
+  emptyState,
 }: DataTableProps<TData, TValue>) {
   const navigate = useNavigate();
   const table = useReactTable({
@@ -51,27 +53,35 @@ export function DataTable<TData, TValue>({
     manualPagination: true,
   });
 
+  // Column headers over "No games yet" are noise
+  const isEmpty = !isLoading && data.length === 0;
+
   return (
-    <div className="overflow-hidden rounded-md border">
+    <div className="overflow-hidden rounded-2xl border border-border/70 bg-card">
       <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
+        {!isEmpty && (
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead
+                      key={header.id}
+                      className="h-10 px-4 text-xs font-medium text-muted-foreground"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+        )}
         <TableBody>
           {isLoading ? (
             <GameTableSkeleton rows={pageSize} columnCount={columns.length} />
@@ -82,13 +92,17 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  onClick={() => {
+                  // The whole row is clickable with a mouse; keyboard and
+                  // screen reader users get a real link in the Players cell
+                  // (see Columns), so the row itself isn't focusable
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest("a")) return;
                     if (gameId) navigate(getArchiveGameRoute(String(gameId)));
                   }}
-                  className="cursor-pointer"
+                  className="cursor-pointer border-border/60 focus-within:bg-accent/60"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-accent-foreground">
+                    <TableCell key={cell.id} className="px-4 py-3">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -100,15 +114,19 @@ export function DataTable<TData, TValue>({
             })
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+              <TableCell colSpan={columns.length} className="p-0">
+                {emptyState ?? (
+                  <p className="py-10 text-center text-sm text-muted-foreground">
+                    No games yet.
+                  </p>
+                )}
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
       {enablePagination && (
-        <div className="py-4">
+        <div className="border-t border-border/60 py-3">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

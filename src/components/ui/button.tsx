@@ -9,22 +9,32 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        // Each variant has a pressed (active) state, so taps give feedback
+        // on touch screens where there is no hover
+        default:
+          "bg-primary-solid text-primary-solid-foreground shadow-xs hover:bg-primary-solid/90 active:bg-primary-solid/80",
         destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-destructive text-white hover:bg-destructive/90 active:bg-destructive/80 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground active:bg-active-bg dark:bg-input/30 dark:border-input dark:hover:bg-input/50 dark:active:bg-active-bg",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-active-bg",
         ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+          "hover:bg-accent hover:text-accent-foreground active:bg-active-bg dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
       },
+      // One height per size, so pages don't set their own:
+      // sm 32px, default 36px, md 40px (panels), lg 44px (touch targets),
+      // xl 48px (a page's main action)
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
+        // Sizes under 44px get a larger invisible hit area on touch screens
+        default: "relative touch-target h-9 px-4 py-2 has-[>svg]:px-3",
+        sm: "relative touch-target h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+        md: "h-10 px-4 has-[>svg]:px-3",
+        lg: "h-11 px-5 has-[>svg]:px-4",
+        xl: "h-12 rounded-lg px-6 text-base has-[>svg]:px-5",
+        icon: "relative touch-target size-9",
+        "icon-lg": "size-11 rounded-lg",
       },
     },
     defaultVariants: {

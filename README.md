@@ -1,4 +1,4 @@
-# ChessHub
+# Gambitio
 
 A modern, real-time chess application built with React, TypeScript, and WebSockets. Play chess online with friends, track your statistics, and improve your game.
 
@@ -82,7 +82,7 @@ A modern, real-time chess application built with React, TypeScript, and WebSocke
 
 ```bash
 git clone <repository-url>
-cd chesshub-frontend
+cd gambitio-frontend
 ```
 
 2. Install dependencies:

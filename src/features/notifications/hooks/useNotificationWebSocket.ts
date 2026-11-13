@@ -1,39 +1,43 @@
-import { useEffect } from "react";
 import useWebSocket from "react-use-websocket";
+import { useQueryClient } from "@tanstack/react-query";
+import { QKEY_ACTIVE_GAME, QKEY_CHALLENGES } from "@/constants/queryKeys";
 import { WS_BASE_URL } from "@/constants/apiConfig";
 import { useUser } from "@/hooks/useUser";
-import { useAuthenticatedWebSocketUrl } from "@/hooks/useAuthenticatedWebSocketUrl";
+import { useAuthenticatedWebSocket, useSocketReauth } from "@/hooks/useAuthenticatedWebSocket";
 import { parseWebSocketMessage } from "@/features/game/utils/websocket-helpers";
-import { messageDispatcher } from "@/services/websocketMessageDispatcher";
+import { notificationMessages } from "@/services/websocketMessageDispatcher";
+import { RECONNECT_OPTIONS } from "@/constants/websocket";
 import type { NotificationWebSocketMessage } from "../types/websocket-messages";
 
 /**
  * Hook for managing the notifications WebSocket connection.
  * Only connects when user is authenticated and has a chess profile.
- * Parses incoming messages and dispatches them to all subscribers.
+ * Dispatches every incoming message to notificationMessages subscribers.
  *
  * @returns WebSocket connection state and methods
  */
 export const useNotificationWebSocket = () => {
   const { id, isAuthenticated, hasProfile } = useUser();
+  const queryClient = useQueryClient();
 
   const baseUrl = isAuthenticated && id && hasProfile ? `${WS_BASE_URL}/notifications` : null;
-  const wsUrl = useAuthenticatedWebSocketUrl(baseUrl, true);
+  const { getUrl, protocols } = useAuthenticatedWebSocket(baseUrl, true);
 
-  const { lastMessage, sendMessage, readyState } = useWebSocket(wsUrl, {
-    share: true,
+  const { sendMessage, readyState } = useWebSocket(getUrl, {
+    ...RECONNECT_OPTIONS,
+    protocols,
+    // Challenges (and games) may have started or ended while we were offline
+    onOpen: () => {
+      queryClient.invalidateQueries({ queryKey: [QKEY_CHALLENGES] });
+      queryClient.invalidateQueries({ queryKey: [QKEY_ACTIVE_GAME] });
+    },
+    onMessage: (event) => {
+      const message = parseWebSocketMessage<NotificationWebSocketMessage>(event);
+      if (message) notificationMessages.dispatch(message);
+    },
   });
 
-  // Parse and dispatch messages to subscribers
-  useEffect(() => {
-    if (!lastMessage) return;
-
-    const message =
-      parseWebSocketMessage<NotificationWebSocketMessage>(lastMessage);
-    if (!message) return;
-
-    messageDispatcher.dispatch(message);
-  }, [lastMessage]);
+  useSocketReauth(sendMessage, readyState);
 
   return {
     sendMessage,

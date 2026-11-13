@@ -20,16 +20,16 @@ export const PlayerDisplay = ({
   clock,
 }: PlayerDisplayProps) => {
   return (
-    <div className="flex items-center justify-between bg-card px-4 text-sm text-foreground">
-      <div className="flex items-center gap-2 py-4">
+    <div className="flex items-center justify-between gap-3 px-3 py-1.5 sm:px-4 sm:py-2.5">
+      <div className="flex min-w-0 items-center gap-2.5">
         {avatar}
-        <div className="leading-tight text-foreground">
-          <p className="font-semibold">{name}</p>
+        <div className="min-w-0 leading-tight">
+          <p className="truncate text-sm font-semibold text-foreground">{name}</p>
           {newRating && newRating !== startingRating ? (
-            <div className="flex items-center gap-1 text-xs">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CountingNumber
                 inView
-                className="text-xs"
+                className="text-xs tabular-nums"
                 fromNumber={startingRating}
                 number={newRating}
                 transition={{ stiffness: 120, damping: 35 }}
@@ -38,16 +38,16 @@ export const PlayerDisplay = ({
                 <span
                   className={
                     ratingChange >= 0
-                      ? "flex items-center gap-0.5 text-rating-up"
-                      : "flex items-center gap-0.5 text-rating-down"
+                      ? "flex items-center gap-0.5 font-medium text-rating-up"
+                      : "flex items-center gap-0.5 font-medium text-rating-down"
                   }
                 >
                   {ratingChange >= 0 ? (
-                    <TrendingUp className="h-3 w-3" aria-hidden="true" />
+                    <TrendingUp className="size-3" aria-hidden="true" />
                   ) : (
-                    <TrendingDown className="h-3 w-3" aria-hidden="true" />
+                    <TrendingDown className="size-3" aria-hidden="true" />
                   )}
-                  <span>
+                  <span className="tabular-nums">
                     {ratingChange >= 0 ? "+" : ""}
                     {ratingChange}
                   </span>
@@ -55,7 +55,11 @@ export const PlayerDisplay = ({
               )}
             </div>
           ) : (
-            <span className="text-xs">{startingRating}</span>
+            startingRating !== undefined && (
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {startingRating}
+              </span>
+            )
           )}
         </div>
       </div>

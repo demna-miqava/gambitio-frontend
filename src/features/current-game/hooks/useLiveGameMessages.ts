@@ -1,16 +1,18 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, type RefObject } from "react";
 import type {
   RatingChanges,
   MoveMessage,
+  MoveRejectedMessage,
+  GameErrorMessage,
   GameEndedMessage,
   InitialGameStateMessage,
 } from "@/features/game/types/websocket-messages";
-import { syncBoard } from "@/features/game/utils/board-utils";
+import { getLastMove, syncBoard } from "@/features/game/utils/board-utils";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { useGameNavigation } from "@/features/game/contexts/GameNavigationContext";
-import { useChessSound } from "@/features/game/hooks/useChessSound";
-import { useSettings } from "@/features/settings/SettingsContext";
+import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
 import { useMessageDispatcher } from "@/hooks/useMessageDispatcher";
+import { gameMessages } from "@/services/websocketMessageDispatcher";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/useUser";
@@ -18,16 +20,40 @@ import { useUser } from "@/hooks/useUser";
 interface UseLiveGameMessagesOptions {
   setGameEnded: (ended: boolean) => void;
   setRatingChanges: (changes: RatingChanges | null) => void;
+  /**
+   * Called with the SAN of each move not played on this device: the
+   * opponent's, or either player's when spectating
+   */
+  onOpponentMove?: (san: string, userId: number) => void;
+  /**
+   * Asks the server for the full game state (answered with
+   * initial_game_state). Move messages carry only the move and the FEN after
+   * it, so a board that drifted (a missed message) resyncs this way.
+   */
+  requestSync: () => void;
+  /**
+   * Set to performance.now() whenever this player's clock starts locally
+   * (the opponent's move or the server's position arrives); moves report the
+   * time since, so network delay isn't charged to the player
+   */
+  turnStartedAtRef: RefObject<number | null>;
 }
 
+/**
+ * Keeps the local board in sync with the server, which is the source of truth
+ * for the position, the clocks and the result.
+ */
 export const useLiveGameMessages = ({
   setGameEnded,
   setRatingChanges,
+  onOpponentMove,
+  requestSync,
+  turnStartedAtRef,
 }: UseLiveGameMessagesOptions) => {
-  const { chessRef, cgRef, color, setTurn } = useChessBoardContext();
+  const { chessRef, cgRef, color, setTurn, inputLockedRef, setInputLocked } =
+    useChessBoardContext();
   const { goToLastMove } = useGameNavigation();
-  const { settings } = useSettings();
-  const { playSoundForMove } = useChessSound(settings?.soundsEnabled);
+  const { playSoundForMove } = useChessSound();
   const { id: currentUserId } = useUser();
 
   const [whiteTimeLeft, setWhiteTimeLeft] = useState<number | undefined>(
@@ -36,21 +62,20 @@ export const useLiveGameMessages = ({
   const [blackTimeLeft, setBlackTimeLeft] = useState<number | undefined>(
     undefined
   );
+  const [clockRunning, setClockRunning] = useState(false);
 
+  /** Replaces the local position with the server's. */
   const syncFromServerState = useCallback(
-    (payload: { pgn?: string; fen?: string }) => {
+    (pgn: string) => {
       const chess = chessRef.current;
       const cg = cgRef.current;
       if (!chess || !cg) return false;
+      // The clocks restart from the server's times now
+      turnStartedAtRef.current = performance.now();
 
       try {
-        if (payload.pgn) {
-          chess.loadPgn(payload.pgn);
-        } else if (payload.fen) {
-          chess.load(payload.fen);
-        } else {
-          return false;
-        }
+        if (pgn) chess.loadPgn(pgn);
+        else chess.reset();
       } catch {
         return false;
       }
@@ -58,67 +83,53 @@ export const useLiveGameMessages = ({
       const turn = syncBoard({
         cg,
         chess,
-        movableColor: color,
+        movableColor: inputLockedRef.current ? undefined : color,
+        lastMove: getLastMove(chess),
         playPremove: true,
       });
       setTurn(turn);
+      goToLastMove();
       return true;
     },
-    [chessRef, cgRef, color, setTurn]
+    [chessRef, cgRef, color, setTurn, goToLastMove, inputLockedRef, turnStartedAtRef]
   );
 
-  // Handle incoming move messages from WebSocket
   const handleIncomingMove = useCallback(
     (data: MoveMessage) => {
-      if (!chessRef.current || !cgRef.current) return;
-
       const chess = chessRef.current;
-      const isOwnMove = data.userId === currentUserId;
+      const cg = cgRef.current;
+      if (!chess || !cg) return;
+
+      setWhiteTimeLeft(data.whiteTimeLeft);
+      setBlackTimeLeft(data.blackTimeLeft);
+      setClockRunning(data.clockRunning);
+
+      // Our own move was already shown optimistically; just confirm the position
+      if (data.userId === currentUserId) {
+        if (chess.fen() !== data.fen) requestSync();
+        return;
+      }
+
+      // Before syncBoard, which may play a premove straight away
+      turnStartedAtRef.current = performance.now();
       try {
-        if (!data.move) {
-          if (syncFromServerState({ pgn: data.pgn, fen: data.fen })) {
-            goToLastMove();
-          }
-          return;
-        }
-
-        // Only apply the move to chess.js if it's from opponent
-        if (!isOwnMove) {
-          const move = chess.move(data.move.lan);
-          if (!move) {
-            if (syncFromServerState({ pgn: data.pgn, fen: data.fen })) {
-              goToLastMove();
-            }
-            return;
-          }
-          const isCheckmate = chess.isCheckmate();
-
-          const turn = syncBoard({
-            cg: cgRef.current,
-            chess,
-            movableColor: color,
-            playPremove: true,
-          });
-          setTurn(turn);
-          playSoundForMove(move, isCheckmate);
-
-          // Auto-jump to latest move when opponent moves
-          goToLastMove();
-        } else if (data.pgn || data.fen) {
-          syncFromServerState({ pgn: data.pgn, fen: data.fen });
-        }
-
-        // Always update clocks with server time (for both players)
-        if (data.whiteTimeLeft !== undefined) {
-          setWhiteTimeLeft(data.whiteTimeLeft);
-        }
-        if (data.blackTimeLeft !== undefined) {
-          setBlackTimeLeft(data.blackTimeLeft);
-        }
+        const move = chess.move(data.move.lan);
+        const turn = syncBoard({
+          cg,
+          chess,
+          movableColor: inputLockedRef.current ? undefined : color,
+          lastMove: [move.from, move.to],
+          playPremove: true,
+        });
+        setTurn(turn);
+        playSoundForMove(move, chess.isCheckmate());
+        goToLastMove();
+        onOpponentMove?.(move.san, data.userId);
+        // Applied, but not where the server is: take the server's position
+        if (chess.fen() !== data.fen) requestSync();
       } catch {
-        if (!syncFromServerState({ pgn: data.pgn, fen: data.fen })) {
-          toast.error("Failed to sync move. Please refresh the page.");
-        }
+        // Local board drifted (e.g. missed message): take the server's position
+        requestSync();
       }
     },
     [
@@ -129,66 +140,71 @@ export const useLiveGameMessages = ({
       playSoundForMove,
       goToLastMove,
       currentUserId,
-      syncFromServerState,
+      inputLockedRef,
+      onOpponentMove,
+      requestSync,
+      turnStartedAtRef,
     ]
   );
 
-  // Handle game_ended messages
+  const handleMoveRejected = useCallback(
+    (data: MoveRejectedMessage) => {
+      toast.error(data.message);
+      syncFromServerState(data.pgn);
+    },
+    [syncFromServerState]
+  );
+
+  const handleError = useCallback((data: GameErrorMessage) => {
+    toast.error(data.data.message, { id: "game_error" });
+  }, []);
+
   const handleGameEnded = useCallback(
     (data: GameEndedMessage) => {
+      // Lock now, not after the next render, so nothing else can be played
+      setInputLocked(true);
       setGameEnded(true);
+      setClockRunning(false);
       if (data.ratingChanges) {
         setRatingChanges(data.ratingChanges);
       }
     },
-    [setGameEnded, setRatingChanges]
+    [setGameEnded, setRatingChanges, setInputLocked]
   );
 
-  // Handle initial game state
+  // Sent on connect and on every reconnect
   const handleInitialState = useCallback(
-    (data: InitialGameStateMessage) => {
-      if (!chessRef.current || !cgRef.current) return;
-      if (!data.data?.fen) return;
-
-      if (data.data.pgn) {
-        chessRef.current.loadPgn(data.data.pgn);
-      }
-
-      const turn = syncBoard({
-        cg: cgRef.current,
-        chess: chessRef.current,
-        movableColor: color,
-        playPremove: true,
-      });
-      setTurn(turn);
-
-      if (data.data.isFinished) {
+    ({ data }: InitialGameStateMessage) => {
+      if (data.isFinished) setInputLocked(true);
+      syncFromServerState(data.pgn);
+      setClockRunning(data.clockRunning && !data.isFinished);
+      if (data.whiteTimeLeft !== null) setWhiteTimeLeft(data.whiteTimeLeft);
+      if (data.blackTimeLeft !== null) setBlackTimeLeft(data.blackTimeLeft);
+      if (data.isFinished) {
         setGameEnded(true);
-      }
-
-      // Set initial clock times if provided
-      if (data.data.whiteTimeLeft !== undefined) {
-        setWhiteTimeLeft(data.data.whiteTimeLeft);
-      }
-      if (data.data.blackTimeLeft !== undefined) {
-        setBlackTimeLeft(data.data.blackTimeLeft);
+        if (data.ratingChanges) setRatingChanges(data.ratingChanges);
       }
     },
-    [chessRef, cgRef, color, setTurn, setGameEnded]
+    [syncFromServerState, setGameEnded, setRatingChanges, setInputLocked]
   );
 
-  // Subscribe to all message types using the reusable hook
-  useMessageDispatcher<MoveMessage>(GAME_MESSAGE_TYPES.MOVE, handleIncomingMove);
-
+  useMessageDispatcher<MoveMessage>(gameMessages, GAME_MESSAGE_TYPES.MOVE, handleIncomingMove);
+  useMessageDispatcher<MoveRejectedMessage>(
+    gameMessages,
+    GAME_MESSAGE_TYPES.MOVE_REJECTED,
+    handleMoveRejected
+  );
+  useMessageDispatcher<GameErrorMessage>(gameMessages, GAME_MESSAGE_TYPES.ERROR, handleError);
   useMessageDispatcher<GameEndedMessage>(
+    gameMessages,
     GAME_MESSAGE_TYPES.GAME_ENDED,
     handleGameEnded
   );
-
   useMessageDispatcher<InitialGameStateMessage>(
+    gameMessages,
     GAME_MESSAGE_TYPES.INITIAL_GAME_STATE,
     handleInitialState
   );
 
-  return { whiteTimeLeft, blackTimeLeft };
+  return { whiteTimeLeft, blackTimeLeft, clockRunning };
 };

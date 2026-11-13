@@ -1,32 +1,27 @@
+import { cn } from "@/lib/utils";
+
 interface ResultBadgeProps {
-  result: string;
+  result: "win" | "loss" | "draw" | string;
+  className?: string;
 }
 
-export const ResultBadge = ({ result }: ResultBadgeProps) => {
-  const isWin = result === "win";
-  const isDraw = result === "draw";
+const STYLES: Record<string, { label: string; className: string }> = {
+  win: { label: "Won", className: "bg-win-bg text-win" },
+  loss: { label: "Lost", className: "bg-loss-bg text-loss" },
+  draw: { label: "Draw", className: "bg-draw-bg text-draw" },
+};
 
-  const badgeLabel = isDraw ? "=" : isWin ? "+" : "-";
-  const badgeColor = isDraw
-    ? "bg-draw-bg text-draw"
-    : isWin
-      ? "bg-win-bg text-win"
-      : "bg-loss-bg text-loss";
-
-  const topScore = isDraw ? "½" : isWin ? "1" : "0";
-  const bottomScore = isDraw ? "½" : isWin ? "0" : "1";
-
+export const ResultBadge = ({ result, className }: ResultBadgeProps) => {
+  const style = STYLES[result] ?? STYLES.draw;
   return (
-    <div className="flex items-center gap-2 text-sm text-white/80">
-      <div className="flex flex-col text-center leading-tight text-foreground">
-        <span>{topScore}</span>
-        <span>{bottomScore}</span>
-      </div>
-      <span
-        className={`flex h-6 w-6 items-center justify-center rounded-md text-xs font-semibold uppercase ${badgeColor}`}
-      >
-        {badgeLabel}
-      </span>
-    </div>
+    <span
+      className={cn(
+        "inline-flex h-6 min-w-12 items-center justify-center rounded-full px-2.5 text-xs font-semibold",
+        style.className,
+        className
+      )}
+    >
+      {style.label}
+    </span>
   );
 };

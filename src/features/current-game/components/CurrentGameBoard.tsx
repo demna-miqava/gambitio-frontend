@@ -1,5 +1,4 @@
 import { useUser } from "@/hooks/useUser";
-import { useLocation } from "react-router-dom";
 import Clock from "@/features/game/components/Clock";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -10,11 +9,16 @@ import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext
 import { useLiveGame } from "../contexts/LiveGameContext";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
 import { PromotionSelector } from "@/features/game/components/PromotionSelector";
+import { ConnectionBanner } from "./ConnectionBanner";
 
 const CurrentGameBoard = () => {
-  const { username, image, id } = useUser();
-  const { boardRef, turn } = useChessBoardContext();
+  const { image } = useUser();
+  const { boardRef, turn, color } = useChessBoardContext();
   const {
+    game,
+    player,
+    opponent,
+    clockRunning,
     gameEnded,
     ratingChanges,
     sendMessage,
@@ -23,19 +27,16 @@ const CurrentGameBoard = () => {
     pendingPromotion,
     handlePromotionSelect,
     cancelPromotion,
+    connectionStatus,
   } = useLiveGame();
   const timeoutSentRef = useRef(false);
   const { settings } = useSettings();
 
-  const { opponentRating, opponentUsername, opponentId, rating, color, time } =
-    useLocation().state || {
-      opponentRating: 0,
-      opponentUsername: "",
-      opponentId: undefined,
-      color: "",
-      time: 180,
-      rating: 0,
-    };
+  const { time } = game;
+  const username = player.username;
+  const rating = player.rating;
+  const opponentUsername = opponent.username;
+  const opponentRating = opponent.rating;
 
   const playerRatings = useMemo(
     () =>
@@ -66,17 +67,20 @@ const CurrentGameBoard = () => {
     ]
   );
 
-  const handleTimeout = (timedOutUserId: number) => {
+  // Tells the server a clock reached zero. The server checks its own clock
+  // and decides the result, so it doesn't matter which side reports it.
+  const handleTimeout = () => {
     if (!timeoutSentRef.current) {
-      timeoutSentRef.current = true;
-      sendMessage(
-        JSON.stringify({
-          type: GAME_MESSAGE_TYPES.TIMEOUT,
-          userId: timedOutUserId,
-        })
+      timeoutSentRef.current = sendMessage(
+        JSON.stringify({ type: GAME_MESSAGE_TYPES.TIMEOUT })
       );
     }
   };
+
+  // Clocks keep running while disconnected, like the server's do. The server
+  // flags a timeout on its own and resyncs both clocks on reconnect.
+  const opponentClockActive = clockRunning && turn !== color;
+  const playerClockActive = clockRunning && turn === color;
 
   return (
     <BoardLayout
@@ -87,7 +91,12 @@ const CurrentGameBoard = () => {
         newRating: opponentRatings.newRating,
         ratingChange: gameEnded ? opponentRatings.ratingChange : undefined,
         avatar: (
-          <PlayerAvatar username={opponentUsername} isOpponent size="sm" />
+          <PlayerAvatar
+            username={opponentUsername}
+            avatarUrl={opponent.avatarUrl}
+            isOpponent
+            size="sm"
+          />
         ),
       }}
       bottomPlayer={{
@@ -102,12 +111,8 @@ const CurrentGameBoard = () => {
       topPlayerClock={
         <Clock
           startingTime={time}
-          isActive={turn !== color}
-          onTimeout={
-            turn !== color && opponentId
-              ? () => handleTimeout(opponentId)
-              : undefined
-          }
+          isActive={opponentClockActive}
+          onTimeout={opponentClockActive ? handleTimeout : undefined}
           gameEnded={gameEnded}
           serverTimeLeft={color === "white" ? blackTimeLeft : whiteTimeLeft}
         />
@@ -115,13 +120,14 @@ const CurrentGameBoard = () => {
       bottomPlayerClock={
         <Clock
           startingTime={time}
-          isActive={turn === color}
-          onTimeout={turn === color && id ? () => handleTimeout(id) : undefined}
+          isActive={playerClockActive}
+          onTimeout={playerClockActive ? handleTimeout : undefined}
           gameEnded={gameEnded}
           serverTimeLeft={color === "white" ? whiteTimeLeft : blackTimeLeft}
         />
       }
     >
+      <ConnectionBanner status={connectionStatus} />
       {pendingPromotion && (
         <PromotionSelector
           color={color}

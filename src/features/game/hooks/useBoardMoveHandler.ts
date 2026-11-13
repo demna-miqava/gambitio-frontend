@@ -21,6 +21,7 @@ interface UseBoardMoveHandlerOptions {
 
 interface ApplyMoveOptions {
   chess?: Chess;
+  /** Highlighted squares; defaults to the move's own from/to */
   lastMove?: [Key, Key];
   playPremove?: boolean;
 }
@@ -52,7 +53,7 @@ export const useBoardMoveHandler = ({
           cg,
           chess,
           movableColor,
-          lastMove,
+          lastMove: lastMove ?? [move.from, move.to],
           playPremove,
         });
         setTurn(turn);

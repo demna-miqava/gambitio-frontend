@@ -30,7 +30,8 @@ export const useChangePassword = () => {
       newPassword: "",
       confirmPassword: "",
     },
-    mode: "onChange",
+    // Errors appear once a field is left (or on submit), then update live
+    mode: "onTouched",
   });
 
   const onSubmit = async (data: ChangePasswordForm) => {
@@ -42,11 +43,11 @@ export const useChangePassword = () => {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       });
-      toast.success("Password changed successfully");
+      toast.success("Password changed");
       form.reset();
     } catch (error) {
       const clerkError = error as { errors?: { message: string }[] };
-      const message = clerkError.errors?.[0]?.message || "Failed to change password";
+      const message = clerkError.errors?.[0]?.message || "Couldn't change your password";
       toast.error(message);
     } finally {
       setIsLoading(false);

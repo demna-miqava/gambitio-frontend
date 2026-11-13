@@ -1,44 +1,47 @@
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  type Control,
-  Controller,
-  type FieldPath,
-  type FieldValues,
-} from "react-hook-form";
+import { useSettings } from "../SettingsContext";
+import type { Settings } from "../types";
 
-type SettingSwitchProps<TFieldValues extends FieldValues> = {
-  control: Control<TFieldValues>;
-  name: FieldPath<TFieldValues>;
+/** Settings that are on/off */
+export type BooleanSettingKey = {
+  [K in keyof Settings]: Settings[K] extends boolean ? K : never;
+}[keyof Settings];
+
+type SettingSwitchProps = {
+  name: BooleanSettingKey;
   label: string;
   description: string;
-  id?: string;
 };
 
-export const SettingSwitch = <TFieldValues extends FieldValues>({
-  control,
-  name,
-  label,
-  description,
-  id,
-}: SettingSwitchProps<TFieldValues>) => {
+/** One on/off setting. Saved as soon as it's flipped (see useUpdateSettings). */
+export const SettingSwitch = ({ name, label, description }: SettingSwitchProps) => {
+  const { settings, updateSettings } = useSettings();
+  const id = `setting-${name}`;
+  const descriptionId = `${id}-description`;
+
   return (
-    <Controller
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <div className="flex items-center justify-between py-3 border-b">
-          <div className="space-y-0.5">
-            <Label htmlFor={id || String(name)}>{label}</Label>
-            <p className="text-sm text-muted-foreground">{description}</p>
-          </div>
-          <Switch
-            id={id || String(name)}
-            checked={field.value}
-            onCheckedChange={field.onChange}
-          />
-        </div>
-      )}
-    />
+    <div className="flex items-center justify-between gap-6 border-b border-border/70 py-4 first:pt-0 last:border-0 last:pb-0">
+      <div className="space-y-0.5">
+        <Label htmlFor={id}>{label}</Label>
+        <p id={descriptionId} className="text-sm text-muted-foreground">
+          {description}
+        </p>
+      </div>
+      <Switch
+        id={id}
+        aria-describedby={descriptionId}
+        // Off and locked until the saved settings arrive, so a click can't
+        // be lost to the first load
+        checked={settings?.[name] ?? false}
+        disabled={!settings}
+        onCheckedChange={(checked) => updateSettings.mutate({ [name]: checked })}
+      />
+    </div>
   );
 };
+
+/** A group of switches with the spacing the settings panels use. */
+export const SettingList = ({ children }: { children: React.ReactNode }) => (
+  <div>{children}</div>
+);

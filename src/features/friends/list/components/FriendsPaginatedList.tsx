@@ -1,4 +1,6 @@
 import { FriendsList } from "./FriendsList";
+import { FriendsListSkeleton } from "./FriendsListSkeleton";
+import type { FriendCardMode } from "../../components/FriendCard";
 import { Pagination } from "@/components/Pagination";
 import type { Friend, FriendActionHandlers } from "@/types";
 import type { ReactNode } from "react";
@@ -12,9 +14,12 @@ interface FriendsPaginatedListProps extends FriendActionHandlers {
     totalPages: number;
   };
   isLoading?: boolean;
+  /** Placeholder rows while loading: the number of friends expected on this page */
+  skeletonRows?: number;
   searchSlot?: ReactNode;
-  emptyMessage?: string;
+  emptyMessage?: ReactNode;
   showPagination?: boolean;
+  mode?: FriendCardMode;
   currentUserId?: number;
   isOwnProfile?: boolean;
 }
@@ -25,14 +30,15 @@ export const FriendsPaginatedList = ({
   setPage,
   pagination,
   isLoading = false,
+  skeletonRows,
   onChallenge,
-  onMessage,
   onRemove,
   searchSlot,
   emptyMessage = "No friends yet",
   showPagination = true,
   currentUserId,
   isOwnProfile,
+  mode,
 }: FriendsPaginatedListProps) => {
   const totalPages = pagination?.totalPages ?? 1;
   const hasNextPage = page < totalPages;
@@ -43,16 +49,16 @@ export const FriendsPaginatedList = ({
       {searchSlot && <div className="w-full">{searchSlot}</div>}
 
       {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">Loading...</div>
+        <FriendsListSkeleton rows={skeletonRows} mode={mode} />
       ) : (
         <FriendsList
           items={friends}
           emptyMessage={emptyMessage}
           onChallenge={onChallenge}
-          onMessage={onMessage}
           onRemove={onRemove}
           currentUserId={currentUserId}
           isOwnProfile={isOwnProfile}
+          mode={mode}
         />
       )}
 

@@ -1,20 +1,21 @@
 import { createContext, useContext, type ReactNode, useMemo } from "react";
 import { useNotificationWebSocket } from "../hooks/useNotificationWebSocket";
-import { useManageChallenge } from "../hooks/useManageChallenge";
+import {
+  useManageChallenge,
+  type SendChallengeData,
+} from "../hooks/useManageChallenge";
 import { useChallengeMessageHandlers } from "../hooks/useChallengeMessageHandlers";
-import type { PlayerColorOption } from "@/types/game.types";
+import type { OutgoingChallenge } from "../types/websocket-messages";
 
 type ChallengesContextType = {
-  sendMessage: (message: string) => void;
-  readyState: number;
   handleAcceptChallenge: (challengerId: number) => void;
   handleDeclineChallenge: (challengerId: number) => void;
-  sendChallenge: (data: {
-    challengedId: number;
-    color: PlayerColorOption;
-    time: number;
-    increment: number;
-  }) => void;
+  /** Challenge a friend; a challenge already waiting on someone else is withdrawn */
+  sendChallenge: (data: SendChallengeData, target: { username: string }) => void;
+  /** Withdraw the challenge we're waiting on */
+  cancelChallenge: () => void;
+  /** The challenge we sent and are waiting on, if any */
+  outgoingChallenge: OutgoingChallenge | null;
 };
 
 const ChallengesContext = createContext<ChallengesContextType | undefined>(
@@ -25,24 +26,38 @@ export const ChallengesProvider = ({ children }: { children: ReactNode }) => {
   // Manage WebSocket connection
   const { sendMessage, readyState } = useNotificationWebSocket();
 
-  // Manage challenge actions (send, accept, decline)
-  const { handleAccept, handleDecline, sendChallenge } = useManageChallenge(
-    sendMessage,
-    readyState
-  );
+  // Manage challenge actions (send, cancel, accept, decline)
+  const {
+    handleAccept,
+    handleDecline,
+    sendChallenge,
+    cancelChallenge,
+    outgoingChallenge,
+    outgoingRef,
+    clearOutgoing,
+    removeChallenge,
+    lastSentTypeRef,
+  } = useManageChallenge(sendMessage, readyState);
 
   // Handle incoming challenge messages
-  useChallengeMessageHandlers(handleAccept, handleDecline);
+  useChallengeMessageHandlers({
+    handleAccept,
+    handleDecline,
+    removeChallenge,
+    outgoingRef,
+    clearOutgoing,
+    lastSentTypeRef,
+  });
 
   const value = useMemo(
     () => ({
-      sendMessage,
-      readyState,
       handleAcceptChallenge: handleAccept,
       handleDeclineChallenge: handleDecline,
       sendChallenge,
+      cancelChallenge,
+      outgoingChallenge,
     }),
-    [sendMessage, readyState, handleAccept, handleDecline, sendChallenge]
+    [handleAccept, handleDecline, sendChallenge, cancelChallenge, outgoingChallenge]
   );
 
   return (

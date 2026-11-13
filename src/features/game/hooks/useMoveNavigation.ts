@@ -41,6 +41,15 @@ export const useMoveNavigation = (totalMoves: number) => {
     setViewingIndex(null); // null = current position
   }, []);
 
+  /** Shows the position after `moveCount` moves (0 = start) */
+  const goToMove = useCallback(
+    (moveCount: number) => {
+      const clamped = Math.max(0, Math.min(moveCount, totalMoves));
+      setViewingIndex(clamped === totalMoves ? null : clamped);
+    },
+    [totalMoves]
+  );
+
   useArrowKeyNavigation({
     onLeft: goToPreviousMove,
     onRight: goToNextMove,
@@ -56,6 +65,7 @@ export const useMoveNavigation = (totalMoves: number) => {
     goToPreviousMove,
     goToNextMove,
     goToLastMove,
+    goToMove,
     isAtStart,
     isAtEnd,
   };

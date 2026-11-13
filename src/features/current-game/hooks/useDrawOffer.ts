@@ -1,63 +1,133 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type {
   DrawOfferMessage,
   DrawResponseMessage,
-  GameEndedMessage,
+  InitialGameStateMessage,
+  MoveMessage,
 } from "@/features/game/types/websocket-messages";
 import { useUser } from "@/hooks/useUser";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
 import { useMessageDispatcher } from "@/hooks/useMessageDispatcher";
+import { gameMessages } from "@/services/websocketMessageDispatcher";
+import { toast } from "sonner";
+import { useLiveGame } from "../contexts/LiveGameContext";
 
-export const useDrawOffer = (gameEnded: boolean) => {
+const DRAW_TOAST_ID = "draw_offer";
+const NOT_CONNECTED = "Not connected. Try again when you're back online.";
+
+/**
+ * Draw offers both ways. An incoming offer shows as a toast with
+ * Accept/Decline (the panel prompt can be below the fold on phones) and in
+ * the side panel. An outgoing offer stays "offered" until the opponent
+ * answers or moves (moving declines it on the server).
+ */
+export const useDrawOffer = () => {
   const { id } = useUser();
-  const [hasDrawOffer, setHasDrawOffer] = useState(false);
-  const [opponentDeclinedDraw, setOpponentDeclinedDraw] = useState(false);
+  const { gameEnded, sendMessage } = useLiveGame();
+  const [incomingOffer, setIncomingOffer] = useState(false);
+  const [offerSent, setOfferSent] = useState(false);
+  const [opponentDeclined, setOpponentDeclined] = useState(false);
+
+  const respond = useCallback(
+    (accepted: boolean) => {
+      toast.dismiss(DRAW_TOAST_ID);
+      const sent = sendMessage(
+        JSON.stringify({ type: GAME_MESSAGE_TYPES.DRAW_RESPONSE, accepted })
+      );
+      if (!sent) {
+        toast.error(NOT_CONNECTED);
+        return;
+      }
+      setIncomingOffer(false);
+    },
+    [sendMessage]
+  );
+
+  const showOfferToast = useCallback(() => {
+    toast("Your opponent offered a draw", {
+      id: DRAW_TOAST_ID,
+      duration: Infinity,
+      action: { label: "Accept", onClick: () => respond(true) },
+      cancel: { label: "Decline", onClick: () => respond(false) },
+    });
+  }, [respond]);
+
+  const offerDraw = useCallback(() => {
+    if (!sendMessage(JSON.stringify({ type: GAME_MESSAGE_TYPES.DRAW_OFFER }))) {
+      toast.error(NOT_CONNECTED);
+      return;
+    }
+    setOfferSent(true);
+    setOpponentDeclined(false);
+  }, [sendMessage]);
 
   const handleDrawOffer = useCallback(() => {
-    setHasDrawOffer(true);
+    setIncomingOffer(true);
+    setOpponentDeclined(false);
+    showOfferToast();
+  }, [showOfferToast]);
+
+  // Only the player who offered receives a decline
+  const handleDrawResponse = useCallback((data: DrawResponseMessage) => {
+    setOfferSent(false);
+    setOpponentDeclined(!data.accepted);
   }, []);
 
-  const handleDrawResponse = useCallback(
-    (data: DrawResponseMessage) => {
+  // My move declines the opponent's offer; the opponent's move declines mine
+  const handleMove = useCallback(
+    (data: MoveMessage) => {
       if (data.userId === id) {
-        setHasDrawOffer(false);
+        setIncomingOffer(false);
+        toast.dismiss(DRAW_TOAST_ID);
       } else {
-        setOpponentDeclinedDraw(!data.accepted);
+        setOfferSent(false);
+        setOpponentDeclined(false);
       }
     },
     [id]
   );
 
-  const handleGameEnded = useCallback(() => {
-    setHasDrawOffer(false);
-  }, []);
+  const handleInitialState = useCallback(
+    ({ data }: InitialGameStateMessage) => {
+      const incoming =
+        !data.isFinished && data.drawOfferedBy !== null && data.drawOfferedBy !== id;
+      setIncomingOffer(incoming);
+      setOfferSent(!data.isFinished && data.drawOfferedBy === id);
+      if (incoming) showOfferToast();
+      else toast.dismiss(DRAW_TOAST_ID);
+    },
+    [id, showOfferToast]
+  );
 
   useMessageDispatcher<DrawOfferMessage>(
+    gameMessages,
     GAME_MESSAGE_TYPES.DRAW_OFFER,
     handleDrawOffer
   );
   useMessageDispatcher<DrawResponseMessage>(
+    gameMessages,
     GAME_MESSAGE_TYPES.DRAW_RESPONSE,
     handleDrawResponse
   );
-  useMessageDispatcher<GameEndedMessage>(
-    GAME_MESSAGE_TYPES.GAME_ENDED,
-    handleGameEnded
+  useMessageDispatcher<MoveMessage>(gameMessages, GAME_MESSAGE_TYPES.MOVE, handleMove);
+  useMessageDispatcher<InitialGameStateMessage>(
+    gameMessages,
+    GAME_MESSAGE_TYPES.INITIAL_GAME_STATE,
+    handleInitialState
   );
 
-  const showDrawOffer = useMemo(
-    () => !gameEnded && hasDrawOffer,
-    [gameEnded, hasDrawOffer]
-  );
-
-  const showOpponentDeclined = useMemo(
-    () => opponentDeclinedDraw,
-    [opponentDeclinedDraw]
-  );
+  // The offer dies with the game, and with the page
+  useEffect(() => {
+    if (gameEnded) toast.dismiss(DRAW_TOAST_ID);
+  }, [gameEnded]);
+  useEffect(() => () => void toast.dismiss(DRAW_TOAST_ID), []);
 
   return {
-    showDrawOffer,
-    showOpponentDeclined,
-    setHasDrawOffer,
+    showDrawOffer: !gameEnded && incomingOffer,
+    drawOfferSent: !gameEnded && offerSent,
+    showOpponentDeclined: !gameEnded && opponentDeclined,
+    offerDraw,
+    acceptDraw: () => respond(true),
+    declineDraw: () => respond(false),
   };
 };

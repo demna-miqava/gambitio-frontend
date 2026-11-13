@@ -1,22 +1,32 @@
-import { BoardLayout } from "@/features/game/components/BoardLayout";
+import { useState } from "react";
 import { GameLayout } from "@/features/game/components/GameLayout";
-import {
-  ChessBoardProvider,
-  useChessBoardContext,
-} from "@/features/game/contexts/ChessBoardContext";
 import { BotSelector } from "@/features/play-bots/components/BotSelector";
+import { BotPreviewBoard } from "@/features/play-bots/components/BotPreviewBoard";
+import { closestBot, type Bot } from "@/features/play-bots/constants/bots";
+import type { PlayerColorOption } from "@/types/game.types";
+import { useUser } from "@/hooks/useUser";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const PlayBots = () => {
+  useDocumentTitle("Play the computer");
+  const { blitzRating } = useUser();
+  const [selectedBot, setSelectedBot] = useState<Bot>(() => closestBot(blitzRating));
+  const [selectedColor, setSelectedColor] = useState<PlayerColorOption>("random");
+
   return (
-    <ChessBoardProvider color="white">
-      <GameLayout board={<BoardSection />} sidebar={<BotSelector />} />
-    </ChessBoardProvider>
+    <GameLayout
+      board={<BotPreviewBoard bot={selectedBot} color={selectedColor} />}
+      sidebar={
+        <BotSelector
+          selectedBot={selectedBot}
+          onSelectBot={setSelectedBot}
+          selectedColor={selectedColor}
+          onSelectColor={setSelectedColor}
+        />
+      }
+      boardIsDecorative
+    />
   );
 };
 
 export default PlayBots;
-
-const BoardSection = () => {
-  const { boardRef } = useChessBoardContext();
-  return <BoardLayout boardRef={boardRef} />;
-};

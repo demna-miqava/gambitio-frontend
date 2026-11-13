@@ -1,48 +1,56 @@
-import { format } from "date-fns";
-import { FriendCard } from "../../components/FriendCard";
+import type { ReactNode } from "react";
+import { UsersRound } from "lucide-react";
+import { FriendCard, type FriendCardMode } from "../../components/FriendCard";
 import type { Friend, FriendActionHandlers } from "@/types";
+import { useFriendLiveGameIds } from "@/features/watch/hooks/useLiveGames";
+import { EmptyState } from "@/components/EmptyState";
+import { formatShortDate } from "@/lib/utils";
 
 interface FriendsListProps extends FriendActionHandlers {
   items: Friend[];
-  emptyMessage?: string;
+  /** Shown when there are no items; a string becomes the empty state's title */
+  emptyMessage?: ReactNode;
   currentUserId?: number;
   isOwnProfile?: boolean;
+  mode?: FriendCardMode;
 }
 
 export const FriendsList = ({
   items,
   emptyMessage = "No friends yet",
   onChallenge,
-  onMessage,
   onRemove,
   currentUserId,
   isOwnProfile,
+  mode,
 }: FriendsListProps) => {
+  // Friends playing right now get a "Watch" link (not when picking whom to challenge)
+  const liveGameIds = useFriendLiveGameIds({ enabled: mode !== "pick" });
+
   if (items.length === 0 && emptyMessage) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        {emptyMessage}
-      </div>
+    return typeof emptyMessage === "string" ? (
+      <EmptyState icon={UsersRound} title={emptyMessage} />
+    ) : (
+      emptyMessage
     );
   }
 
   return (
-    <div className="space-y-2">
+    <ul className="space-y-2">
       {items.map((friend) => (
-        <FriendCard
-          key={friend.id}
-          friend={friend}
-          onChallenge={onChallenge}
-          onMessage={onMessage}
-          onRemove={onRemove}
-          currentUserId={currentUserId}
-          isOwnProfile={isOwnProfile}
-          secondaryText={`Friends since ${format(
-            new Date(friend.friendsSince),
-            "MMM d, yyyy"
-          )}`}
-        />
+        <li key={friend.id}>
+          <FriendCard
+            friend={friend}
+            onChallenge={onChallenge}
+            onRemove={onRemove}
+            currentUserId={currentUserId}
+            isOwnProfile={isOwnProfile}
+            mode={mode}
+            liveGameId={mode === "pick" ? null : liveGameIds.get(friend.id)}
+            secondaryText={`Friends since ${formatShortDate(friend.friendsSince)}`}
+          />
+        </li>
       ))}
-    </div>
+    </ul>
   );
 };

@@ -12,5 +12,12 @@ export const useProfileUserId = () => {
   const { id: currentUserId } = useUser();
   const { id: urlId } = useParams<{ id: string }>();
 
-  return urlId ? parseInt(urlId) : currentUserId || 0;
+  if (!urlId) return currentUserId || 0;
+  return parseProfileId(urlId);
+};
+
+/** A positive integer id, or 0 (which disables every profile query). */
+export const parseProfileId = (raw: string): number => {
+  const id = Number(raw);
+  return Number.isInteger(id) && id > 0 ? id : 0;
 };

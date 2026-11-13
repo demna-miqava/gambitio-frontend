@@ -12,24 +12,24 @@ export interface PuzzleModeConfig {
 
 export const PUZZLE_MODES: PuzzleModeConfig[] = [
   {
-    title: "Solve Puzzles",
+    title: "Solve puzzles",
     description: "Train tactics at your own pace",
     icon: Target,
-    iconColor: "text-success",
+    iconColor: "text-primary",
     url: "infinite",
   },
   {
     title: "Puzzle Rush",
     description: "Solve as many as you can in 3 minutes",
     icon: Zap,
-    iconColor: "text-warning",
+    iconColor: "text-blitz",
     url: "rush",
   },
   {
-    title: "Sudden Death",
-    description: "3 lives - one wrong move costs a life",
+    title: "Survival",
+    description: "Three lives. Each wrong move costs one",
     icon: Skull,
-    iconColor: "text-destructive",
+    iconColor: "text-loss",
     url: "survival",
   },
 ];

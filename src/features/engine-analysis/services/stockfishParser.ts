@@ -29,20 +29,17 @@ export class StockfishParser {
     return {};
   }
 
-  private extractDepth(tokens: string[]): number | undefined {
-    const depthIndex = tokens.indexOf("depth");
-    if (depthIndex === -1) return undefined;
-    return this.parseNumber(tokens[depthIndex + 1]);
-  }
-
-  private shouldParseLine(tokens: string[], targetDepth?: number): boolean {
+  /**
+   * Accepts every completed line at any depth; the caller keeps the deepest
+   * per multipv. Requiring the target depth dropped everything on slower
+   * devices (phones), where the movetime limit ends the search first.
+   * Bound scores are provisional (the search failed high/low and is
+   * re-searching), so they're skipped.
+   */
+  private shouldParseLine(tokens: string[]): boolean {
     if (tokens[0] !== "info") return false;
     if (!tokens.includes("score") || !tokens.includes("pv")) return false;
-
-    if (!targetDepth) return true;
-
-    const depth = this.extractDepth(tokens);
-    return depth === targetDepth;
+    return !tokens.includes("lowerbound") && !tokens.includes("upperbound");
   }
 
   private parseInfoTokens(tokens: string[]): Partial<EvaluationLine> {
@@ -87,13 +84,10 @@ export class StockfishParser {
   /**
     Parse a raw info message; returns null if the line should be ignored.
   */
-  parseInfo(
-    message: string,
-    targetDepth?: number
-  ): Partial<EvaluationLine> | null {
+  parseInfo(message: string): Partial<EvaluationLine> | null {
     const tokens = message.split(" ");
 
-    if (!this.shouldParseLine(tokens, targetDepth)) return null;
+    if (!this.shouldParseLine(tokens)) return null;
 
     return this.parseInfoTokens(tokens);
   }

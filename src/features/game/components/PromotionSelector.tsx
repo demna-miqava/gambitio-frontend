@@ -19,36 +19,6 @@ interface PromotionSelectorProps {
   boardOrientation: PlayerColor;
 }
 
-const PromotionButton = memo(
-  ({
-    piece,
-    pieceSvg,
-    onSelect,
-  }: {
-    piece: PieceSymbol;
-    pieceSvg: string;
-    onSelect: (piece: PieceSymbol) => void;
-  }) => {
-    const handleClick = useCallback(() => onSelect(piece), [piece, onSelect]);
-
-    return (
-      <button
-        onClick={handleClick}
-        className="aspect-square bg-background dark:bg-slate-600 hover:bg-accent hover:text-accent-foreground transition-colors rounded-md relative overflow-hidden p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label={`Promote to ${PIECE_NAMES[piece]}`}
-      >
-        <img
-          src={pieceSvg}
-          alt={PIECE_NAMES[piece]}
-          className="w-full h-full object-contain"
-        />
-      </button>
-    );
-  }
-);
-
-PromotionButton.displayName = "PromotionButton";
-
 export const PromotionSelector = memo(
   ({
     color,
@@ -73,7 +43,7 @@ export const PromotionSelector = memo(
 
     // Stable event handlers
     const handleClickOutside = useCallback(
-      (event: MouseEvent) => {
+      (event: PointerEvent) => {
         if (
           menuRef.current &&
           !menuRef.current.contains(event.target as Node)
@@ -93,13 +63,16 @@ export const PromotionSelector = memo(
       [onCancel]
     );
 
-    // Handle click outside and escape key
+    // Handle click outside and escape key. pointerdown (not mousedown) so a
+    // tap works on touch screens: Chessground prevents default on touchstart,
+    // which stops iOS from synthesizing mouse events over the board.
+    // Capture phase so board handlers can't stop it first.
     useEffect(() => {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("pointerdown", handleClickOutside, true);
       document.addEventListener("keydown", handleEscape);
 
       return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("pointerdown", handleClickOutside, true);
         document.removeEventListener("keydown", handleEscape);
       };
     }, [handleClickOutside, handleEscape]);
@@ -124,7 +97,7 @@ export const PromotionSelector = memo(
               <button
                 key={piece}
                 onClick={() => onSelect(piece)}
-                className="aspect-square bg-background dark:bg-slate-600 hover:bg-accent hover:text-accent-foreground transition-colors rounded-md relative overflow-hidden p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="aspect-square bg-card hover:bg-accent hover:text-accent-foreground transition-colors rounded-md relative overflow-hidden p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={`Promote to ${PIECE_NAMES[piece]}`}
               >
                 <img

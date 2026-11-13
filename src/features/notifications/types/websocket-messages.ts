@@ -25,33 +25,68 @@ export type DeclineChallengeMessage = {
   };
 };
 
+export type CancelChallengeMessage = {
+  type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_CANCELLED;
+  data: {
+    challengedId: number;
+  };
+};
+
 export type ChallengeReceivedNotification = {
   type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_RECEIVED;
   data: {
+    id: number;
     challengerId: number;
     username: string;
     avatarUrl: string | null;
-    challengerRating: number;
+    // The color the receiving player will play
     color: PlayerColorOption;
     time: number;
     increment: number;
     createdAt: string;
+    /** Challenger's rating for this time control */
+    rating?: number;
   };
+};
+
+/** The client message a reply answers, as echoed back by the server */
+export type EchoedRequest = {
+  type?: NOTIFICATION_MESSAGE_TYPES;
+  data?: { challengedId?: number; challengerId?: number };
 };
 
 export type OpponentUnavailableNotification = {
   type: NOTIFICATION_MESSAGE_TYPES.OPPONENT_UNAVAILABLE;
+  data?: { request?: EchoedRequest };
 };
 
 export type ChallengeDeclinedNotification = {
   type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_DECLINED;
+  /**
+   * Who declined. `reason` is set when nobody declined: the challenge expired
+   * unanswered, or was withdrawn because the sender went offline.
+   */
+  data?: {
+    challengedId?: number;
+    reason?: "expired" | "offline";
+  };
+};
+
+/** The challenger withdrew a challenge sent to you */
+export type ChallengeCancelledNotification = {
+  type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_CANCELLED;
+  data: {
+    challengerId: number;
+    /** "declined": you declined it (in another tab), so there's nothing to say */
+    reason?: "declined";
+  };
 };
 
 export type MatchCreatedNotification = {
   type: NOTIFICATION_MESSAGE_TYPES.MATCH_CREATED;
   data: {
-    gameId: string;
-    opponentId: string;
+    gameId: number;
+    opponentId: number;
     opponentUsername: string;
     opponentRating: number;
     color: "white" | "black";
@@ -64,6 +99,8 @@ export type ChallengeErrorNotification = {
   type: NOTIFICATION_MESSAGE_TYPES.ERROR;
   data: {
     message: string;
+    code?: string;
+    request?: EchoedRequest;
   };
 };
 
@@ -76,11 +113,31 @@ export type Challenge = {
   time: number;
   increment: number;
   createdAt: string;
+  /** Challenger's rating for this time control */
+  rating?: number;
+};
+
+/** A challenge the signed-in user sent and is waiting on. */
+export type OutgoingChallenge = {
+  challengedId: number;
+  username: string;
+  color: PlayerColorOption;
+  time: number;
+  increment: number;
+  /** When it was sent (ms), for the client-side expiry */
+  sentAt: number;
+};
+
+export type ActiveGameNotification = {
+  type: NOTIFICATION_MESSAGE_TYPES.ACTIVE_GAME;
+  data: { gameId: number | null };
 };
 
 export type NotificationWebSocketMessage =
+  | ActiveGameNotification
   | ChallengeReceivedNotification
   | OpponentUnavailableNotification
   | ChallengeDeclinedNotification
+  | ChallengeCancelledNotification
   | MatchCreatedNotification
   | ChallengeErrorNotification;

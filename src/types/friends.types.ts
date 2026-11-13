@@ -23,7 +23,6 @@ export type PaginatedFriendsResponse = {
  */
 interface BaseFriendActionHandlers {
   onChallenge?: (friend: Friend) => void;
-  onMessage?: (friendId: number) => void;
 }
 
 export interface FriendActionHandlers extends BaseFriendActionHandlers {

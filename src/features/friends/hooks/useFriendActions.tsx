@@ -2,7 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { useSendFriendRequest } from "../suggestions/hooks/useSendFriendRequest";
 import { useRemoveFriend } from "./useRemoveFriend";
 import type { Friend } from "@/types";
-import { ROUTES } from "@/constants/routes";
+import {
+  getChallengeFriendRoute,
+  type PlaySetupState,
+} from "@/features/create-game/utils/setupRoute";
 
 export const useFriendActions = () => {
   const navigate = useNavigate();
@@ -12,28 +15,23 @@ export const useFriendActions = () => {
   const onChallenge = (friend: Friend) => {
     const { username, avatarUrl, blitzRating, bulletRating, rapidRating, id } =
       friend;
-    navigate(ROUTES.PLAY, {
-      state: {
-        section: "friend-invite-options",
-        selectedFriend: {
-          id,
-          username,
-          avatarUrl,
-          blitzRating,
-          bulletRating,
-          rapidRating,
-        },
+    // The friend in the state shows the form without a fetch; the URL alone
+    // (?section=friends&friend=12) works too, e.g. after a reload
+    const state: PlaySetupState = {
+      selectedFriend: {
+        id,
+        username,
+        avatarUrl,
+        blitzRating,
+        bulletRating,
+        rapidRating,
       },
-    });
+    };
+    navigate(getChallengeFriendRoute(id), { state });
   };
 
   const onRemove = (id: number) => {
     removeFriendMutation.mutate(id);
-  };
-
-  const onMessage = (id: number) => {
-    console.log("id", id);
-    // TODO: Navigate to messages when messaging feature is implemented
   };
 
   const onAddFriend = (id: number) => {
@@ -43,7 +41,6 @@ export const useFriendActions = () => {
   return {
     onChallenge,
     onRemove,
-    onMessage,
     onAddFriend,
   };
 };

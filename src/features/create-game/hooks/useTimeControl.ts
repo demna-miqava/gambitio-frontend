@@ -3,13 +3,15 @@ import type { TimeControlType } from "@/types";
 
 export interface TimeControl {
   format: TimeControlType;
+  /** Starting time per side, in seconds */
   time: number;
+  /** Increment per move, in seconds */
   increment: number;
 }
 
 /**
- * Hook to manage time control selection
- * Combines format (bullet/blitz/rapid), time (in minutes), and increment (in seconds)
+ * Hook to manage time control selection: format (bullet/blitz/rapid),
+ * starting time and increment, both in seconds.
  */
 export const useTimeControl = (
   initialFormat: TimeControlType = "blitz",
@@ -29,11 +31,5 @@ export const useTimeControl = (
     []
   );
 
-  return {
-    timeControl,
-    updateTimeControl,
-    format: timeControl.format,
-    time: timeControl.time,
-    increment: timeControl.increment,
-  };
+  return { timeControl, updateTimeControl };
 };

@@ -9,7 +9,7 @@ type GameTableSkeletonProps = {
 // Individual skeleton components for each column type
 const TimeControlSkeleton = () => (
   <div className="flex flex-col items-center gap-1">
-    <Skeleton className="h-6 w-6 rounded" />
+    <Skeleton className="size-6 rounded" />
     <Skeleton className="h-3 w-12" />
   </div>
 );

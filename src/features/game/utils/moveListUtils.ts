@@ -31,29 +31,3 @@ export function groupMovesIntoPairs<T>(moves: T[]): MovePair<T>[] {
 
   return pairs;
 }
-
-/**
- * Groups moves into pairs with index tracking
- * Useful when you need to track the original index of each move
- */
-export interface IndexedMovePair<T> {
-  moveNumber: number;
-  white: { item: T; index: number } | null;
-  black: { item: T; index: number } | null;
-}
-
-export function groupMovesIntoPairsWithIndex<T>(
-  moves: T[]
-): IndexedMovePair<T>[] {
-  const pairs: IndexedMovePair<T>[] = [];
-
-  for (let i = 0; i < moves.length; i += 2) {
-    pairs.push({
-      moveNumber: getMoveNumber(i),
-      white: moves[i] ? { item: moves[i], index: i } : null,
-      black: moves[i + 1] ? { item: moves[i + 1], index: i + 1 } : null,
-    });
-  }
-
-  return pairs;
-}

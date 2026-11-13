@@ -1,16 +1,8 @@
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { SettingRadioGroup } from "../components/SettingRadioGroup";
-import { SettingsSubmitButton } from "../components/SettingsSubmitButton";
 import { useSettings } from "../SettingsContext";
 import type { MessagesAllowedFrom } from "../types";
-import { Form } from "@/components/ui/form";
 
-type SocialSettingsFormValues = {
-  messagesAllowedFrom: MessagesAllowedFrom;
-};
-
-const privacyOptions = [
+const privacyOptions: { value: MessagesAllowedFrom; label: string }[] = [
   { value: "everyone", label: "Everyone" },
   { value: "only_friends", label: "Only friends" },
   { value: "nobody", label: "Nobody" },
@@ -19,40 +11,17 @@ const privacyOptions = [
 export const SocialSettingsForm = () => {
   const { settings, updateSettings } = useSettings();
 
-  const form = useForm<SocialSettingsFormValues>({
-    defaultValues: {
-      messagesAllowedFrom: "everyone",
-    },
-  });
-
-  useEffect(() => {
-    if (settings) {
-      form.reset({
-        messagesAllowedFrom: settings.messagesAllowedFrom,
-      });
-    }
-  }, [settings, form]);
-
-  const onSubmit = (data: SocialSettingsFormValues) => {
-    updateSettings.mutate(data);
-  };
-
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-6">
-          <SettingRadioGroup
-            control={form.control}
-            name="messagesAllowedFrom"
-            label="Send and receive direct messages"
-            description="Allow other users to send you private messages"
-            options={privacyOptions}
-            id="messages-privacy"
-          />
-        </div>
-
-        <SettingsSubmitButton isLoading={updateSettings.isPending} />
-      </form>
-    </Form>
+    <SettingRadioGroup
+      id="messages-privacy"
+      label="Who can send you direct messages"
+      description="Choose who can start a private conversation with you"
+      options={privacyOptions}
+      value={settings?.messagesAllowedFrom ?? "everyone"}
+      disabled={!settings}
+      onValueChange={(value) =>
+        updateSettings.mutate({ messagesAllowedFrom: value as MessagesAllowedFrom })
+      }
+    />
   );
 };

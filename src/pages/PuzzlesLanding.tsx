@@ -1,19 +1,22 @@
 import { GameLayout } from "@/features/game/components/GameLayout";
 import { LandingBoard } from "@/features/puzzles/components/layout/LandingBoard";
 import { PuzzleModesList } from "@/features/puzzles/components/selectors/PuzzleModesList";
+import { PageHeader } from "@/components/PageHeader";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const PuzzlesLanding = () => {
+  useDocumentTitle("Puzzles");
+
   return (
     <GameLayout
+      boardIsDecorative
       board={<LandingBoard />}
       sidebar={
-        <div className="flex h-full flex-col gap-6 border p-4 bg-sidebar rounded-xl border-border/60">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold tracking-tight">Puzzles</h2>
-            <p className="text-sm text-muted-foreground">
-              Improve your chess tactics with our puzzle modes.
-            </p>
-          </div>
+        <div className="flex flex-col gap-6 rounded-2xl border border-border/70 bg-card p-5">
+          <PageHeader
+            title="Puzzles"
+            description="Find the best move. Pick a mode to start training your tactics."
+          />
 
           <PuzzleModesList />
         </div>

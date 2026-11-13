@@ -7,8 +7,15 @@ export type ProfileStatusResponse = {
   user: User | null;
 };
 
+// The app can't start without this call, so a hanging API should surface the
+// "Can't reach Gambitio" screen quickly instead of waiting on the browser's
+// own (minutes-long) timeout
+const PROFILE_STATUS_TIMEOUT_MS = 5000;
+
 export const getProfileStatus = async (): Promise<ProfileStatusResponse> => {
-  return apiRequest<ProfileStatusResponse>("get", "/users/status");
+  return apiRequest<ProfileStatusResponse>("get", "/users/status", {
+    timeout: PROFILE_STATUS_TIMEOUT_MS,
+  });
 };
 
 export type SyncProfileData = {
@@ -34,4 +41,9 @@ export const getUserFriends = async (userId: number, query: string): Promise<Pag
 
 export const getUserGames = async (userId: number, query: string): Promise<PaginatedGamesResponse> => {
   return apiRequest<PaginatedGamesResponse>("get", `/users/${userId}/games?${query}`);
+};
+
+/** Deletes the chess profile and the Clerk account (server-side). */
+export const deleteMyAccount = async (): Promise<void> => {
+  await apiRequest<void>("delete", "/users/me");
 };

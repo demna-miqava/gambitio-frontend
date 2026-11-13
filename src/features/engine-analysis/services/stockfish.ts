@@ -31,6 +31,10 @@ class StockfishService {
   private readyPromise: Promise<void> | null = null;
   private parser = new StockfishParser();
   private options: StockfishOptions = { ...DEFAULT_ENGINE_OPTIONS };
+  /** The search currently running (or queued), so searches never overlap */
+  private currentSearch: Promise<MultiPvResult> | null = null;
+  /** Bumped per request; a queued search that's been superseded is skipped */
+  private searchGeneration = 0;
 
   async init(options?: StockfishOptions): Promise<void> {
     if (this.worker && this.isReady) {
@@ -155,9 +159,35 @@ class StockfishService {
     return depth;
   }
 
-  async analyzeMultiPv(
+  /**
+   * Analyzes one position. A running search is stopped and allowed to emit
+   * its "bestmove" first; otherwise its late output would be read as this
+   * position's result (wrong lines, wrong eval sign).
+   */
+  analyzeMultiPv(fen: string, numLines: number = 3): Promise<MultiPvResult> {
+    const generation = ++this.searchGeneration;
+    const previous = this.currentSearch;
+    const search = (async () => {
+      if (previous) {
+        this.stop();
+        await previous.catch(() => undefined);
+      }
+      // A newer request arrived while we waited: don't start a search for it
+      if (generation !== this.searchGeneration) {
+        return { lines: [], depth: 0 };
+      }
+      return this.runSearch(fen, numLines);
+    })();
+    this.currentSearch = search;
+    void search.finally(() => {
+      if (this.currentSearch === search) this.currentSearch = null;
+    }).catch(() => undefined);
+    return search;
+  }
+
+  private async runSearch(
     fen: string,
-    numLines: number = 3
+    numLines: number
   ): Promise<MultiPvResult> {
     if (!this.isReady) await this.init();
     // Set MultiPV option
@@ -178,7 +208,7 @@ class StockfishService {
       let maxDepth = 0;
 
       const handler = (message: string) => {
-        const parsed = this.parser.parseInfo(message, targetDepth);
+        const parsed = this.parser.parseInfo(message);
         if (parsed) {
           const depth = this.updateLine(lines, parsed, isBlackTurn);
           if (depth > maxDepth) maxDepth = depth;
@@ -213,6 +243,8 @@ class StockfishService {
   }
 
   destroy(): void {
+    this.searchGeneration++;
+    this.currentSearch = null;
     if (this.worker) {
       this.send("quit");
       this.worker.terminate();

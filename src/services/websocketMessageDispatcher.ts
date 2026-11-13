@@ -1,17 +1,15 @@
-type WebSocketMessage = { type: string; [key: string]: unknown };
+export type WebSocketMessage = { type: string; [key: string]: unknown };
 
 type MessageHandler<T extends WebSocketMessage = WebSocketMessage> = (
   message: T
 ) => void;
 
 /**
- * Centralized WebSocket message dispatcher.
- * Provides pub/sub pattern for WebSocket messages across the application.
- *
- * This dispatcher is used by both game and notification WebSocket connections
- * to distribute messages to multiple subscribers without tight coupling.
+ * Pub/sub for one WebSocket connection's messages. Each socket gets its own
+ * instance so message types that exist on several sockets (e.g. "error",
+ * "match_found") only reach the subscribers of the socket they came from.
  */
-class WebSocketMessageDispatcher {
+export class WebSocketMessageDispatcher {
   private handlers = new Map<string, Set<MessageHandler>>();
 
   subscribe<T extends WebSocketMessage>(
@@ -42,4 +40,8 @@ class WebSocketMessageDispatcher {
   }
 }
 
-export const messageDispatcher = new WebSocketMessageDispatcher();
+/** Messages from the live game socket */
+export const gameMessages = new WebSocketMessageDispatcher();
+
+/** Messages from the notifications socket */
+export const notificationMessages = new WebSocketMessageDispatcher();

@@ -1,28 +1,35 @@
-import Clock from "@/features/game/components/Clock";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
+import { AnalysisPromotion } from "./AnalysisPromotion";
+import { BotAvatar } from "@/features/play-bots/components/BotAvatar";
+import { useArchiveGame } from "../contexts/ArchiveGameContext";
+import { boardLabel } from "../utils/announce";
 
 interface ArchiveGameBoardProps {
   whitePlayer: {
     username: string;
     rating: number;
-    avatarUrl?: string;
+    avatarUrl?: string | null;
   };
   blackPlayer: {
     username: string;
     rating: number;
-    avatarUrl?: string;
+    avatarUrl?: string | null;
   };
-  timeControl: number;
+  /** Kept for callers; finished games don't show clocks */
+  timeControl?: number;
+  /** The computer's side in a bot game (gets a bot avatar) */
+  botSide?: "white" | "black";
 }
 
 const ArchiveGameBoard = ({
   whitePlayer,
   blackPlayer,
-  timeControl,
+  botSide,
 }: ArchiveGameBoardProps) => {
   const { boardRef, color } = useChessBoardContext();
+  const { currentNode } = useArchiveGame();
 
   const topPlayer = color === "white" ? blackPlayer : whitePlayer;
   const bottomPlayer = color === "white" ? whitePlayer : blackPlayer;
@@ -30,10 +37,13 @@ const ArchiveGameBoard = ({
   return (
     <BoardLayout
       boardRef={boardRef}
+      boardLabel={boardLabel(currentNode)}
       topPlayer={{
         name: topPlayer.username,
         startingRating: topPlayer.rating,
-        avatar: (
+        avatar: botSide === (color === "white" ? "black" : "white") ? (
+          <BotAvatar rating={topPlayer.rating} className="size-8 rounded-lg" />
+        ) : (
           <PlayerAvatar
             username={topPlayer.username}
             avatarUrl={topPlayer.avatarUrl}
@@ -45,7 +55,9 @@ const ArchiveGameBoard = ({
       bottomPlayer={{
         name: bottomPlayer.username,
         startingRating: bottomPlayer.rating,
-        avatar: (
+        avatar: botSide === color ? (
+          <BotAvatar rating={bottomPlayer.rating} className="size-8 rounded-lg" />
+        ) : (
           <PlayerAvatar
             username={bottomPlayer.username}
             avatarUrl={bottomPlayer.avatarUrl}
@@ -54,13 +66,9 @@ const ArchiveGameBoard = ({
           />
         ),
       }}
-      topPlayerClock={
-        <Clock startingTime={timeControl} isActive={false} gameEnded={true} />
-      }
-      bottomPlayerClock={
-        <Clock startingTime={timeControl} isActive={false} gameEnded={true} />
-      }
-    />
+    >
+      <AnalysisPromotion />
+    </BoardLayout>
   );
 };
 

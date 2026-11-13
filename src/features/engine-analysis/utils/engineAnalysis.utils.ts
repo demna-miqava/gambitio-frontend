@@ -26,7 +26,8 @@ export const formatScore = (
     return relativeMate > 0 ? `M${relativeMate}` : `-M${Math.abs(relativeMate)}`;
   }
 
-  const relativeScore = (line.score * multiplier) / 100;
+  // Round first so a small negative score shows "0.0", not "-0.0"
+  const relativeScore = Math.round(line.score * multiplier / 10) / 10 || 0;
   const sign = relativeScore > 0 ? "+" : "";
   return `${sign}${relativeScore.toFixed(1)}`;
 };
@@ -35,21 +36,16 @@ export const formatScore = (
  * Calculate white's percentage for evaluation bar (5-95 to always show both sides)
  */
 export const getWhitePercentage = (line: EvaluationLine): number => {
-  const { minPercentage, maxPercentage, pawnCap, pawnScale } = EVAL_BAR;
+  const { minPercentage, maxPercentage, winChanceK } = EVAL_BAR;
 
   if (line.mate !== undefined) {
     // If a mate is found, the bar should be fully one-sided
     return line.mate > 0 ? 100 : 0;
   }
 
-  const pawnScore = line.score / 100;
-
-  // Beyond +/- cap pawns, clamp to min/max
-  if (pawnScore >= pawnCap) return maxPercentage;
-  if (pawnScore <= -pawnCap) return minPercentage;
-
-  // Scale: 0 = 50%, +cap = max, -cap = min
-  const percentage = 50 + pawnScore * pawnScale;
+  // White's winning chances, -1..1, then 0..100%
+  const winChance = 2 / (1 + Math.exp(-winChanceK * line.score)) - 1;
+  const percentage = 50 + 50 * winChance;
   return Math.max(minPercentage, Math.min(maxPercentage, percentage));
 };
 

@@ -71,3 +71,11 @@ export const BOTS: Bot[] = [
 export const getBotById = (id: string): Bot | undefined => {
   return BOTS.find((bot) => bot.id === id);
 };
+
+/** The bot closest to a rating (the player's blitz rating by default) */
+export const closestBot = (rating?: number): Bot =>
+  rating
+    ? BOTS.reduce((best, bot) =>
+        Math.abs(bot.rating - rating) < Math.abs(best.rating - rating) ? bot : best
+      )
+    : BOTS[2];

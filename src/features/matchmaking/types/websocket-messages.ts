@@ -14,12 +14,13 @@ export type SearchingMessage = {
 export type MatchFoundMessage = {
   type: MATCHMAKING_MESSAGE_TYPES.MATCH_FOUND;
   data: {
-    gameId: string;
+    gameId: number;
     color: PlayerColor;
+    opponentId: number;
     opponentRating: number;
     opponentUsername: string;
     time: number;
-    increment: number | null;
+    increment: number;
     rating: number;
   };
 };
@@ -28,9 +29,7 @@ export type MatchmakingErrorMessage = {
   type: MATCHMAKING_MESSAGE_TYPES.ERROR;
   data: {
     message: string;
-    time: number;
-    increment: number | null;
-    rating: number;
+    code?: string;
   };
 };
 

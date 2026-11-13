@@ -1,7 +1,7 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bot } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { New } from "./sections/New";
-import { Bots } from "./sections/Bots";
 import { Friends } from "./sections/Friends";
 import { Custom } from "./sections/Custom";
 import { FriendInviteOptions } from "./sections/FriendInviteOptions";
@@ -9,39 +9,99 @@ import {
   useGameSetup,
   type GameSection,
 } from "@/features/create-game/GameSetupContext";
-import { Tabs } from "./Tabs";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/PageHeader";
+import { ROUTES } from "@/constants/routes";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
-const SECTIONS = (activeSection: GameSection) => {
-  switch (activeSection) {
-    case "new":
-      return <New />;
-    case "bots":
-      return <Bots />;
-    case "friends":
-      return <Friends />;
-    case "custom":
-      return <Custom />;
-    case "friend-invite-options":
-      return <FriendInviteOptions />;
-    default:
-      return <New />;
-  }
+const TITLES: Record<GameSection, string> = {
+  new: "Play online",
+  friends: "Play a friend",
+  custom: "Custom time",
+  "friend-invite-options": "Send a challenge",
 };
 
+/** Same labels as the sidebar's Play links */
+const MODES: { section: "new" | "friends"; label: string }[] = [
+  { section: "new", label: "Play online" },
+  { section: "friends", label: "Play a friend" },
+];
+
+const PlayComputerLink = () => (
+  <Link
+    to={ROUTES.PLAY_BOTS}
+    className="flex items-center gap-3 rounded-xl border border-border/70 p-3 text-sm transition-colors hover:border-primary/40 hover:bg-accent/60"
+  >
+    <span className="flex size-9 items-center justify-center rounded-lg bg-brand-soft text-primary">
+      <Bot className="size-4" aria-hidden="true" />
+    </span>
+    <span>
+      <span className="block font-medium">Play the computer</span>
+      <span className="block text-xs text-muted-foreground">
+        No waiting, any strength
+      </span>
+    </span>
+  </Link>
+);
+
 export const CreateGameSidebar = () => {
-  const { activeSection, canGoBack, goBack } = useGameSetup();
+  const { activeSection, setActiveSection, canGoBack, goBack, isSearching } =
+    useGameSetup();
+  const isTopLevel = activeSection === "new" || activeSection === "friends";
+  useDocumentTitle(TITLES[activeSection]);
+
+  if (!isTopLevel) {
+    return (
+      <aside className="flex w-full flex-col gap-5 rounded-2xl border border-border/70 bg-card p-4 sm:p-5">
+        <div className="space-y-2">
+          {canGoBack && (
+            <Button size="lg"
+              variant="ghost"
+              onClick={goBack}
+              className="-ml-3 text-muted-foreground"
+            >
+              <ArrowLeft aria-hidden="true" /> Back
+            </Button>
+          )}
+          <PageHeader title={TITLES[activeSection]} />
+        </div>
+        {activeSection === "custom" ? <Custom /> : <FriendInviteOptions />}
+      </aside>
+    );
+  }
 
   return (
-    <aside className="flex max-h-[calc(100vh-4rem)] w-full flex-col overflow-hidden rounded-xl border border-border/60 bg-sidebar text-sidebar-foreground p-4 shadow-sm">
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <Tabs />
-        {canGoBack && (
-          <button type="button" onClick={goBack} className="cursor-pointer">
-            <ArrowLeft size={20} />
-          </button>
+    <aside className="flex w-full flex-col gap-5 rounded-2xl border border-border/70 bg-card p-4 sm:p-5">
+      <PageHeader
+        title="Play"
+        description="Find an opponent online or challenge a friend."
+      />
+
+      <Tabs
+        value={activeSection}
+        onValueChange={(value) => setActiveSection(value as GameSection)}
+        className="gap-5"
+      >
+        {/* Switching while searching would stop the search */}
+        {!isSearching && (
+          <TabsList aria-label="Opponent" className="grid h-11 w-full grid-cols-2">
+            {MODES.map(({ section, label }) => (
+              <TabsTrigger key={section} value={section} className="relative touch-target">
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
         )}
-        {SECTIONS(activeSection)}
-      </div>
+        <TabsContent value="new">
+          <New />
+        </TabsContent>
+        <TabsContent value="friends">
+          <Friends />
+        </TabsContent>
+      </Tabs>
+
+      {!isSearching && <PlayComputerLink />}
     </aside>
   );
 };

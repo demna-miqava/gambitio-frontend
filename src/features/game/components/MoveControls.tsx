@@ -8,16 +8,24 @@ import {
 import { useGameNavigation } from "@/features/game/contexts/GameNavigationContext";
 import { BaseMoveControls, type MoveControl } from "./BaseMoveControls";
 
-const MoveControls = () => {
-  const {
-    goToFirstMove,
-    goToPreviousMove,
-    goToNextMove,
-    goToLastMove,
-    isAtStart,
-    isAtEnd,
-  } = useGameNavigation();
+interface MoveNavigationControlsProps {
+  goToFirstMove: () => void;
+  goToPreviousMove: () => void;
+  goToNextMove: () => void;
+  goToLastMove: () => void;
+  isAtStart: boolean;
+  isAtEnd: boolean;
+}
 
+/** First / previous / next / last buttons, e.g. fed by useMoveNavigation. */
+export const MoveNavigationControls = ({
+  goToFirstMove,
+  goToPreviousMove,
+  goToNextMove,
+  goToLastMove,
+  isAtStart,
+  isAtEnd,
+}: MoveNavigationControlsProps) => {
   const controls = useMemo<MoveControl[]>(
     () => [
       {
@@ -54,5 +62,8 @@ const MoveControls = () => {
 
   return <BaseMoveControls controls={controls} />;
 };
+
+/** The controls for a page inside GameNavigationProvider. */
+const MoveControls = () => <MoveNavigationControls {...useGameNavigation()} />;
 
 export default MoveControls;

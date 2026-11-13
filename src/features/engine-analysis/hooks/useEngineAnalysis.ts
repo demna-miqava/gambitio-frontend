@@ -5,6 +5,8 @@ import { ANALYSIS_DEFAULTS } from "@/features/engine-analysis/constants";
 import { useAnalysis } from "../contexts/EngineAnalysisContext";
 
 interface UseEngineAnalysisOptions {
+  /** Position to analyze; defaults to the board's current position */
+  fen?: string;
   numLines?: number;
   depth?: number;
   moveTime?: number;
@@ -12,6 +14,7 @@ interface UseEngineAnalysisOptions {
 }
 
 export function useEngineAnalysis({
+  fen,
   numLines = ANALYSIS_DEFAULTS.numLines,
   depth = ANALYSIS_DEFAULTS.depth,
   moveTime = ANALYSIS_DEFAULTS.moveTime,
@@ -75,7 +78,7 @@ export function useEngineAnalysis({
     [analyze, stop, debounceMs, setAnalysis]
   );
 
-  const FEN = chessRef.current?.fen();
+  const FEN = fen ?? chessRef.current?.fen();
   useEffect(() => {
     if (!isReady || !FEN) return;
     debouncedAnalyze(FEN);

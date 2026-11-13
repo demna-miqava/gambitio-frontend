@@ -1,99 +1,121 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Move } from "chess.js";
-import type { AnalysisMoveNode, AnalysisPosition } from "../types/analysis.types";
-import * as TreeUtils from "../utils/analysisTree";
+import type { AnalysisNode, NodePath } from "../types/analysis.types";
+import * as Tree from "../utils/analysisTree";
+import { parsePgn, toPgn } from "../utils/pgn";
 
-interface UseAnalysisTreeOptions {
-  initialMoves?: Move[];
-  extendMainLine?: boolean;
+const STORAGE_PREFIX = "gambitio:analysis:";
+
+function parseOrEmpty(pgn: string | undefined) {
+  if (!pgn) return Tree.createRoot();
+  try {
+    return parsePgn(pgn).root;
+  } catch {
+    return Tree.createRoot();
+  }
 }
 
-export const useAnalysisTree = ({
-  initialMoves = [],
-  extendMainLine = false,
-}: UseAnalysisTreeOptions = {}) => {
-  const [moves, setMoves] = useState<AnalysisMoveNode[]>(() =>
-    TreeUtils.createTreeFromMoves(initialMoves)
-  );
+function loadInitialTree(pgn: string | undefined, storageKey: string | undefined) {
+  const game = parseOrEmpty(pgn);
+  if (!storageKey) return game;
+  try {
+    const saved = localStorage.getItem(STORAGE_PREFIX + storageKey);
+    if (!saved) return game;
+    const restored = parsePgn(saved).root;
+    if (restored.fen !== game.fen) return game;
+    // A promoted variation may now be the saved main line, so "game move"
+    // means "matches the real game", not "is on the saved main line".
+    // With no game (analysis board) every saved move is analysis.
+    return Tree.markGameMoves(restored, game);
+  } catch {
+    // Corrupt or outdated save: fall back to the game itself
+    return game;
+  }
+}
 
-  const [currentPosition, setCurrentPosition] = useState<AnalysisPosition>(
-    TreeUtils.createInitialPosition
-  );
+interface UseAnalysisTreeOptions {
+  /** The game (may contain variations) */
+  pgn?: string;
+  /** Saves the analysis in localStorage under this key and restores it on load */
+  storageKey?: string;
+}
 
-  const originalMoves = useMemo(
-    () => initialMoves.map((m) => m.san),
-    [initialMoves]
-  );
+/**
+ * State for an analysis session: the move tree and the current path.
+ * Edits are immutable, so undo is just keeping the previous root.
+ */
+export const useAnalysisTree = ({ pgn, storageKey }: UseAnalysisTreeOptions = {}) => {
+  const [root, setRoot] = useState<AnalysisNode>(() => loadInitialTree(pgn, storageKey));
+  const [path, setPath] = useState<NodePath>([]);
+  const lastSaved = useRef<AnalysisNode | null>(null);
 
-  // Derived state (memoized)
-  const isInBranch = useMemo(
-    () => TreeUtils.isInBranch(currentPosition),
-    [currentPosition]
-  );
-  const isAtStart = useMemo(
-    () => TreeUtils.isAtStart(currentPosition),
-    [currentPosition]
-  );
-  const isAtEnd = useMemo(
-    () => TreeUtils.isAtEnd(moves, currentPosition),
-    [moves, currentPosition]
-  );
+  // Persist after edits (not on navigation). Nothing to save means no entry.
+  useEffect(() => {
+    if (!storageKey || lastSaved.current === root) return;
+    lastSaved.current = root;
+    const key = STORAGE_PREFIX + storageKey;
+    try {
+      if (Tree.hasAnalysis(root) || !pgn) localStorage.setItem(key, toPgn(root));
+      else localStorage.removeItem(key);
+    } catch {
+      // Storage full or disabled: analysis just isn't saved
+    }
+  }, [root, storageKey, pgn]);
 
-  // Add a move to the tree
+  const nodes = useMemo(() => Tree.nodesAlong(root, path), [root, path]);
+  const currentNode = nodes[nodes.length - 1]!;
+
   const addMove = useCallback(
     (move: Move) => {
-      const result = TreeUtils.addMoveToTree(
-        moves,
-        originalMoves,
-        currentPosition,
-        move,
-        { extendMainLine }
-      );
-
-      if (result.moves !== moves) {
-        setMoves(result.moves);
-      }
-      setCurrentPosition(result.position);
-      return result;
+      const result = Tree.addMove(root, path, move);
+      setRoot(result.root);
+      setPath(result.path);
+      return result.path;
     },
-    [moves, originalMoves, currentPosition, extendMainLine]
+    [root, path]
   );
 
-  // Reset tree with new moves
-  const reset = useCallback((newMoves: Move[] = []) => {
-    setMoves(TreeUtils.createTreeFromMoves(newMoves));
-    setCurrentPosition(TreeUtils.createInitialPosition());
+  /** Removes the variation the current move belongs to (from the point it branched off). */
+  const deleteVariation = useCallback(() => {
+    const mainPath = Tree.mainLineAncestor(root, path);
+    if (mainPath.length === path.length) return null;
+    const branchPath = path.slice(0, mainPath.length + 1);
+    const previous = root;
+    setRoot(Tree.deleteNode(root, branchPath));
+    setPath(mainPath);
+    return previous;
+  }, [root, path]);
+
+  const promoteVariation = useCallback(() => {
+    setRoot(Tree.promoteVariation(root, path));
+  }, [root, path]);
+
+  /** Back to the original game. Returns the previous tree so the caller can offer undo. */
+  const resetAnalysis = useCallback(() => {
+    const previous = root;
+    const cleared = Tree.clearAnalysis(root, path);
+    setRoot(cleared.root);
+    setPath(cleared.path);
+    return previous;
+  }, [root, path]);
+
+  const restore = useCallback((previous: AnalysisNode, previousPath: NodePath) => {
+    setRoot(previous);
+    setPath(previousPath);
   }, []);
 
-  // Clear all branches, keeping only main line
-  const clearBranches = useCallback(() => {
-    setMoves(TreeUtils.clearAllBranches(moves));
-    // If currently in a branch, return to main line
-    if (currentPosition.branch) {
-      setCurrentPosition(TreeUtils.exitBranchPosition(currentPosition));
-    }
-  }, [moves, currentPosition]);
-
-  // Check if there are any branches
-  const hasBranches = useMemo(
-    () => moves.some((node) => node.branches.length > 0),
-    [moves]
-  );
-
   return {
-    // State
-    moves,
-    currentPosition,
-    setCurrentPosition,
-    originalMoves,
-    isInBranch,
-    isAtStart,
-    isAtEnd,
-    hasBranches,
-
-    // Actions
+    root,
+    path,
+    setPath,
+    currentNode,
+    nodes,
+    isInVariation: !Tree.isMainLine(root, path),
+    hasAnalysis: Tree.hasAnalysis(root),
     addMove,
-    reset,
-    clearBranches,
+    deleteVariation,
+    promoteVariation,
+    resetAnalysis,
+    restore,
   };
 };

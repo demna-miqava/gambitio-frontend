@@ -1,29 +1,31 @@
 import { Route, Routes } from "react-router-dom";
-import { lazy } from "react";
 import { ROUTES } from "@/constants/routes";
 import { AppLayout } from "@/components/AppLayout";
-// Protected
-const Home = lazy(() => import("@/pages/Home"));
-const Settings = lazy(() => import("@/pages/Settings"));
-const Play = lazy(() => import("@/pages/CreateGame"));
-const PlayBots = lazy(() => import("@/pages/PlayBots"));
-const CurrentGame = lazy(() => import("@/pages/CurrentGame"));
-const ArchiveGame = lazy(() => import("@/pages/ArchiveGame"));
-const PuzzlesLanding = lazy(() => import("@/pages/PuzzlesLanding"));
-const PuzzleModePage = lazy(() => import("@/pages/PuzzleModePage"));
-const ImportGame = lazy(() => import("@/pages/ImportGame"));
-const AnalysisBoard = lazy(() => import("@/pages/AnalysisBoard"));
-// Profile
-const Profile = lazy(() => import("@/pages/Profile"));
-const ProfileStats = lazy(() => import("@/pages/ProfileStats"));
-const ProfileOverview = lazy(() => import("@/pages/ProfileOverview"));
-const ProfileGames = lazy(() => import("@/pages/ProfileGames"));
-const ProfileFriends = lazy(() => import("@/pages/ProfileFriends"));
-// Public
-const SignIn = lazy(() => import("@/pages/SignIn"));
-const SignUp = lazy(() => import("@/pages/SignUp"));
-const IntroPage = lazy(() => import("@/pages/IntroPage"));
-const ProfileSetup = lazy(() => import("@/pages/ProfileSetup"));
+import {
+  AnalysisBoard,
+  ArchiveGame,
+  BotGame,
+  CurrentGame,
+  Home,
+  ImportGame,
+  IntroPage,
+  Leaderboard,
+  NotFoundPage,
+  Play,
+  PlayBots,
+  Profile,
+  ProfileFriends,
+  ProfileGames,
+  ProfileOverview,
+  ProfileSetup,
+  ProfileStats,
+  PuzzleModePage,
+  PuzzlesLanding,
+  Settings,
+  SignIn,
+  SignUp,
+  Watch,
+} from "./pages";
 
 export const AppRoutes = () => {
   return (
@@ -38,13 +40,18 @@ export const AppRoutes = () => {
         </Route>
         <Route path={ROUTES.PLAY} element={<Play />} />
         <Route path={ROUTES.PLAY_BOTS} element={<PlayBots />} />
+        <Route path={ROUTES.BOT_GAME} element={<BotGame />} />
         <Route path={ROUTES.GAME} element={<CurrentGame />} />
         <Route path={ROUTES.ARCHIVE_GAME} element={<ArchiveGame />} />
+        <Route path={ROUTES.WATCH} element={<Watch />} />
         <Route path={ROUTES.SETTINGS} element={<Settings />} />
         <Route path={ROUTES.PUZZLES} element={<PuzzlesLanding />} />
         <Route path={ROUTES.PUZZLE_MODE} element={<PuzzleModePage />} />
         <Route path={ROUTES.TOOLS.IMPORT_GAME} element={<ImportGame />} />
         <Route path={ROUTES.TOOLS.ANALYSIS_BOARD} element={<AnalysisBoard />} />
+        <Route path={ROUTES.LEADERBOARD} element={<Leaderboard />} />
+        {/* Signed-out users never get here: AuthGuard sends them to sign in */}
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
       <Route path={ROUTES.LANDING} element={<IntroPage />} />
       <Route path={ROUTES.AUTH.SIGN_IN} element={<SignIn />} />

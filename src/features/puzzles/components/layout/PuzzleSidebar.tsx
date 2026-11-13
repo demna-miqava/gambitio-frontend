@@ -6,7 +6,8 @@ import { PuzzleInfiniteSidebar } from "../modes/PuzzleInfiniteSidebar";
 import { PuzzleGameOverDialog } from "../shared/PuzzleGameOverDialog";
 
 export const PuzzleSidebar = () => {
-  const { sessionStats, restart, mode, isGameOver } = usePuzzle();
+  const context = usePuzzle();
+  const { sessionStats, restart, mode, isGameOver } = context;
   const [showGameOverDialog, setShowGameOverDialog] = useState(false);
 
   const isPuzzleGameOver =
@@ -28,15 +29,18 @@ export const PuzzleSidebar = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-sm">
+    <div className="flex w-full flex-col gap-3">
       {mode === "infinite" && <PuzzleInfiniteSidebar />}
       {mode === "rush" && <PuzzleRushSidebar />}
       {mode === "survival" && <PuzzleSurvivalSidebar />}
       {(mode === "rush" || mode === "survival") && (
         <PuzzleGameOverDialog
           isOpen={showGameOverDialog}
-          score={sessionStats.solved}
+          score={mode === "rush" ? context.score : sessionStats.solved}
           mode={mode}
+          {...(mode === "rush"
+            ? { reason: context.endReason, best: context.best, isNewBest: context.isNewBest }
+            : {})}
           onRestart={handleRestart}
           onClose={handleGameOverDialogClose}
         />

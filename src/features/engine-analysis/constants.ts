@@ -18,6 +18,12 @@ export const ANALYSIS_DEFAULTS = {
 export const EVAL_BAR = {
   minPercentage: 5,
   maxPercentage: 95,
-  pawnCap: 10,
-  pawnScale: 4.5, // each pawn shifts 4.5% from center
+  /**
+   * Steepness of the centipawn → win-chance curve (the constant Lichess
+   * uses). Small advantages move the bar gently, big ones level off instead
+   * of hitting a hard cap.
+   */
+  winChanceK: 0.00368208,
+  /** Shallower engine results swing too much to show once we have a value */
+  minDepth: 8,
 };

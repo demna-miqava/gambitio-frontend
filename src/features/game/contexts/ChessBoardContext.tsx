@@ -9,9 +9,17 @@ interface ChessBoardContextValue {
   chessRef: React.RefObject<Chess>;
   cgRef: React.RefObject<Api | null>;
   turn: PlayerColor | undefined;
+  /** Call after changing chessRef: records the side to move and move count */
   setTurn: (turn: PlayerColor) => void;
+  /** Half-moves played, as of the last setTurn (re-renders on resyncs) */
+  ply: number;
   color: PlayerColor;
   isArchiveMode: boolean;
+  /** True while the player can't move (game over, disconnected) */
+  inputLocked: boolean;
+  /** Same as inputLocked, readable from callbacks without re-subscribing */
+  inputLockedRef: React.RefObject<boolean>;
+  setInputLocked: (locked: boolean) => void;
 }
 
 const ChessBoardContext = createContext<ChessBoardContextValue | null>(null);
@@ -20,14 +28,17 @@ interface ChessBoardProviderProps {
   children: ReactNode;
   color: PlayerColor;
   isArchiveMode?: boolean;
+  /** Decorative board: nothing can be moved or selected */
+  viewOnly?: boolean;
 }
 
 export const ChessBoardProvider = ({
   children,
   color,
   isArchiveMode = false,
+  viewOnly = false,
 }: ChessBoardProviderProps) => {
-  const chessBoard = useChessBoard({ color });
+  const chessBoard = useChessBoard({ color, viewOnly });
 
   const value = useMemo<ChessBoardContextValue>(() => ({
     boardRef: chessBoard.boardRef,
@@ -35,16 +46,24 @@ export const ChessBoardProvider = ({
     cgRef: chessBoard.cgRef,
     turn: chessBoard.turn,
     setTurn: chessBoard.setTurn,
+    ply: chessBoard.ply,
     color,
     isArchiveMode,
+    inputLocked: chessBoard.inputLocked,
+    inputLockedRef: chessBoard.inputLockedRef,
+    setInputLocked: chessBoard.setInputLocked,
   }), [
     chessBoard.boardRef,
     chessBoard.chessRef,
     chessBoard.cgRef,
     chessBoard.turn,
     chessBoard.setTurn,
+    chessBoard.ply,
     color,
     isArchiveMode,
+    chessBoard.inputLocked,
+    chessBoard.inputLockedRef,
+    chessBoard.setInputLocked,
   ]);
 
   return (

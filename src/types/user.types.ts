@@ -8,6 +8,9 @@ export type User = {
   blitzRating: number;
   bulletRating: number;
   rapidRating: number;
+  /** Absent from responses of servers older than migration 008 */
+  puzzleRating?: number;
+  highestPuzzleRating?: number;
   createdAt: string;
 };
 
@@ -23,6 +26,7 @@ export type UserProfile = {
   rapidRating: number;
   blitzRating: number;
   bulletRating: number;
+  puzzleRating?: number;
   friendCount: number;
 };
 

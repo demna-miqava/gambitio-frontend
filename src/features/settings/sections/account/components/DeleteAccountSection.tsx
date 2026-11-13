@@ -22,26 +22,29 @@ export const DeleteAccountSection = () => {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold mb-2">Delete Account</h3>
+        <h3 className="mb-1 text-base font-semibold">Delete account</h3>
         <p className="text-sm text-muted-foreground">
-          Permanently delete your account and all associated data. This action
-          cannot be undone.
+          Permanently delete your account, profile, friends and settings. This
+          action cannot be undone.
         </p>
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="destructive">Delete Account</Button>
+          <Button variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive">
+            Delete account
+          </Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Are you sure?</DialogTitle>
+            <DialogTitle>Delete your account?</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. This will permanently delete your
-              account and remove all your data from our servers.
+              This action cannot be undone. Your account, profile, friends and
+              settings will be deleted. Games you played stay in your
+              opponents' history without your name.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
@@ -50,7 +53,7 @@ export const DeleteAccountSection = () => {
               onClick={handleDelete}
               disabled={isLoading}
             >
-              {isLoading ? "Deleting..." : "Delete Account"}
+              {isLoading ? "Deleting…" : "Delete account"}
             </Button>
           </DialogFooter>
         </DialogContent>

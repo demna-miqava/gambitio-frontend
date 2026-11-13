@@ -80,18 +80,12 @@ export const Pagination = ({
   };
 
   return (
-    <PaginationRoot className="mt-6">
+    <PaginationRoot>
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
-            onClick={(e) => {
-              e.preventDefault();
-              if (hasPreviousPage) onPageChange(currentPage - 1);
-            }}
-            aria-disabled={!hasPreviousPage}
-            className={
-              !hasPreviousPage ? "pointer-events-none opacity-50" : "cursor-pointer"
-            }
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={!hasPreviousPage}
           />
         </PaginationItem>
 
@@ -103,13 +97,9 @@ export const Pagination = ({
           ) : (
             <PaginationItem key={page}>
               <PaginationLink
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange(page);
-                }}
+                onClick={() => onPageChange(page)}
                 isActive={currentPage === page}
-                aria-current={currentPage === page ? "page" : undefined}
-                className="cursor-pointer"
+                aria-label={`Page ${page}`}
               >
                 {page}
               </PaginationLink>
@@ -119,14 +109,8 @@ export const Pagination = ({
 
         <PaginationItem>
           <PaginationNext
-            onClick={(e) => {
-              e.preventDefault();
-              if (hasNextPage) onPageChange(currentPage + 1);
-            }}
-            aria-disabled={!hasNextPage}
-            className={
-              !hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"
-            }
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={!hasNextPage}
           />
         </PaginationItem>
       </PaginationContent>

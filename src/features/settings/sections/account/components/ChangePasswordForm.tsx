@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/PasswordInput";
 import {
@@ -17,14 +18,14 @@ export const ChangePasswordForm = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <h3 className="text-lg font-semibold mb-4">Change Password</h3>
+          <h3 className="mb-4 text-base font-semibold">Change password</h3>
           <div className="space-y-4">
             <FormField
               control={form.control}
               name="currentPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Current Password</FormLabel>
+                  <FormLabel>Current password</FormLabel>
                   <FormControl>
                     <PasswordInput
                       placeholder="Enter current password"
@@ -41,7 +42,7 @@ export const ChangePasswordForm = () => {
               name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>New Password</FormLabel>
+                  <FormLabel>New password</FormLabel>
                   <FormControl>
                     <PasswordInput
                       placeholder="Enter new password"
@@ -58,7 +59,7 @@ export const ChangePasswordForm = () => {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm New Password</FormLabel>
+                  <FormLabel>Confirm new password</FormLabel>
                   <FormControl>
                     <PasswordInput
                       placeholder="Retype new password"
@@ -72,12 +73,10 @@ export const ChangePasswordForm = () => {
           </div>
         </div>
 
-        <Button
-          type="submit"
-          disabled={!form.formState.isValid || isLoading}
-          className="w-full sm:w-auto"
-        >
-          {isLoading ? "Updating..." : "Update Password"}
+        {/* Not disabled while invalid: submitting is what reveals what's missing */}
+        <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+          {isLoading && <Loader2 className="animate-spin" aria-hidden="true" />}
+          {isLoading ? "Changing password…" : "Change password"}
         </Button>
       </form>
     </Form>

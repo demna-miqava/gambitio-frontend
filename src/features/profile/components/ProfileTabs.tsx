@@ -8,10 +8,10 @@ const tabs = [
   { value: "friends", label: "Friends" },
 ];
 
+/** "/profile/12/stats" -> "stats"; anything else under the profile is Overview */
 const getValueFromPath = (pathname: string) => {
-  // Find the tab that matches the current pathname
-  const matchingTab = tabs.find((tab) => pathname.includes(tab.value));
-  return matchingTab?.value || "overview";
+  const segment = pathname.split("/").filter(Boolean)[2];
+  return tabs.some((tab) => tab.value === segment) ? segment! : "overview";
 };
 
 export const ProfileTabs = () => {
@@ -24,18 +24,18 @@ export const ProfileTabs = () => {
       value={getValueFromPath(location.pathname)}
       onValueChange={(value) => {
         const routeName = value === "overview" ? "" : `${value}`;
-        navigate(`/profile/${id}/${routeName}`);
+        navigate(`/profile/${id}/${routeName}`, { state: { preserveScroll: true } });
       }}
-      className="mt-8 w-full"
+      className="w-full"
     >
-      <TabsList className="flex w-full justify-start gap-3 overflow-x-auto bg-transparent p-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <TabsList className="scrollbar-none flex h-auto w-full justify-start gap-6 overflow-x-auto rounded-none border-b border-border/70 bg-transparent p-0">
         {tabs.map((tab) => (
           <TabsTrigger
             key={tab.value}
             value={tab.value}
-            className="flex-none w-[120px] rounded-lg border border-border bg-card px-3 py-2 text-[11px] font-medium leading-tight text-foreground transition hover:bg-accent data-[state=active]:border-success data-[state=active]:bg-success-bg"
+            className="relative h-11 flex-none rounded-none border-0 bg-transparent px-0.5 text-sm font-medium text-muted-foreground shadow-none transition-colors hover:text-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none dark:data-[state=active]:bg-transparent after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary after:opacity-0 data-[state=active]:after:opacity-100"
           >
-            <span className="block truncate">{tab.label}</span>
+            {tab.label}
           </TabsTrigger>
         ))}
       </TabsList>

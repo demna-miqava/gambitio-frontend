@@ -1,6 +1,10 @@
+import { Link } from "react-router-dom";
+import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/UserAvatar";
 import type { FriendRequest } from "@/features/friends/types";
+import { getProfileRoute } from "@/constants/routes";
+import { formatShortDate } from "@/lib/utils";
 
 interface FriendRequestCardProps {
   request: FriendRequest;
@@ -8,66 +12,69 @@ interface FriendRequestCardProps {
   onAccept?: (request: FriendRequest) => void;
   onDecline?: (request: FriendRequest) => void;
   onCancel?: (request: FriendRequest) => void;
+  disabled?: boolean;
 }
 
+/** One pending request: who, when, and Accept/Decline (or Cancel for yours). */
 export const FriendRequestCard = ({
   request,
   type,
   onAccept,
   onDecline,
   onCancel,
+  disabled,
 }: FriendRequestCardProps) => {
-  const displayUser =
-    type === "incoming"
-      ? {
-          username: request.senderUsername,
-          avatarUrl: request.senderAvatarUrl,
-        }
-      : {
-          username: request.receiverUsername,
-          avatarUrl: request.receiverAvatarUrl,
-        };
+  const incoming = type === "incoming";
+  const user = incoming
+    ? { id: request.senderId, username: request.senderUsername, avatarUrl: request.senderAvatarUrl }
+    : { id: request.receiverId, username: request.receiverUsername, avatarUrl: request.receiverAvatarUrl };
 
   return (
-    <div className="flex flex-col gap-2 p-4 border rounded-lg">
-      <div className="flex items-center gap-3">
-        <UserAvatar src={displayUser.avatarUrl} username={displayUser.username} />
-
-        <div>
-          <p className="font-medium">{displayUser.username}</p>
-          <p className="text-sm text-muted-foreground">
-            {type === "incoming"
-              ? new Date(request.createdAt).toLocaleDateString()
-              : `Sent ${new Date(request.createdAt).toLocaleDateString()}`}
+    <li className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-3">
+      <Link
+        to={getProfileRoute(Number(user.id))}
+        className="flex min-w-0 items-center gap-3 rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <UserAvatar src={user.avatarUrl} username={user.username} className="size-10 shrink-0" />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-foreground">{user.username}</p>
+          <p className="text-xs text-muted-foreground">
+            {incoming ? "Received" : "Sent"} {formatShortDate(request.createdAt)}
           </p>
         </div>
-      </div>
+      </Link>
 
-      <div className="flex gap-2 self-end">
-        {type === "incoming" ? (
-          <>
-            <Button
-              onClick={() => onDecline?.(request)}
-              className="px-4 py-2 border rounded-md hover:bg-accent"
-            >
-              Decline
-            </Button>
-            <Button
-              onClick={() => onAccept?.(request)}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-            >
-              Accept
-            </Button>
-          </>
-        ) : (
+      {incoming ? (
+        <div className="grid grid-cols-2 gap-2">
           <Button
-            onClick={() => onCancel?.(request)}
-            className="px-4 py-2 border rounded-md hover:bg-accent"
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            onClick={() => onDecline?.(request)}
+            aria-label={`Decline ${user.username}'s friend request`}
           >
-            Cancel
+            <X aria-hidden="true" /> Decline
           </Button>
-        )}
-      </div>
-    </div>
+          <Button
+            size="sm"
+            disabled={disabled}
+            onClick={() => onAccept?.(request)}
+            aria-label={`Accept ${user.username}'s friend request`}
+          >
+            <Check aria-hidden="true" /> Accept
+          </Button>
+        </div>
+      ) : (
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+          onClick={() => onCancel?.(request)}
+          aria-label={`Cancel your friend request to ${user.username}`}
+        >
+          Cancel request
+        </Button>
+      )}
+    </li>
   );
 };

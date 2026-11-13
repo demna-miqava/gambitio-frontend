@@ -1,15 +1,18 @@
 import { SettingsContainer } from "@/features/settings/SettingsContainer";
-import { Settings as SettingsIcon } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
+import { PageContainer } from "@/components/PageContainer";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const Settings = () => {
+  useDocumentTitle("Settings");
   return (
-    <div className="mx-auto max-w-8xl p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <SettingsIcon />
-        <span className="text-2xl font-bold">Settings</span>
-      </div>
+    <PageContainer className="space-y-6 sm:space-y-8">
+      <PageHeader
+        title="Settings"
+        description="Changes are saved as soon as you make them."
+      />
       <SettingsContainer />
-    </div>
+    </PageContainer>
   );
 };
 
