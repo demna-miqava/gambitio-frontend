@@ -10,6 +10,7 @@ import { useLiveGame } from "../contexts/LiveGameContext";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
 import { PromotionSelector } from "@/features/game/components/PromotionSelector";
 import { ConnectionBanner } from "./ConnectionBanner";
+import { useShownLine } from "@/features/game/hooks/useShownLine";
 
 const CurrentGameBoard = () => {
   const { image } = useUser();
@@ -30,6 +31,7 @@ const CurrentGameBoard = () => {
     connectionStatus,
   } = useLiveGame();
   const timeoutSentRef = useRef(false);
+  const shownLine = useShownLine();
   const { settings } = useSettings();
 
   const { time } = game;
@@ -85,6 +87,7 @@ const CurrentGameBoard = () => {
   return (
     <BoardLayout
       boardRef={boardRef}
+      material={{ fen: shownLine[shownLine.length - 1], bottom: color }}
       topPlayer={{
         name: opponentUsername,
         startingRating: opponentRatings.startingRating,

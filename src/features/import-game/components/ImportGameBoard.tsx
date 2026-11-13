@@ -62,7 +62,11 @@ const ImportGameBoard = ({ disabled = false, players = DEFAULT_PLAYERS }: Import
     <BoardLayout
       boardRef={boardRef}
       boardLabel={boardLabel(currentNode)}
-      {...(showPlayers && { topPlayer: row(topSide), bottomPlayer: row(bottomSide) })}
+      {...(showPlayers && {
+        topPlayer: row(topSide),
+        bottomPlayer: row(bottomSide),
+        material: { fen: currentNode.fen, bottom: bottomSide },
+      })}
     >
       <AnalysisPromotion />
     </BoardLayout>

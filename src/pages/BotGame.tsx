@@ -27,6 +27,7 @@ import { ReviewGameLinks } from "@/features/game-review/components/ReviewGameLin
 import type { ImportGameState } from "@/features/import-game/importGameState";
 import { buildBotGamePgn } from "@/features/play-bots/utils/botGamePgn";
 import { cn } from "@/lib/utils";
+import { positionsAlong } from "@/features/game/utils/material";
 
 const RESULT_TITLES: Record<BotGameResult["outcome"], string> = {
   win: "You won",
@@ -133,10 +134,13 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
     .filter(Boolean)
     .join(". ");
 
+  const shownLine = positionsAlong(history, navigation.currentIndex);
+
   const board = (
     <BoardLayout
       boardRef={boardRef}
       boardLabel={boardLabel}
+      material={{ fen: shownLine[shownLine.length - 1], bottom: color }}
       topPlayer={{
         name: bot.name,
         startingRating: bot.rating,

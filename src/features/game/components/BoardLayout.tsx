@@ -1,8 +1,11 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import "@lichess-org/chessground/assets/chessground.base.css";
 import "@lichess-org/chessground/assets/chessground.brown.css";
 import "@lichess-org/chessground/assets/chessground.cburnett.css";
 import { PlayerDisplay } from "./PlayerDisplay";
+import { MaterialDisplay } from "./MaterialDisplay";
+import { getMaterial } from "../utils/material";
+import type { PlayerColor } from "../types/game.types";
 
 interface PlayerInfo {
   name: string;
@@ -23,6 +26,12 @@ interface BoardLayoutProps {
   bottomPlayerClock?: ReactNode;
   /** Accessible name of the board (e.g. who's to move and the last move) */
   boardLabel?: string;
+  /**
+   * Show captured pieces and the material lead in the player rows, for the
+   * position `fen` (the one on the board) with `bottom` the colour of the
+   * bottom player.
+   */
+  material?: { fen: string; bottom: PlayerColor };
   children?: ReactNode;
 }
 
@@ -42,13 +51,26 @@ export const BoardLayout = ({
   topPlayerClock,
   bottomPlayerClock,
   boardLabel,
+  material,
   children,
 }: BoardLayoutProps) => {
+  const fen = material?.fen;
+  const bottom = material?.bottom ?? "white";
+  const sides = useMemo(() => (fen ? getMaterial(fen) : null), [fen]);
+  const materialFor = (side: PlayerColor) =>
+    sides ? (
+      <MaterialDisplay
+        material={sides[side]}
+        capturedColor={side === "white" ? "black" : "white"}
+      />
+    ) : undefined;
+  const top: PlayerColor = bottom === "white" ? "black" : "white";
+
   return (
     <section className="flex w-full max-w-(--board-max) flex-col overflow-hidden bg-card sm:rounded-2xl sm:border sm:border-border/70 sm:shadow-sm">
       {topPlayer && (
         <div className={PLAYER_ROW}>
-          <PlayerDisplay {...topPlayer} clock={topPlayerClock} />
+          <PlayerDisplay {...topPlayer} clock={topPlayerClock} material={materialFor(top)} />
         </div>
       )}
 
@@ -64,7 +86,11 @@ export const BoardLayout = ({
 
       {bottomPlayer && (
         <div className={PLAYER_ROW}>
-          <PlayerDisplay {...bottomPlayer} clock={bottomPlayerClock} />
+          <PlayerDisplay
+            {...bottomPlayer}
+            clock={bottomPlayerClock}
+            material={materialFor(bottom)}
+          />
         </div>
       )}
     </section>

@@ -17,6 +17,7 @@ import { formatTimeControl, getTimeControlIcon } from "@/utils/timeControl";
 import { useLiveGame } from "../contexts/LiveGameContext";
 import { useSpectatorState, type SpectatorFinish } from "../hooks/useSpectatorState";
 import { ConnectionBanner } from "./ConnectionBanner";
+import { useShownLine } from "@/features/game/hooks/useShownLine";
 
 // Widgets where "f" is typing, not a shortcut
 const TYPING_TARGETS = "input, textarea, select, [contenteditable='true']";
@@ -79,6 +80,7 @@ const SpectatorBoard = ({ orientation }: { orientation: PlayerColor }) => {
     blackTimeLeft,
     connectionStatus,
   } = useLiveGame();
+  const shownLine = useShownLine();
 
   const playerInfo = (side: PlayerColor) => {
     const player = side === "white" ? game.whitePlayer : game.blackPlayer;
@@ -119,6 +121,7 @@ const SpectatorBoard = ({ orientation }: { orientation: PlayerColor }) => {
   return (
     <BoardLayout
       boardRef={boardRef}
+      material={{ fen: shownLine[shownLine.length - 1], bottom: orientation }}
       topPlayer={playerInfo(top)}
       bottomPlayer={playerInfo(orientation)}
       topPlayerClock={clock(top)}

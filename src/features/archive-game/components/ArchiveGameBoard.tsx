@@ -38,6 +38,7 @@ const ArchiveGameBoard = ({
     <BoardLayout
       boardRef={boardRef}
       boardLabel={boardLabel(currentNode)}
+      material={{ fen: currentNode.fen, bottom: color }}
       topPlayer={{
         name: topPlayer.username,
         startingRating: topPlayer.rating,
