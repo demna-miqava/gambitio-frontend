@@ -1,6 +1,6 @@
 import { GameTable } from "@/features/game-table";
 import { Header } from "@/components/home/Header";
-import { QuickPlayGrid } from "@/components/home/QuickPlayGrid";
+import { QuickPairing } from "@/components/home/QuickPairing";
 import { LastGameCard } from "@/components/home/LastGameCard";
 import { ResultsSummary } from "@/components/home/ResultsSummary";
 import { HOME_GAMES_LIMIT } from "@/components/home/constants";
@@ -13,9 +13,9 @@ import { getProfileGamesRoute } from "@/constants/routes";
 import { PageContainer } from "@/components/PageContainer";
 
 /**
- * Anything waiting on the player first (a game in progress, challenges), then
- * the quick play cards, earlier games, and beside them the last game to
- * review, how the last 30 days went and the top players.
+ * What to do next, not where to go (the sidebar does that): anything waiting
+ * on the player first (a game in progress, challenges), then a new game, the
+ * last one to review, how the last 30 days went, and earlier games.
  */
 const Home = () => {
   const { id } = useUser();
@@ -26,7 +26,14 @@ const Home = () => {
       <ReturnToGameBanner />
       <Challenges className="rounded-2xl border border-border/70 bg-card p-5" />
       <Header />
-      <QuickPlayGrid />
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6">
+        <QuickPairing />
+        <div className="space-y-4">
+          <LastGameCard />
+          <ResultsSummary />
+        </div>
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
         <GameTable
@@ -35,9 +42,7 @@ const Home = () => {
           skipLatest
           actionHref={getProfileGamesRoute(id || 0)}
         />
-        <aside className="space-y-4">
-          <LastGameCard />
-          <ResultsSummary />
+        <aside>
           <TopPlayers />
         </aside>
       </div>
