@@ -4,6 +4,7 @@ import type { MoveReview, PositionEval, ReviewMove } from "../types";
 import { cpWinChance, evalWinChance, mateWinChance, toWinPercent } from "./winChance";
 import { computeAccuracy, moveAccuracy, volatilityWeights } from "./accuracy";
 import { buildGameReview, classifyMove, formatEval, uciToSan } from "./buildReview";
+import { backUpEvals } from "./backUpEvals";
 import { gameFingerprint, gamePositions, getGameLine, terminalEval, toReviewMoves } from "./gameLine";
 import { parseBestMove, parseInfoLine, pickFinalInfo } from "./uci";
 import { parseStoredEvals } from "./reviewStorage";
@@ -182,9 +183,75 @@ describe("buildGameReview", () => {
     expect(review.black.accuracy).toBe(100);
   });
 
+  test("a shallow search that misjudges its own reply doesn't turn the move before it into a blunder", () => {
+    // Morphy's Opera Game, with the evaluations the review's depth-16 search
+    // actually produced. After 15. Bxd7+ the search picks ...Nxd7 at +2.72,
+    // not seeing 16. Qb8+ Nxb8 17. Rd8#, which the next search finds.
+    const { moves } = gameFrom(
+      "1. e4 e5 2. Nf3 d6 3. d4 Bg4 4. dxe5 Bxf3 5. Qxf3 dxe5 6. Bc4 Nf6 7. Qb3 Qe7 8. Nc3 c6 9. Bg5 b5 " +
+        "10. Nxb5 cxb5 11. Bxb5+ Nbd7 12. O-O-O Rd8 13. Rxd7 Rxd7 14. Rd1 Qe6 15. Bxd7+ Nxd7 16. Qb8+ Nxb8 17. Rd8#"
+    );
+    const engine: PositionEval[] = [
+      ...[45, 33, 34, 32, 42, 47, 77, 76, 134, 155, 154, 124, 211, 196, 245, 200, 201, 213, 291, 268, 380, 447, 454, 468, 510, 542, 579, 608].map(
+        (value) => cp(value)
+      ),
+      cp(613, "g5f6"),
+      cp(272, "f6d7"),
+      { type: "mate", value: 2, bestMove: "b3b8" },
+      { type: "mate", value: 1, bestMove: "d7b8" },
+      { type: "mate", value: 1, bestMove: "d1d8" },
+      { type: "over", result: 1 },
+    ];
+    const review = buildGameReview(moves, engine);
+
+    const bxd7 = review.moves[28]!;
+    expect(bxd7.san).toBe("Bxd7+");
+    expect(bxd7.classification).toBe("best");
+    expect(bxd7.winChanceAfter).toBeGreaterThan(bxd7.winChanceBefore);
+    expect(review.white.blunders).toBe(0);
+    expect(review.evals.slice(28)).toEqual([
+      cp(613, "g5f6"), // Bxd7+ wasn't the engine's choice: its own search stands
+      { type: "mate", value: 2, bestMove: "f6d7" },
+      { type: "mate", value: 2, bestMove: "b3b8" },
+      { type: "mate", value: 1, bestMove: "d7b8" },
+      { type: "mate", value: 1, bestMove: "d1d8" },
+      { type: "over", result: 1 },
+    ]);
+  });
+
   test("rejects evaluations that don't match the moves", () => {
     const { moves } = gameFrom("1. e4 e5");
     expect(() => buildGameReview(moves, [cp(0)])).toThrow();
+  });
+});
+
+describe("backing up evaluations along the engine's moves", () => {
+  test("black's mate counts up from black's own moves, not white's", () => {
+    // Fool's mate: 1. f3 e5 2. g4 Qh4#
+    const { moves } = gameFrom("1. f3 e5 2. g4 Qh4#");
+    const backed = backUpEvals(moves, [
+      cp(0, "e2e4"),
+      cp(-50, "e7e5"),
+      cp(-60, "g2g4"),
+      { type: "mate", value: -1, bestMove: "d8h4" },
+      { type: "over", result: -1 },
+    ]);
+    expect(backed).toEqual([
+      cp(0, "e2e4"), // 1. f3 wasn't the engine's move
+      { type: "mate", value: -2, bestMove: "e7e5" }, // black to move, mates in 2
+      { type: "mate", value: -1, bestMove: "g2g4" }, // white walks into mate in 1
+      { type: "mate", value: -1, bestMove: "d8h4" },
+      { type: "over", result: -1 },
+    ]);
+  });
+
+  test("a move into a drawn finish backs up as an even position", () => {
+    const fen = "k7/2K5/8/8/8/8/8/1Q6 w - - 0 1";
+    const moves: ReviewMove[] = [{ san: "Qb6", uci: "b1b6", fenBefore: fen }];
+    expect(backUpEvals(moves, [cp(900, "b1b6"), { type: "over", result: 0 }])).toEqual([
+      cp(0, "b1b6"),
+      { type: "over", result: 0 },
+    ]);
   });
 });
 

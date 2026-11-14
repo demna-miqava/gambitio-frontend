@@ -10,6 +10,7 @@ import type {
   Side,
 } from "../types";
 import { computeAccuracy } from "./accuracy";
+import { backUpEvals } from "./backUpEvals";
 import { evalWinChance, forSide, toWinPercent } from "./winChance";
 
 /**
@@ -74,16 +75,18 @@ function playerTotals(moves: MoveReview[], side: Side, accuracy: number | null):
  * Turns per-position evaluations into the review: per-move winning chances,
  * classification and accuracy, and per-player totals.
  *
- * `evals[i]` is the position before `moves[i]`; the last entry is the final
- * position. The only legal move in a position is never judged (always
+ * `engineEvals[i]` is the position before `moves[i]`; the last entry is the
+ * final position. They're first backed up along the engine's own moves
+ * (backUpEvals), and the review's `evals` are the backed-up ones. The only legal move in a position is never judged (always
  * "best") and doesn't count toward accuracy; the engine's own choice is
  * "best" and scores 100%.
  */
-export function buildGameReview(moves: ReviewMove[], evals: PositionEval[]): GameReview {
-  if (evals.length !== moves.length + 1) {
-    throw new Error(`Expected ${moves.length + 1} evaluations, got ${evals.length}`);
+export function buildGameReview(moves: ReviewMove[], engineEvals: PositionEval[]): GameReview {
+  if (engineEvals.length !== moves.length + 1) {
+    throw new Error(`Expected ${moves.length + 1} evaluations, got ${engineEvals.length}`);
   }
 
+  const evals = backUpEvals(moves, engineEvals);
   const whiteChances = evals.map(evalWinChance);
   const movers = moves.map((m) => sideToMove(m.fenBefore));
   const forced = moves.map((m) => legalMoveCount(m.fenBefore) === 1);
