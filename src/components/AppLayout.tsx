@@ -14,6 +14,7 @@ import { useIsWideScreen } from "@/hooks/use-mobile";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { cn } from "@/lib/utils";
 import { preloadSignedInPages } from "@/routes/pages";
+import { StudyInviteToasts } from "@/features/study/components/StudyInviteToasts";
 
 const MAIN_ID = "main-content";
 const SIDEBAR_WIDE_OPEN_KEY = "sidebarWideOpen";
@@ -79,6 +80,7 @@ export const AppLayout = () => {
         <ChessSoundProvider>
           <ChallengesProvider>
             <AppSidebar />
+            <StudyInviteToasts />
             <SidebarInset
               className={cn(
                 "md:[--app-top-bar-height:0px]",

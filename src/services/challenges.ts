@@ -1,5 +1,5 @@
 import { apiRequest } from ".";
-import type { Challenge } from "@/features/notifications/types/websocket-messages";
+import type { BestOf, Challenge } from "@/features/notifications/types/websocket-messages";
 import type { PlayerColorOption } from "@/types/game.types";
 
 export type SentChallenge = {
@@ -10,6 +10,11 @@ export type SentChallenge = {
   time: number;
   increment: number;
   color: PlayerColorOption;
+  /** 3 or 5 for a series */
+  bestOf?: BestOf;
+  /** Set when it continues a series, with the game it would start */
+  seriesId?: number | null;
+  seriesGame?: number | null;
 };
 
 export const getChallenges = async (): Promise<Challenge[]> => {

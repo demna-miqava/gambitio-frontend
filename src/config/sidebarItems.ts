@@ -60,6 +60,8 @@ export const getNavItems = (userId: number): NavItem[] => [
       ROUTES.PLAY_BOTS,
       ROUTES.BOT_GAME,
       "/game/",
+      // A series is played as games
+      "/series/",
       // Game history is listed under Play, so it highlights Play
       getProfileGamesRoute(userId),
     ],
@@ -86,11 +88,13 @@ export const getNavItems = (userId: number): NavItem[] => [
     title: "Puzzles",
     url: ROUTES.PUZZLES,
     icon: Puzzle,
-    match: [ROUTES.PUZZLES],
+    // The endgame lab is training too
+    match: [ROUTES.PUZZLES, ROUTES.ENDGAMES],
     items: [
       { title: "Solve puzzles", url: getPuzzleModeRoute("infinite") },
       { title: "Puzzle Rush", url: getPuzzleModeRoute("rush") },
       { title: "Survival", url: getPuzzleModeRoute("survival") },
+      { title: "Endgame lab", url: ROUTES.ENDGAMES },
     ],
   },
   {
@@ -104,9 +108,17 @@ export const getNavItems = (userId: number): NavItem[] => [
     title: "Analysis",
     url: ROUTES.TOOLS.ANALYSIS_BOARD,
     icon: Microscope,
-    match: [ROUTES.TOOLS.ANALYSIS_BOARD, ROUTES.TOOLS.IMPORT_GAME, "/archive/"],
+    match: [
+      ROUTES.TOOLS.ANALYSIS_BOARD,
+      ROUTES.TOOLS.IMPORT_GAME,
+      "/archive/",
+      ROUTES.REPERTOIRE,
+      ROUTES.STUDY,
+    ],
     items: [
       { title: "Analysis board", url: ROUTES.TOOLS.ANALYSIS_BOARD },
+      { title: "Opening repertoire", url: ROUTES.REPERTOIRE },
+      { title: "Study rooms", url: ROUTES.STUDY },
       { title: "Import a game", url: ROUTES.TOOLS.IMPORT_GAME },
     ],
   },

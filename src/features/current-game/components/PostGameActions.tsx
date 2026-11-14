@@ -1,9 +1,13 @@
 import { Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { ReviewGameLinks } from "@/features/game-review/components/ReviewGameLinks";
-import { getArchiveGameRoute, getGameReviewRoute } from "@/constants/routes";
+import { getArchiveGameRoute, getGameReviewRoute, getGameRoute } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RematchState } from "../hooks/useRematch";
+import type { SeriesSummary } from "@/features/series/types";
+import { SeriesResultNote } from "@/features/series/components/SeriesResultNote";
+import { nextGameLabel } from "@/features/series/utils/seriesFormat";
 import RematchOffered from "./RematchOffered";
 import RematchRequested from "./RematchRequested";
 
@@ -19,6 +23,18 @@ type Props = {
   search: NewGameSearch;
   /** The finished game, linked to its review and analysis */
   gameId: number;
+  /**
+   * The series this game is part of, as it stands after the game. While it
+   * goes on, the rematch starts its next game (the server picks the colours).
+   */
+  series?: SeriesSummary | null;
+  /** The signed-in user, for "You play white in game 2" */
+  viewerId?: number;
+  /**
+   * The game the rematch already started (e.g. this page was reopened after
+   * it): the offer is over, so link to that game instead.
+   */
+  rematchGameId?: number | null;
   className?: string;
 };
 
@@ -27,17 +43,31 @@ type Props = {
  * declined states, and links to the game's review and analysis. Rendered in both the result dialog and the side panel,
  * from the same rematch and matchmaking state.
  */
-const PostGameActions = ({ rematch, search, gameId, className }: Props) => {
+const PostGameActions = ({
+  rematch,
+  search,
+  gameId,
+  series,
+  viewerId,
+  rematchGameId,
+  className,
+}: Props) => {
+  const started = rematchGameId ?? null;
   const {
-    rematchOffered,
-    rematchRequested,
+    rematchOffered: offered,
+    rematchRequested: requested,
     rematchDeclined,
     requestRematch,
     acceptRematch,
     declineRematch,
     cancelRematch,
   } = rematch;
+  // A stale offer on a game whose rematch already started can't be answered
+  const rematchOffered = offered && started === null;
+  const rematchRequested = requested && started === null;
   const { isSearching, isConnecting, setShouldConnect } = search;
+  const nextGame = series?.status === "active" && started === null ? series.next : null;
+  const rematchLabel = nextGame ? `Next game (${nextGame.number} of ${series!.bestOf})` : "Rematch";
   // Leave the queue first, or matchmaking could pair us into a second game
   const acceptRematchAndStopSearch = () => {
     if (isSearching) setShouldConnect(false);
@@ -46,8 +76,15 @@ const PostGameActions = ({ rematch, search, gameId, className }: Props) => {
 
   return (
     <div className={cn("flex w-full flex-col gap-3", className)}>
+      {series && <SeriesResultNote series={series} viewerId={viewerId} />}
+      {nextGame && !rematchOffered && !rematchRequested && (
+        <p className="text-center text-xs text-muted-foreground">{nextGameLabel(series!, viewerId)}</p>
+      )}
       {rematchOffered && (
         <RematchOffered
+          message={
+            nextGame ? `Your opponent is ready for game ${nextGame.number}` : undefined
+          }
           onAcceptRematch={acceptRematchAndStopSearch}
           onDeclineRematch={declineRematch}
         />
@@ -58,7 +95,9 @@ const PostGameActions = ({ rematch, search, gameId, className }: Props) => {
       {rematchDeclined && !rematchRequested && !rematchOffered && (
         // Announced once by useRematch; this is shown in two places
         <p className="text-center text-sm text-muted-foreground">
-          Your opponent declined the rematch.
+          {nextGame
+            ? "Your opponent isn't ready for the next game."
+            : "Your opponent declined the rematch."}
         </p>
       )}
       {isSearching && (
@@ -82,13 +121,21 @@ const PostGameActions = ({ rematch, search, gameId, className }: Props) => {
           >
             {isSearching ? "Cancel search" : "New game"}
           </Button>
-          <Button size="md"
-            onClick={requestRematch}
-            disabled={rematchDeclined || isSearching}
-            className="flex-1"
-          >
-            Rematch
-          </Button>
+          {started !== null ? (
+            <Button size="md" asChild className="flex-1">
+              <Link to={getGameRoute(started)}>
+                {series ? "Go to next game" : "Go to rematch"}
+              </Link>
+            </Button>
+          ) : (
+            <Button size="md"
+              onClick={requestRematch}
+              disabled={rematchDeclined || isSearching}
+              className="flex-1"
+            >
+              {rematchLabel}
+            </Button>
+          )}
         </div>
       )}
       <ReviewGameLinks

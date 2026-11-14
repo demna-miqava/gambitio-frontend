@@ -1,4 +1,5 @@
 import { GAME_MESSAGE_TYPES } from "../constants/websocket-types";
+import type { SeriesSummary } from "@/features/series/types";
 
 export type DrawOfferMessage = {
   type: GAME_MESSAGE_TYPES.DRAW_OFFER;
@@ -37,6 +38,8 @@ export type GameEndedMessage = {
   result: GameResult;
   winnerId: number | null;
   ratingChanges?: RatingChanges;
+  /** The series score after this game, when it was a series game */
+  series?: SeriesSummary;
 };
 
 export type MoveMessage = {
@@ -90,6 +93,12 @@ export type InitialGameStateMessage = {
     blackTimeLeft: number | null;
     drawOfferedBy: number | null;
     rematchRequestedBy: number | null;
+    /** The game the rematch started, once it has */
+    rematchGameId?: number | null;
+    /** The friend series this game is part of, as it stands now */
+    series?: SeriesSummary | null;
+    /** 1-based number of this game in its series */
+    seriesGame?: number | null;
     /** People watching (not the players); only for games in progress */
     spectators?: number;
     result?: GameResult;
@@ -133,7 +142,8 @@ export type SpectatorsMessage = {
 
 export type GameErrorMessage = {
   type: GAME_MESSAGE_TYPES.ERROR;
-  data: { message: string; code?: string };
+  /** `request`: the client message the error answers (its type, at least) */
+  data: { message: string; code?: string; request?: { type?: string } };
 };
 
 export type GameWebSocketMessage =

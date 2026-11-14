@@ -34,6 +34,9 @@ export const useUpdateSettings = () => {
       if (context?.previous) {
         queryClient.setQueryData([QKEY_USER_SETTINGS], context.previous);
       }
+      // The snapshot predates any other toggle saved meanwhile; reload so
+      // those aren't shown as undone
+      void queryClient.invalidateQueries({ queryKey: [QKEY_USER_SETTINGS] });
       toast.error("Couldn't save your settings", {
         description: error.message || "Check your connection and try again.",
       });

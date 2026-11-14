@@ -280,7 +280,14 @@ export const usePuzzleGame = ({
           if (puzzleRef.current?.id !== asked.id) return;
           const played = result.line[moveIndex];
           let shown = move;
-          if (result.result !== "failed" && played && played !== uciMove) {
+          // Only the promotion piece is swapped: an alternative mate the
+          // server accepted stays on the board as played
+          if (
+            result.result !== "failed" &&
+            played &&
+            played !== uciMove &&
+            played.slice(0, 4) === uciMove.slice(0, 4)
+          ) {
             chess.undo();
             const fixed = tryMove(chess, played);
             if (fixed) {

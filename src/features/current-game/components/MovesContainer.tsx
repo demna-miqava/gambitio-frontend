@@ -15,6 +15,9 @@ import { useRematch } from "../hooks/useRematch";
 import { formatTimeControl, getTimeControlIcon } from "@/utils/timeControl";
 import { OpeningName } from "@/features/openings";
 import { useShownLine } from "@/features/game/hooks/useShownLine";
+import { useLiveSeries } from "@/features/series/hooks/useLiveSeries";
+import { SeriesStrip } from "@/features/series/components/SeriesStrip";
+import { useUser } from "@/hooks/useUser";
 
 export const MovesContainer = () => {
   const { game, gameEnded, isConnected } = useLiveGame();
@@ -43,6 +46,9 @@ export const MovesContainer = () => {
   } = useDrawOffer();
   const TypeIcon = getTimeControlIcon(game.type);
   const shownLine = useShownLine();
+  const { id: viewerId } = useUser();
+  // A series game shows the series score; the rematch becomes "Next game"
+  const { series, seriesGame, rematchGameId } = useLiveSeries(game);
 
   return (
     <div className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
@@ -56,6 +62,8 @@ export const MovesContainer = () => {
           <span className="capitalize">· {game.type}</span>
         </span>
       </div>
+
+      {series && <SeriesStrip series={series} seriesGame={seriesGame} viewerId={viewerId} />}
 
       {/* Phones: moves strip sits right under the board */}
       <div className="rounded-xl border border-border/70 bg-card px-1 py-1.5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
@@ -90,7 +98,14 @@ export const MovesContainer = () => {
                 )}
               </div>
             )}
-            <PostGameActions rematch={rematch} search={search} gameId={game.id} />
+            <PostGameActions
+              rematch={rematch}
+              search={search}
+              gameId={game.id}
+              series={series}
+              viewerId={viewerId}
+              rematchGameId={rematchGameId}
+            />
           </div>
         ) : (
           <MatchActions
@@ -110,7 +125,14 @@ export const MovesContainer = () => {
         title={finish?.title}
         description={finish?.description}
       >
-        <PostGameActions rematch={rematch} search={search} gameId={game.id} />
+        <PostGameActions
+          rematch={rematch}
+          search={search}
+          gameId={game.id}
+          series={series}
+          viewerId={viewerId}
+          rematchGameId={rematchGameId}
+        />
       </GameResultDialog>
     </div>
   );

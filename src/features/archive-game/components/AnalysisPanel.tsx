@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { BookMarked, ChevronDown, ChevronUp, UsersRound } from "lucide-react";
 import type { Key } from "@lichess-org/chessground/types";
 import { EngineAnalysisPanel, formatScore, useAnalysis } from "@/features/engine-analysis";
 import {
@@ -22,6 +22,23 @@ import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { cn } from "@/lib/utils";
 import { OpeningName } from "@/features/openings";
 import { nodesAlong } from "../utils/analysisTree";
+import { useLineActions } from "../hooks/useLineActions";
+
+/** Phones: the desktop header (with these in its menu) is hidden */
+const MobileLineActions = () => {
+  const { canSaveLine, openRepertoire, openStudy, dialogs } = useLineActions();
+  return (
+    <div className="order-6 grid grid-cols-2 gap-2 lg:hidden">
+      <Button variant="outline" size="md" onClick={openRepertoire} disabled={!canSaveLine}>
+        <BookMarked aria-hidden="true" /> Save line
+      </Button>
+      <Button variant="outline" size="md" onClick={openStudy}>
+        <UsersRound aria-hidden="true" /> Study together
+      </Button>
+      {dialogs}
+    </div>
+  );
+};
 
 /** Phone engine header: toggle, current evaluation and depth on one row. */
 const EngineStrip = ({ fen }: { fen: string }) => {
@@ -218,8 +235,10 @@ export const AnalysisPanel = ({ onLoadAnotherPgn }: { onLoadAnotherPgn?: () => v
       {/* Phones: below the moves, as before */}
       <GameReviewSection className="order-5 lg:hidden" />
 
+      <MobileLineActions />
+
       {onLoadAnotherPgn && (
-        <div className="order-6 lg:hidden">
+        <div className="order-7 lg:hidden">
           <Button variant="outline" size="md" onClick={onLoadAnotherPgn} className="w-full">
             Load another PGN
           </Button>

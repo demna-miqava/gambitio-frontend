@@ -58,6 +58,8 @@ interface ArchiveGameContextValue {
   copyPgn: () => void;
   /** Saves the PGN (with variations) as a .pgn file */
   downloadPgn: () => void;
+  /** The PGN headers (players, date...), if this is a game */
+  getHeaders: () => Record<string, string> | undefined;
 
   pendingPromotion: PendingPromotion | null;
   handlePromotionSelect: (piece: PieceSymbol) => void;
@@ -260,6 +262,8 @@ export const ArchiveGameProvider = ({
     headersRef.current = headers;
   }, [headers]);
 
+  const getHeaders = useCallback(() => headersRef.current, []);
+
   const copyPgn = useCallback(() => {
     navigator.clipboard
       .writeText(toPgn(root, headersRef.current))
@@ -309,6 +313,7 @@ export const ArchiveGameProvider = ({
       resetAnalysis,
       copyPgn,
       downloadPgn,
+      getHeaders,
       pendingPromotion,
       handlePromotionSelect,
       cancelPromotion,
@@ -332,6 +337,7 @@ export const ArchiveGameProvider = ({
       resetAnalysis,
       copyPgn,
       downloadPgn,
+      getHeaders,
       pendingPromotion,
       handlePromotionSelect,
       cancelPromotion,

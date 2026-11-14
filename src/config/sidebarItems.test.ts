@@ -51,6 +51,10 @@ describe("isNavItemActive", () => {
     expect(activeTitles("/archive/3")).toEqual(["Analysis"]);
     expect(activeTitles("/leaderboard")).toEqual(["Leaderboard"]);
     expect(activeTitles("/watch")).toEqual(["Watch"]);
+    expect(activeTitles("/endgames/kq-vs-k")).toEqual(["Puzzles"]);
+    expect(activeTitles("/repertoire")).toEqual(["Analysis"]);
+    expect(activeTitles("/study/4")).toEqual(["Analysis"]);
+    expect(activeTitles("/series/2")).toEqual(["Play"]);
   });
 });
 

@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Copy, Download, FileUp, MoreHorizontal, RotateCcw } from "lucide-react";
+import { BookMarked, Copy, Download, FileUp, MoreHorizontal, RotateCcw, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -14,6 +14,7 @@ import {
 import { useAnalysis } from "@/features/engine-analysis";
 import { cn } from "@/lib/utils";
 import { useArchiveGame } from "../contexts/ArchiveGameContext";
+import { useLineActions } from "../hooks/useLineActions";
 
 interface IconActionProps {
   icon: LucideIcon;
@@ -60,6 +61,7 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
   const { copyPgn, downloadPgn, resetAnalysis, hasAnalysis, root } = useArchiveGame();
   const { engineEnabled, setEngineEnabled } = useAnalysis();
   const noMoves = root.children.length === 0;
+  const lineActions = useLineActions();
 
   return (
     <div className={cn("h-13 shrink-0 items-center gap-1 border-b border-border/70 pr-3 pl-4", className)}>
@@ -93,7 +95,14 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
               More actions
             </TooltipContent>
           </Tooltip>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onSelect={lineActions.openRepertoire} disabled={!lineActions.canSaveLine}>
+              <BookMarked /> Save line to repertoire
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={lineActions.openStudy}>
+              <UsersRound /> Study with friends
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={downloadPgn} disabled={noMoves}>
               <Download /> Download PGN
             </DropdownMenuItem>
@@ -117,6 +126,7 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
         </Label>
         <Switch id="engine-toggle" checked={engineEnabled} onCheckedChange={setEngineEnabled} />
       </div>
+      {lineActions.dialogs}
     </div>
   );
 };

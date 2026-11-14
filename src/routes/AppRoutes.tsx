@@ -6,6 +6,8 @@ import {
   ArchiveGame,
   BotGame,
   CurrentGame,
+  EndgameExercise,
+  EndgameLab,
   Home,
   ImportGame,
   IntroPage,
@@ -21,9 +23,13 @@ import {
   ProfileStats,
   PuzzleModePage,
   PuzzlesLanding,
+  Repertoire,
+  Series,
   Settings,
   SignIn,
   SignUp,
+  StudyRoom,
+  StudyRooms,
   Watch,
 } from "./pages";
 
@@ -50,6 +56,12 @@ export const AppRoutes = () => {
         <Route path={ROUTES.TOOLS.IMPORT_GAME} element={<ImportGame />} />
         <Route path={ROUTES.TOOLS.ANALYSIS_BOARD} element={<AnalysisBoard />} />
         <Route path={ROUTES.LEADERBOARD} element={<Leaderboard />} />
+        <Route path={ROUTES.SERIES} element={<Series />} />
+        <Route path={ROUTES.REPERTOIRE} element={<Repertoire />} />
+        <Route path={ROUTES.STUDY} element={<StudyRooms />} />
+        <Route path={ROUTES.STUDY_ROOM} element={<StudyRoom />} />
+        <Route path={ROUTES.ENDGAMES} element={<EndgameLab />} />
+        <Route path={ROUTES.ENDGAME_EXERCISE} element={<EndgameExercise />} />
         {/* Signed-out users never get here: AuthGuard sends them to sign in */}
         <Route path="*" element={<NotFoundPage />} />
       </Route>

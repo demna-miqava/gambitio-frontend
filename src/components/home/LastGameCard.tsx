@@ -24,7 +24,8 @@ export const LastGameCard = () => {
   const { id } = useUser();
   const { games } = useUserGames({ defaultLimit: HOME_GAMES_LIMIT });
   const game = games[0];
-  if (!game || !id) return null;
+  // The history also lists a game still being played: nothing to review yet
+  if (!game || game.status !== "finished" || !id) return null;
 
   const me = game.whitePlayer.id === id ? game.whitePlayer : game.blackPlayer;
   const opponent = me === game.whitePlayer ? game.blackPlayer : game.whitePlayer;

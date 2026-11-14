@@ -69,7 +69,7 @@ export const GameList = ({ games, userId, isLoading, rows, emptyState }: GameLis
                 <span>{format(new Date(game.createdAt), "MMM d")}</span>
               </div>
             </div>
-            <ResultBadge result={getResult(game, userId)} />
+            <ResultBadge result={game.status === "in_progress" ? "live" : getResult(game, userId)} />
           </Link>
         </li>
       ))}

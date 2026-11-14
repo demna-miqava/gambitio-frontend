@@ -26,6 +26,9 @@ export type Game = {
   endReason: string | null;
   whitePlayer: GamePlayerInfo;
   blackPlayer: GamePlayerInfo;
+  /** The friend series this game belongs to, if any */
+  seriesId?: number | null;
+  seriesGame?: number | null;
 };
 
 /** A player in a stored game; the computer in a bot game has no id */
@@ -46,6 +49,10 @@ export type StoredGame = Omit<Game, "time" | "type" | "whitePlayer" | "blackPlay
   rated: boolean;
   /** The computer opponent (play-bots BOTS id) in a bot game */
   botId: string | null;
+  /** The friend series this game belongs to (see features/series) */
+  seriesId?: number | null;
+  /** 1-based number of the game in its series */
+  seriesGame?: number | null;
   whitePlayer: StoredGamePlayer;
   blackPlayer: StoredGamePlayer;
 };

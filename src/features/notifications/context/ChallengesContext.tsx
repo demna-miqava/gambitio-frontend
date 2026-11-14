@@ -6,12 +6,16 @@ import {
 } from "../hooks/useManageChallenge";
 import { useChallengeMessageHandlers } from "../hooks/useChallengeMessageHandlers";
 import type { OutgoingChallenge } from "../types/websocket-messages";
+import { useSeriesUpdates } from "@/features/series/hooks/useSeries";
 
 type ChallengesContextType = {
   handleAcceptChallenge: (challengerId: number) => void;
   handleDeclineChallenge: (challengerId: number) => void;
-  /** Challenge a friend; a challenge already waiting on someone else is withdrawn */
-  sendChallenge: (data: SendChallengeData, target: { username: string }) => void;
+  /**
+   * Challenge a friend; a challenge already waiting on someone else is
+   * withdrawn. `seriesGame`: the game a series continuation would start
+   */
+  sendChallenge: (data: SendChallengeData, target: { username: string; seriesGame?: number }) => void;
   /** Withdraw the challenge we're waiting on */
   cancelChallenge: () => void;
   /** The challenge we sent and are waiting on, if any */
@@ -38,6 +42,9 @@ export const ChallengesProvider = ({ children }: { children: ReactNode }) => {
     removeChallenge,
     lastSentTypeRef,
   } = useManageChallenge(sendMessage, readyState);
+
+  // Series resigned between games (the score and the other player's toast)
+  useSeriesUpdates();
 
   // Handle incoming challenge messages
   useChallengeMessageHandlers({

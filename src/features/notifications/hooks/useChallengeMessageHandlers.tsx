@@ -92,6 +92,7 @@ export const useChallengeMessageHandlers = ({
         increment: message.data.increment,
         createdAt: message.data.createdAt,
         rating: message.data.rating,
+        bestOf: message.data.bestOf,
       };
 
       queryClient.setQueryData<Challenge[]>([QKEY_CHALLENGES], (old = []) =>

@@ -54,6 +54,9 @@ export const usePuzzleLoader = ({
 
   // Prevent race conditions from rapid calls
   const isLoadingRef = useRef(false);
+  // Asked for the next puzzle before its page arrived: load it once it does
+  // (Rush and Survival have no Next button to press again)
+  const awaitingPageRef = useRef(false);
 
   const loadNextPuzzle = useCallback(async () => {
     // Debounce - prevent multiple simultaneous calls
@@ -79,6 +82,7 @@ export const usePuzzleLoader = ({
           return;
         }
 
+        awaitingPageRef.current = false;
         setPuzzle(newPuzzle);
         setStatus("solving");
         setMoveIndex(0);
@@ -94,6 +98,7 @@ export const usePuzzleLoader = ({
       } else {
         // No puzzle available in buffer
         if (hasNextPage) {
+          awaitingPageRef.current = true;
           fetchNextPage();
           toast.info(PUZZLE_MESSAGES.LOADING_MORE);
         } else {
@@ -119,6 +124,12 @@ export const usePuzzleLoader = ({
     resetBoard,
     setIsLoading,
   ]);
+
+  const loadNextRef = useRef(loadNextPuzzle);
+  loadNextRef.current = loadNextPuzzle;
+  useEffect(() => {
+    if (awaitingPageRef.current && data) void loadNextRef.current();
+  }, [data]);
 
   const retryPuzzle = useCallback(() => {
     if (!puzzle) return;

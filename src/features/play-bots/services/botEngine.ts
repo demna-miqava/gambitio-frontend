@@ -100,16 +100,26 @@ export class BotEngine {
     await this.waitFor("readyok", () => this.send("isready"));
   }
 
-  /** Returns the engine's move in UCI notation (e.g. "e2e4", "e7e8q"). */
-  async bestMove(fen: string, rating: number): Promise<string | null> {
+  /**
+   * Returns the engine's move in UCI notation (e.g. "e2e4", "e7e8q").
+   * `options.moveTime` replaces the think time the rating would give.
+   */
+  async bestMove(fen: string, rating: number, options: { moveTime?: number } = {}): Promise<string | null> {
     await this.ready;
-    const { depth, moveTime } = getStrengthSettings(rating);
+    const strength = getStrengthSettings(rating);
+    const { depth } = strength;
+    const moveTime = options.moveTime ?? strength.moveTime;
     this.send(`position fen ${fen}`);
     const line = await this.waitFor("bestmove", () =>
       this.send(depth ? `go depth ${depth} movetime ${moveTime}` : `go movetime ${moveTime}`)
     );
     const move = line.split(" ")[1];
     return move && move !== "(none)" ? move : null;
+  }
+
+  /** Ends the current search early; its bestmove still arrives (and resolves bestMove). */
+  stop() {
+    if (!this.error) this.send("stop");
   }
 
   destroy() {

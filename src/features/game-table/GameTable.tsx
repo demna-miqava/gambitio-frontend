@@ -42,7 +42,8 @@ export const GameTable = ({
   const { games: loaded, isPending, page, setPage, pagination } = useUserGames({
     defaultLimit: limit,
   });
-  const games = skipLatest ? loaded.slice(1) : loaded;
+  // Only a finished game is featured (see LastGameCard)
+  const games = skipLatest && loaded[0]?.status === "finished" ? loaded.slice(1) : loaded;
 
   const columns = useMemo(() => createColumns(userId), [userId]);
 

@@ -41,7 +41,8 @@ export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListI
     accessorKey: "result",
     header: "Result",
     cell: ({ row }) => {
-      const result = getResult(row.original, currentUserId);
+      const result =
+        row.original.status === "in_progress" ? "live" : getResult(row.original, currentUserId);
       return <ResultBadge result={result} />;
     },
   },

@@ -65,6 +65,9 @@ export const useManageChallenge = (
           color: sent.color,
           time: sent.time,
           increment: sent.increment,
+          bestOf: sent.bestOf,
+          ...(sent.seriesId ? { seriesId: sent.seriesId } : {}),
+          ...(sent.seriesGame ? { seriesGame: sent.seriesGame } : {}),
           sentAt: new Date(sent.createdAt).getTime(),
         };
         outgoingRef.current = next;
@@ -137,7 +140,7 @@ export const useManageChallenge = (
   }, [send, setOutgoingChallenge]);
 
   const sendChallenge = useCallback(
-    (data: SendChallengeData, target: { username: string }) => {
+    (data: SendChallengeData, target: { username: string; seriesGame?: number }) => {
       if (!checkConnection()) return;
       const previous = outgoingRef.current;
       if (previous?.challengedId === data.challengedId) return;
@@ -145,7 +148,12 @@ export const useManageChallenge = (
       if (previous) cancelChallenge();
 
       send({ type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_SENT, data });
-      setOutgoingChallenge({ ...data, username: target.username, sentAt: Date.now() });
+      setOutgoingChallenge({
+        ...data,
+        username: target.username,
+        ...(target.seriesGame ? { seriesGame: target.seriesGame } : {}),
+        sentAt: Date.now(),
+      });
     },
     [cancelChallenge, checkConnection, send, setOutgoingChallenge]
   );

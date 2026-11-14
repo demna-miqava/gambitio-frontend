@@ -16,5 +16,9 @@ export enum NOTIFICATION_MESSAGE_TYPES {
   MATCH_CREATED = "match_created",
   /** The player started or finished a live game ({ gameId } or { gameId: null }) */
   ACTIVE_GAME = "active_game",
+  /** A series changed outside a game (e.g. resigned): { series } */
+  SERIES_UPDATED = "series_updated",
+  /** A friend added you to a study room: { roomId, name, from } */
+  STUDY_INVITE = "study_invite",
   ERROR = "error",
 }

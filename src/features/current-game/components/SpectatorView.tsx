@@ -19,6 +19,8 @@ import { useSpectatorState, type SpectatorFinish } from "../hooks/useSpectatorSt
 import { ConnectionBanner } from "./ConnectionBanner";
 import { OpeningName } from "@/features/openings";
 import { useShownLine } from "@/features/game/hooks/useShownLine";
+import { useLiveSeries } from "@/features/series/hooks/useLiveSeries";
+import { SeriesStrip } from "@/features/series/components/SeriesStrip";
 
 // Widgets where "f" is typing, not a shortcut
 const TYPING_TARGETS = "input, textarea, select, [contenteditable='true']";
@@ -151,6 +153,7 @@ const SpectatorPanel = ({
   // Watchers other than you
   const others = spectatorCount === null ? null : Math.max(0, spectatorCount - 1);
   const shownLine = useShownLine();
+  const { series, seriesGame } = useLiveSeries(game);
 
   return (
     <div className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
@@ -186,6 +189,8 @@ const SpectatorPanel = ({
           </span>
         </span>
       </div>
+
+      {series && <SeriesStrip series={series} seriesGame={seriesGame} />}
 
       <div className="rounded-xl border border-border/70 bg-card px-1 py-1.5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
         <OpeningName fens={shownLine} className="px-1.5 pb-1 lg:px-0 lg:pb-2" />

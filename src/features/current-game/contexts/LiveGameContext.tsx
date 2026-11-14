@@ -169,12 +169,17 @@ export const LiveGameProvider = ({
   const locked = spectating || gameEnded || !isConnected;
   useEffect(() => {
     setInputLocked(locked);
-    if (locked) {
-      setPendingPromotion(null);
-      return;
-    }
     const cg = cgRef.current;
     const chess = chessRef.current;
+    if (locked) {
+      setPendingPromotion(null);
+      // A pawn dropped on the last rank waiting for its promotion piece is
+      // only on the board, not in the game: put the board back
+      if (cg && chess) {
+        syncBoard({ cg, chess, movableColor: undefined, lastMove: getLastMove(chess) });
+      }
+      return;
+    }
     if (!cg || !chess) return;
     setTurn(
       syncBoard({ cg, chess, movableColor: color, lastMove: getLastMove(chess) })

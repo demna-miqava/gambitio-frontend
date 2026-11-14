@@ -13,7 +13,12 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
   useEffect(
     function () {
-      localStorage.setItem(key, JSON.stringify(value));
+      // Blocked or full storage: keep the value in memory only
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch {
+        // ignore
+      }
     },
     [value, key]
   );

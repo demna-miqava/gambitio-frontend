@@ -10,6 +10,12 @@ export const ROUTES = {
   ARCHIVE_GAME: "/archive/:gameId",
   WATCH: "/watch",
   LEADERBOARD: "/leaderboard",
+  SERIES: "/series/:seriesId",
+  REPERTOIRE: "/repertoire",
+  STUDY: "/study",
+  STUDY_ROOM: "/study/:roomId",
+  ENDGAMES: "/endgames",
+  ENDGAME_EXERCISE: "/endgames/:exerciseId",
   PROFILE: {
     ROOT: "/profile/:id",
     OVERVIEW: "",
@@ -39,6 +45,9 @@ export const REVIEW_PARAM = "review";
 /** The archived game with the computer review started */
 export const getGameReviewRoute = (gameId: string | number) =>
   `/archive/${gameId}?${REVIEW_PARAM}=1`;
+export const getSeriesRoute = (seriesId: number) => `/series/${seriesId}`;
+export const getStudyRoomRoute = (roomId: number) => `/study/${roomId}`;
+export const getEndgameExerciseRoute = (exerciseId: string) => `/endgames/${exerciseId}`;
 export const getProfileRoute = (id: number) => `/profile/${id}`;
 export const getProfileGamesRoute = (id: number) => `/profile/${id}/games`;
 export const getProfileStatsRoute = (id: number) => `/profile/${id}/stats`;

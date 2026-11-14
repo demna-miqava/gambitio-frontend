@@ -31,6 +31,12 @@ export const PuzzleModePage = page(() => import("@/pages/PuzzleModePage"));
 export const ImportGame = page(() => import("@/pages/ImportGame"));
 export const AnalysisBoard = page(() => import("@/pages/AnalysisBoard"));
 export const Leaderboard = page(() => import("@/pages/Leaderboard"));
+export const Series = page(() => import("@/pages/Series"));
+export const Repertoire = page(() => import("@/pages/Repertoire"));
+export const StudyRooms = page(() => import("@/pages/StudyRooms"));
+export const StudyRoom = page(() => import("@/pages/StudyRoom"));
+export const EndgameLab = page(() => import("@/pages/EndgameLab"));
+export const EndgameExercise = page(() => import("@/pages/EndgameExercise"));
 export const NotFoundPage = page(() => import("@/pages/NotFoundPage"));
 // Profile
 export const Profile = page(() => import("@/pages/Profile"));
@@ -64,6 +70,12 @@ const SIGNED_IN_PAGES = [
   BotGame,
   ArchiveGame,
   ImportGame,
+  Repertoire,
+  StudyRooms,
+  StudyRoom,
+  EndgameLab,
+  EndgameExercise,
+  Series,
 ];
 
 /**

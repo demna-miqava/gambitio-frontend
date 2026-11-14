@@ -1,4 +1,4 @@
-import { useCallback, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import type {
   RatingChanges,
   MoveMessage,
@@ -17,6 +17,38 @@ import { gameMessages } from "@/services/websocketMessageDispatcher";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
 import { toast } from "sonner";
 import { useUser } from "@/hooks/useUser";
+
+/** Wait before resyncing after an error (see handleError) */
+const ERROR_SYNC_DELAY_MS = 500;
+
+/**
+ * Whether an error may have left a refused move on the board: one about a
+ * move, or one the server sends before reading the message (rate limit,
+ * bad JSON), which carries no request. Not the error for a sync, which
+ * would loop.
+ */
+export const errorMayHaveDroppedMove = (data: GameErrorMessage["data"]): boolean => {
+  const request = data.request;
+  return !request || request.type === GAME_MESSAGE_TYPES.MOVE;
+};
+
+/** What a dropped (rate-limited) message was, for the user: "your resignation wasn't sent" */
+const DROPPED_LABELS: Record<string, string> = {
+  [GAME_MESSAGE_TYPES.RESIGN]: "resignation",
+  [GAME_MESSAGE_TYPES.ABORT]: "abort",
+  [GAME_MESSAGE_TYPES.DRAW_OFFER]: "draw offer",
+  [GAME_MESSAGE_TYPES.DRAW_RESPONSE]: "draw reply",
+  [GAME_MESSAGE_TYPES.REMATCH_REQUEST]: "rematch request",
+  [GAME_MESSAGE_TYPES.REMATCH_RESPONSE]: "rematch reply",
+  [GAME_MESSAGE_TYPES.CANCEL_REMATCH]: "rematch cancel",
+  [GAME_MESSAGE_TYPES.GIVE_TIME]: "extra time",
+};
+
+/** The error as shown: a dropped action names itself, so the user knows to send it again */
+export const gameErrorText = (data: GameErrorMessage["data"]): string => {
+  const dropped = data.code === "RATE_LIMITED" ? DROPPED_LABELS[data.request?.type ?? ""] : undefined;
+  return dropped ? `Too many messages: your ${dropped} wasn't sent. Try again.` : data.message;
+};
 
 interface UseLiveGameMessagesOptions {
   setGameEnded: (ended: boolean) => void;
@@ -67,6 +99,17 @@ export const useLiveGameMessages = ({
     undefined
   );
   const [clockRunning, setClockRunning] = useState(false);
+  // The position the server last confirmed. A move shown optimistically
+  // that the server never played (e.g. it reached the server after a flag)
+  // leaves the board off it when the game ends.
+  const serverFenRef = useRef<string | null>(null);
+  const errorSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (errorSyncTimerRef.current) clearTimeout(errorSyncTimerRef.current);
+    },
+    []
+  );
 
   /** Replaces the local position with the server's. */
   const syncFromServerState = useCallback(
@@ -107,6 +150,7 @@ export const useLiveGameMessages = ({
       setWhiteTimeLeft(data.whiteTimeLeft);
       setBlackTimeLeft(data.blackTimeLeft);
       setClockRunning(data.clockRunning);
+      serverFenRef.current = data.fen;
 
       // Our own move was already shown optimistically; just confirm the position
       if (data.userId === currentUserId) {
@@ -154,14 +198,25 @@ export const useLiveGameMessages = ({
   const handleMoveRejected = useCallback(
     (data: MoveRejectedMessage) => {
       toast.error(data.message);
-      syncFromServerState(data.pgn);
+      if (syncFromServerState(data.pgn)) serverFenRef.current = chessRef.current.fen();
     },
-    [syncFromServerState]
+    [syncFromServerState, chessRef]
   );
 
-  const handleError = useCallback((data: GameErrorMessage) => {
-    toast.error(data.data.message, { id: "game_error" });
-  }, []);
+  // An error instead of move_rejected (rate limited, game over, server
+  // error) leaves a refused move on the board. Resync, a moment later so a
+  // rate limit has refilled; the error for a sync itself isn't answered.
+  const handleError = useCallback(
+    (data: GameErrorMessage) => {
+      toast.error(gameErrorText(data.data), { id: "game_error" });
+      if (!errorMayHaveDroppedMove(data.data) || errorSyncTimerRef.current) return;
+      errorSyncTimerRef.current = setTimeout(() => {
+        errorSyncTimerRef.current = null;
+        requestSync();
+      }, ERROR_SYNC_DELAY_MS);
+    },
+    [requestSync]
+  );
 
   const handleGameEnded = useCallback(
     (data: GameEndedMessage) => {
@@ -172,8 +227,13 @@ export const useLiveGameMessages = ({
       if (data.ratingChanges) {
         setRatingChanges(data.ratingChanges);
       }
+      // Show the final position, not a move the server didn't play
+      const chess = chessRef.current;
+      if (chess && serverFenRef.current !== null && chess.fen() !== serverFenRef.current) {
+        requestSync();
+      }
     },
-    [setGameEnded, setRatingChanges, setInputLocked]
+    [setGameEnded, setRatingChanges, setInputLocked, chessRef, requestSync]
   );
 
   // Only the clock that got the time changes: the other one keeps counting
@@ -191,7 +251,7 @@ export const useLiveGameMessages = ({
   const handleInitialState = useCallback(
     ({ data }: InitialGameStateMessage) => {
       if (data.isFinished) setInputLocked(true);
-      syncFromServerState(data.pgn);
+      if (syncFromServerState(data.pgn)) serverFenRef.current = chessRef.current.fen();
       setClockRunning(data.clockRunning && !data.isFinished);
       if (data.whiteTimeLeft !== null) setWhiteTimeLeft(data.whiteTimeLeft);
       if (data.blackTimeLeft !== null) setBlackTimeLeft(data.blackTimeLeft);
@@ -200,7 +260,7 @@ export const useLiveGameMessages = ({
         if (data.ratingChanges) setRatingChanges(data.ratingChanges);
       }
     },
-    [syncFromServerState, setGameEnded, setRatingChanges, setInputLocked]
+    [syncFromServerState, setGameEnded, setRatingChanges, setInputLocked, chessRef]
   );
 
   useMessageDispatcher<MoveMessage>(gameMessages, GAME_MESSAGE_TYPES.MOVE, handleIncomingMove);

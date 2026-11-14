@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { formatTimeControl } from "@/utils/timeControl";
 import { challengeToastId } from "../hooks/useManageChallenge";
 import type { Challenge } from "../types/websocket-messages";
-import { describeChallengeColor } from "../utils/challengeLabels";
+import { describeChallengeColor, describeMatchFormat } from "../utils/challengeLabels";
 
 type ChallengeNotificationProps = {
   challenge: Challenge;
@@ -18,8 +18,9 @@ const ChallengeNotification = ({
   onAccept,
   onDecline,
 }: ChallengeNotificationProps) => {
-  const { challengerId, username, avatarUrl, time, increment, color, rating } =
+  const { challengerId, username, avatarUrl, time, increment, color, rating, bestOf, seriesGame } =
     challenge;
+  const format = describeMatchFormat(bestOf, seriesGame);
 
   return (
     <div className="relative flex w-full flex-col gap-3">
@@ -44,9 +45,10 @@ const ChallengeNotification = ({
             challenged you
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
+            {format && <span className="font-medium text-foreground">{format} · </span>}
             <span className="tabular-nums">{formatTimeControl(time, increment)}</span>
             {" · "}
-            {describeChallengeColor(color)}
+            {format && !seriesGame ? `${describeChallengeColor(color)} first` : describeChallengeColor(color)}
           </p>
         </div>
       </div>

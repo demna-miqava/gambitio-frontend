@@ -1,5 +1,9 @@
 import type { PlayerColorOption } from "@/types/game.types";
 import { NOTIFICATION_MESSAGE_TYPES } from "../constants/websocket-types";
+import type { SeriesSummary } from "@/features/series/types";
+
+/** Games in a friend match: a single game, or a best-of series */
+export type BestOf = 1 | 3 | 5;
 
 export type SendChallengeMessage = {
   type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_SENT;
@@ -8,6 +12,13 @@ export type SendChallengeMessage = {
     color: PlayerColorOption;
     time: number;
     increment: number;
+    /** 3 or 5 plays a series; 1 (the default) a single game */
+    bestOf?: BestOf;
+    /**
+     * Continue this series instead: the server takes the time control,
+     * length and colours from it, and the challenged player must be the opponent
+     */
+    seriesId?: number;
   };
 };
 
@@ -46,6 +57,10 @@ export type ChallengeReceivedNotification = {
     createdAt: string;
     /** Challenger's rating for this time control */
     rating?: number;
+    bestOf?: BestOf;
+    /** Set when accepting plays the next game of an existing series */
+    seriesId?: number;
+    seriesGame?: number;
   };
 };
 
@@ -115,6 +130,10 @@ export type Challenge = {
   createdAt: string;
   /** Challenger's rating for this time control */
   rating?: number;
+  bestOf?: BestOf;
+  /** Set when accepting plays the next game of an existing series (null over REST) */
+  seriesId?: number | null;
+  seriesGame?: number | null;
 };
 
 /** A challenge the signed-in user sent and is waiting on. */
@@ -126,11 +145,27 @@ export type OutgoingChallenge = {
   increment: number;
   /** When it was sent (ms), for the client-side expiry */
   sentAt: number;
+  bestOf?: BestOf;
+  /** Set when it continues a series: the game it would start */
+  seriesId?: number;
+  seriesGame?: number;
 };
 
 export type ActiveGameNotification = {
   type: NOTIFICATION_MESSAGE_TYPES.ACTIVE_GAME;
   data: { gameId: number | null };
+};
+
+/** A series changed outside a game (resigned) */
+export type SeriesUpdatedNotification = {
+  type: NOTIFICATION_MESSAGE_TYPES.SERIES_UPDATED;
+  data: { series: SeriesSummary };
+};
+
+/** A friend added you to their study room */
+export type StudyInviteNotification = {
+  type: NOTIFICATION_MESSAGE_TYPES.STUDY_INVITE;
+  data: { roomId: number; name: string; from: { id: number; username: string } };
 };
 
 export type NotificationWebSocketMessage =
@@ -140,4 +175,6 @@ export type NotificationWebSocketMessage =
   | ChallengeDeclinedNotification
   | ChallengeCancelledNotification
   | MatchCreatedNotification
-  | ChallengeErrorNotification;
+  | ChallengeErrorNotification
+  | SeriesUpdatedNotification
+  | StudyInviteNotification;

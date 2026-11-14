@@ -9,6 +9,15 @@ import type { PlayerColorOption } from "@/types/game.types";
 import { formatTimeControl } from "@/utils/timeControl";
 import { OutgoingChallengeCard } from "../OutgoingChallengeCard";
 import { SegmentedRadioGroup, type SegmentedOption } from "@/components/SegmentedRadioGroup";
+import type { BestOf } from "@/features/notifications/types/websocket-messages";
+
+type MatchFormat = "1" | "3" | "5";
+
+const FORMAT_CHOICES: SegmentedOption<MatchFormat>[] = [
+  { value: "1", label: "Single game" },
+  { value: "3", label: "Best of 3" },
+  { value: "5", label: "Best of 5" },
+];
 
 const COLOR_CHOICES: SegmentedOption<PlayerColorOption>[] = [
   { value: "white", label: "White" },
@@ -18,6 +27,8 @@ const COLOR_CHOICES: SegmentedOption<PlayerColorOption>[] = [
 
 export const FriendInviteOptions = () => {
   const [colorChoice, setColorChoice] = useState<PlayerColorOption>("random");
+  const [format, setFormat] = useState<MatchFormat>("1");
+  const bestOf = Number(format) as BestOf;
   const { selectedFriend, isSelectedFriendLoading, timeControl, goBack } =
     useGameSetup();
   const { sendChallenge, outgoingChallenge } = useChallenges();
@@ -77,10 +88,31 @@ export const FriendInviteOptions = () => {
               aria-hidden="true"
               className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
             >
-              I play as
+              Match format
             </p>
             <SegmentedRadioGroup
-              label="I play as"
+              label="Match format"
+              value={format}
+              onValueChange={setFormat}
+              options={FORMAT_CHOICES}
+            />
+            {bestOf > 1 && (
+              <p className="text-xs text-muted-foreground">
+                Colours alternate each game and a draw is half a point. Whoever leads after{" "}
+                {bestOf} games wins, or sooner once the lead can't be caught.
+              </p>
+            )}
+          </section>
+
+          <section className="space-y-2">
+            <p
+              aria-hidden="true"
+              className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+            >
+              {bestOf > 1 ? "I play first as" : "I play as"}
+            </p>
+            <SegmentedRadioGroup
+              label={bestOf > 1 ? "I play the first game as" : "I play as"}
               value={colorChoice}
               onValueChange={setColorChoice}
               options={COLOR_CHOICES}
@@ -97,6 +129,7 @@ export const FriendInviteOptions = () => {
                   color: colorChoice,
                   time: timeControl.time,
                   increment: timeControl.increment,
+                  bestOf,
                 },
                 { username: selectedFriend.username }
               )
@@ -106,7 +139,7 @@ export const FriendInviteOptions = () => {
             <span className="tabular-nums">
               {formatTimeControl(timeControl.time, timeControl.increment)}
             </span>{" "}
-            challenge
+            {bestOf > 1 ? `best-of-${bestOf} challenge` : "challenge"}
           </Button>
           {outgoingChallenge && (
             <p className="-mt-3 text-center text-xs text-muted-foreground">
