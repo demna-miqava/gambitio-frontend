@@ -2,7 +2,7 @@
 
 Real-time online chess: play rated games against people or bots, review them with Stockfish, and train with puzzles, endgame drills and your own opening repertoire. Built with React, TypeScript and WebSockets.
 
-**[Play it live → gambitio.mipupu.com](https://gambitio.mipupu.com)** · Backend: [gambitio-backend](https://github.com/demna-miqava/gambitio-backend)
+**[Play it live → gambitio.demnamikava.dev](https://gambitio.demnamikava.dev)** · Backend: [gambitio-backend](https://github.com/demna-miqava/gambitio-backend)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/live-game-dark.png">
