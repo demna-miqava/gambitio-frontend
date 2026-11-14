@@ -24,7 +24,7 @@ export const GameList = ({ games, userId, isLoading, rows, emptyState }: GameLis
     return (
       <ul className="divide-y divide-border rounded-2xl bg-card">
         {Array.from({ length: Math.min(rows, 5) }).map((_, i) => (
-          <li key={i} className="flex items-center gap-3 py-4">
+          <li key={i} className="flex items-center gap-3 px-4 py-4">
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-40" />
               <Skeleton className="h-3 w-28" />
@@ -48,7 +48,7 @@ export const GameList = ({ games, userId, isLoading, rows, emptyState }: GameLis
         <li key={game.id}>
           <Link
             to={getArchiveGameRoute(game.id)}
-            className="flex items-center gap-3 py-3.5 transition-colors hover:bg-accent/50 focus-visible:bg-accent/60 focus-visible:outline-none"
+            className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-accent/50 focus-visible:bg-accent/60 focus-visible:outline-none"
           >
             <div className="min-w-0 flex-1 space-y-1">
               <p className="flex min-w-0 items-center text-sm text-foreground">
