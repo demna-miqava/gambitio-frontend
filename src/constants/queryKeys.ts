@@ -28,3 +28,4 @@ export const QKEY_REPERTOIRE = "repertoire";
 export const QKEY_REPERTOIRE_CHECK = "repertoire-check";
 export const QKEY_STUDY_ROOMS = "study-rooms";
 export const QKEY_ENDGAME_PROGRESS = "endgame-progress";
+export const QKEY_ENDGAME_TABLEBASE = "endgame-tablebase";

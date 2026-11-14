@@ -4,8 +4,11 @@ export type EndgameCategory =
   | "Checkmates"
   | "King and pawn"
   | "Opposition"
+  | "Pawn races"
+  | "Minor pieces"
   | "Queen endgames"
-  | "Rook endgames";
+  | "Rook endgames"
+  | "Rook vs minor piece";
 
 export type EndgameDifficulty = "beginner" | "intermediate" | "advanced";
 

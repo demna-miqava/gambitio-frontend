@@ -25,6 +25,7 @@ import type { EndgameExercise } from "../types";
 import { objectiveLabel } from "../utils/objective";
 import { movesLabel } from "../utils/format";
 import { DifficultyBadge } from "./DifficultyBadge";
+import { ExerciseAnalysis } from "./ExerciseAnalysis";
 
 const ENGINE_NAME = "Stockfish";
 
@@ -61,10 +62,13 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
     navigation,
     orientation,
     flip,
+    showArrow,
     isPlayerTurn,
   } = useEndgameExercise(exercise);
   useFlipBoardKey(flip);
   const [hintsShown, setHintsShown] = useState(0);
+  // Off by default: the exercise is to find the moves yourself
+  const [analysisOn, setAnalysisOn] = useState(false);
   const { byId } = useEndgameProgress();
   const progress = byId.get(exercise.id);
   const record = useRecordEndgameAttempt();
@@ -258,6 +262,15 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
           </Button>
         )}
       </section>
+
+      <ExerciseAnalysis
+        exercise={exercise}
+        fen={shownFen}
+        enabled={analysisOn}
+        onEnabledChange={setAnalysisOn}
+        paused={thinking}
+        onArrow={showArrow}
+      />
 
       <div className="space-y-2 lg:border-t lg:border-border/70 lg:pt-3">
         <div className="rounded-xl border border-border/70 bg-card px-1 py-1.5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">

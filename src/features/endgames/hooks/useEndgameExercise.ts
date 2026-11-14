@@ -307,6 +307,15 @@ export const useEndgameExercise = (exercise: EndgameExercise) => {
     return playUserMove(move.from, move.to, move.promotion) ? null : "That move couldn't be played.";
   };
 
+  /** The analysis's suggested move as an arrow on the board (UCI), or none */
+  const showArrow = useCallback((uci: string | null) => {
+    const cg = cgRef.current;
+    if (!cg) return;
+    cg.setAutoShapes(
+      uci ? [{ orig: uci.slice(0, 2) as Key, dest: uci.slice(2, 4) as Key, brush: "paleBlue" }] : []
+    );
+  }, []);
+
   const playerMoves = useMemo(() => countPlayerMoves(history, playerColor), [history, playerColor]);
   const positions = useMemo(
     () => [exercise.fen, ...history.map((move) => move.after)],
@@ -332,6 +341,7 @@ export const useEndgameExercise = (exercise: EndgameExercise) => {
     navigation,
     orientation,
     flip,
+    showArrow,
     isPlayerTurn:
       evaluation.status === "playing" && !thinking && chessRef.current.turn() === playerCode,
   };

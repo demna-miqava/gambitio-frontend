@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:endgames": "node --experimental-strip-types --no-warnings scripts/verify-endgames.mjs"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.58.1",
