@@ -11,6 +11,7 @@ import { TimeControlCell } from "@/features/game-table/components/TimeControlCel
 import { BotTag } from "@/features/game-table/components/PlayerCell";
 import RatingDelta from "@/features/stats/components/RatingDelta";
 import { isBotGame } from "@/utils/storedGame";
+import { fullMoves } from "@/utils/moves";
 import { getGameReviewRoute } from "@/constants/routes";
 import { HOME_GAMES_LIMIT } from "./constants";
 
@@ -53,7 +54,7 @@ export const LastGameCard = () => {
           <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
             <TimeControlCell type={game.type} time={game.time} increment={game.increment} />
             <span aria-hidden="true">·</span>
-            <span className="tabular-nums">{game.numMoves} moves</span>
+            <span className="tabular-nums">{fullMoves(game.numMoves)} moves</span>
             <span aria-hidden="true">·</span>
             <span>{playedAgo}</span>
             {me.ratingChange ? (

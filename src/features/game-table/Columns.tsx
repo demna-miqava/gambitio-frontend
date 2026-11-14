@@ -7,6 +7,7 @@ import { getArchiveGameRoute } from "@/constants/routes";
 import { formatShortDate } from "@/lib/utils";
 import type { StoredGameListItem } from "@/types";
 import { getResult } from "./utils/gameResult";
+import { fullMoves } from "@/utils/moves";
 
 export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListItem>[] => [
   {
@@ -52,7 +53,7 @@ export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListI
     cell: ({ row }) => {
       return (
         <span className="tabular-nums text-muted-foreground">
-          {row.original.numMoves ?? "–"}
+          {row.original.numMoves == null ? "–" : fullMoves(row.original.numMoves)}
         </span>
       );
     },

@@ -8,6 +8,7 @@ import { ResultBadge } from "./ResultBadge";
 import { TimeControlCell } from "./TimeControlCell";
 import { BotTag } from "./PlayerCell";
 import { isBotPlayer } from "@/utils/storedGame";
+import { fullMoves } from "@/utils/moves";
 
 interface GameListProps {
   games: StoredGameListItem[];
@@ -64,7 +65,7 @@ export const GameList = ({ games, userId, isLoading, rows, emptyState }: GameLis
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <TimeControlCell type={game.type} time={game.time} increment={game.increment} />
                 <span aria-hidden="true">·</span>
-                <span className="tabular-nums">{game.numMoves ?? 0} moves</span>
+                <span className="tabular-nums">{fullMoves(game.numMoves ?? 0)} moves</span>
                 <span aria-hidden="true">·</span>
                 <span>{format(new Date(game.createdAt), "MMM d")}</span>
               </div>

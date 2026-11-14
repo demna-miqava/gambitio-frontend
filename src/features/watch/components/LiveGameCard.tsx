@@ -7,6 +7,7 @@ import { useAvatarSrc } from "@/hooks/useAvatarSrc";
 import { getGameRoute } from "@/constants/routes";
 import { formatTimeControl, getTimeControlIcon } from "@/utils/timeControl";
 import { cn } from "@/lib/utils";
+import { fullMoves } from "@/utils/moves";
 import type { LiveGameSummary, LivePlayer } from "@/types/liveGames.types";
 import { LiveGamePreview } from "./LiveGamePreview";
 
@@ -50,7 +51,7 @@ export const LiveGameCard = ({ game, currentUserId }: LiveGameCardProps) => {
     currentUserId !== undefined &&
     (game.whitePlayer.id === currentUserId || game.blackPlayer.id === currentUserId);
   const started = formatDistanceToNowStrict(new Date(game.startedAt), { addSuffix: true });
-  const moves = Math.ceil(game.numMoves / 2);
+  const moves = fullMoves(game.numMoves);
 
   return (
     <article
