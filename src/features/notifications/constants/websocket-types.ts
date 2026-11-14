@@ -20,5 +20,7 @@ export enum NOTIFICATION_MESSAGE_TYPES {
   SERIES_UPDATED = "series_updated",
   /** A friend added you to a study room: { roomId, name, from } */
   STUDY_INVITE = "study_invite",
+  /** A friend request or friendship with someone changed: { event, user } */
+  FRIENDS_UPDATED = "friends_updated",
   ERROR = "error",
 }

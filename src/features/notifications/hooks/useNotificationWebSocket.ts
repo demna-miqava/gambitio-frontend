@@ -1,6 +1,11 @@
 import useWebSocket from "react-use-websocket";
 import { useQueryClient } from "@tanstack/react-query";
-import { QKEY_ACTIVE_GAME, QKEY_CHALLENGES } from "@/constants/queryKeys";
+import {
+  QKEY_ACTIVE_GAME,
+  QKEY_CHALLENGES,
+  QKEY_PENDING_FRIEND_REQUESTS,
+  QKEY_USER_FRIENDS,
+} from "@/constants/queryKeys";
 import { WS_BASE_URL } from "@/constants/apiConfig";
 import { useUser } from "@/hooks/useUser";
 import { useAuthenticatedWebSocket, useSocketReauth } from "@/hooks/useAuthenticatedWebSocket";
@@ -26,10 +31,12 @@ export const useNotificationWebSocket = () => {
   const { sendMessage, readyState } = useWebSocket(getUrl, {
     ...RECONNECT_OPTIONS,
     protocols,
-    // Challenges (and games) may have started or ended while we were offline
+    // Challenges, games and friend requests may have changed while we were offline
     onOpen: () => {
       queryClient.invalidateQueries({ queryKey: [QKEY_CHALLENGES] });
       queryClient.invalidateQueries({ queryKey: [QKEY_ACTIVE_GAME] });
+      queryClient.invalidateQueries({ queryKey: [QKEY_PENDING_FRIEND_REQUESTS] });
+      queryClient.invalidateQueries({ queryKey: [QKEY_USER_FRIENDS] });
     },
     onMessage: (event) => {
       const message = parseWebSocketMessage<NotificationWebSocketMessage>(event);

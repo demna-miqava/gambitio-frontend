@@ -168,6 +168,24 @@ export type StudyInviteNotification = {
   data: { roomId: number; name: string; from: { id: number; username: string } };
 };
 
+/** What the other user did, from the point of view of the one being told */
+export type FriendsUpdatedEvent =
+  | "request_received"
+  | "request_accepted"
+  | "request_declined"
+  | "request_cancelled"
+  | "removed";
+
+/** A friend request or friendship with another player changed */
+export type FriendsUpdatedNotification = {
+  type: NOTIFICATION_MESSAGE_TYPES.FRIENDS_UPDATED;
+  data: {
+    event: FriendsUpdatedEvent;
+    /** The other player; username is set for request_received and request_accepted */
+    user: { id: number; username?: string; avatarUrl?: string | null };
+  };
+};
+
 export type NotificationWebSocketMessage =
   | ActiveGameNotification
   | ChallengeReceivedNotification
@@ -177,4 +195,5 @@ export type NotificationWebSocketMessage =
   | MatchCreatedNotification
   | ChallengeErrorNotification
   | SeriesUpdatedNotification
-  | StudyInviteNotification;
+  | StudyInviteNotification
+  | FriendsUpdatedNotification;
