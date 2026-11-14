@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { Bot as BotIcon, Flag, Loader2, RotateCcw } from "lucide-react";
+import { Bot as BotIcon, Flag, Loader2, RotateCcw, Undo2 } from "lucide-react";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { GameLayout } from "@/features/game/components/GameLayout";
 import { PromotionSelector } from "@/features/game/components/PromotionSelector";
@@ -10,7 +10,6 @@ import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 import { MovesListView } from "@/features/game/components/MovesList";
 import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { ActionButton } from "@/features/current-game/components/ActionButton";
-import { GAME_BUTTON_STYLES } from "@/features/current-game/constants/button-styles";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { LeaveGameDialog } from "@/components/LeaveGameDialog";
 import { Button } from "@/components/ui/button";
@@ -55,12 +54,22 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
     selectPromotion,
     cancelPromotion,
     resign,
+    undo,
+    canUndo,
     submitTypedMove,
     navigation,
     orientation,
     flip,
     isPlayerTurn,
   } = useBotGame(bot, color);
+  // Said after an undo, until the next move: the move count it went back
+  // to, and how many undos so far (repeated text isn't read out again, so
+  // every other one gets a trailing no-break space)
+  const [undone, setUndone] = useState<{ ply: number; count: number } | null>(null);
+  const takeBack = () => {
+    const ply = undo();
+    if (ply !== null) setUndone((prev) => ({ ply, count: (prev?.count ?? 0) + 1 }));
+  };
   useFlipBoardKey(flip);
 
   // Bot games run in the browser and are only saved once finished, so
@@ -97,9 +106,19 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
   // player's own moves aren't repeated back)
   const lastMove = history.at(-1);
   const playerCode = color === "white" ? "w" : "b";
+  const undoAnnouncement =
+    undone !== null && undone.ply === history.length
+      ? `Move taken back. ${
+          lastMove
+            ? `Last move: ${lastMove.color === playerCode ? "you" : bot.name} played ${describeMove(lastMove)}. `
+            : ""
+        }Your move.${undone.count % 2 ? "" : "\u00a0"}`
+      : null;
   const announcement = engineError
     ? status
-    : resultText
+    : undoAnnouncement
+      ? undoAnnouncement
+      : resultText
       ? `${lastMove && lastMove.color !== playerCode ? `${bot.name} played ${describeMove(lastMove)}. ` : ""}${resultText}.`
       : lastMove && lastMove.color !== playerCode
         ? `${bot.name} played ${describeMove(lastMove)}. Your move.`
@@ -214,14 +233,23 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
           <FlipBoardButton onFlip={flip} orientation={orientation} />
         </div>
         {!result ? (
-          <ActionButton
-            variant="resign"
-            className={cn(GAME_BUTTON_STYLES.resign, "w-full")}
-            onClick={resign}
-            icon={<Flag className="size-4" />}
-            label="Resign"
-            confirmTitle={confirmResign ? "Resign this game?" : undefined}
-          />
+          <div className="flex gap-2">
+            <ActionButton
+              variant="takeback"
+              onClick={takeBack}
+              icon={<Undo2 className="size-4" aria-hidden="true" />}
+              label="Undo"
+              ariaLabel="Undo your last move"
+              disabled={!canUndo}
+            />
+            <ActionButton
+              variant="resign"
+              onClick={resign}
+              icon={<Flag className="size-4" aria-hidden="true" />}
+              label="Resign"
+              confirmTitle={confirmResign ? "Resign this game?" : undefined}
+            />
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-2">

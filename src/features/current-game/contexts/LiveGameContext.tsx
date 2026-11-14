@@ -17,6 +17,7 @@ import {
 } from "@/features/game/hooks/useGameWebSocket";
 import type {
   RatingChanges,
+  TakebackMessage,
   TimeAddedMessage,
 } from "@/features/game/types/websocket-messages";
 import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
@@ -370,6 +371,21 @@ export const LiveGameProvider = ({
     [announce, color, spectating, game.whitePlayer, game.blackPlayer]
   );
 
+  // The position changed under any promotion picker; announce whose move it is now
+  const handleTakeback = useCallback(
+    ({ moveNumber }: TakebackMessage) => {
+      setPendingPromotion(null);
+      const toMove = moveNumber % 2 === 0 ? "white" : "black";
+      if (spectating) {
+        const mover = toMove === "white" ? game.whitePlayer : game.blackPlayer;
+        announce(`Moves were taken back. ${mover.username} to move.`);
+      } else {
+        announce(`Moves were taken back. ${toMove === color ? "Your move." : "Your opponent's move."}`);
+      }
+    },
+    [announce, color, spectating, game.whitePlayer, game.blackPlayer]
+  );
+
   const requestSync = useCallback(() => {
     sendMessage(JSON.stringify({ type: GAME_MESSAGE_TYPES.SYNC }));
   }, [sendMessage]);
@@ -379,6 +395,7 @@ export const LiveGameProvider = ({
     setRatingChanges,
     onOpponentMove: handleOpponentMove,
     onTimeAdded: handleTimeAdded,
+    onTakeback: handleTakeback,
     requestSync,
     turnStartedAtRef,
   });

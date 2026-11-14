@@ -11,6 +11,31 @@ export type DrawResponseMessage = {
   userId?: number;
 };
 
+/** To the requester's opponent: answer with a takeback_response */
+export type TakebackRequestMessage = {
+  type: GAME_MESSAGE_TYPES.TAKEBACK_REQUEST;
+};
+
+/** To the requester, when the opponent declined (an accept sends TakebackMessage) */
+export type TakebackResponseMessage = {
+  type: GAME_MESSAGE_TYPES.TAKEBACK_RESPONSE;
+  accepted: boolean;
+};
+
+/**
+ * A takeback was accepted; sent to both players and spectators. The game is
+ * now this position, `moveNumber` half-moves in; the clocks as of now.
+ */
+export type TakebackMessage = {
+  type: GAME_MESSAGE_TYPES.TAKEBACK;
+  fen: string;
+  pgn: string;
+  moveNumber: number;
+  clockRunning: boolean;
+  whiteTimeLeft: number;
+  blackTimeLeft: number;
+};
+
 export type RatingChanges = {
   whiteRatingChange: number;
   blackRatingChange: number;
@@ -92,6 +117,8 @@ export type InitialGameStateMessage = {
     whiteTimeLeft: number | null;
     blackTimeLeft: number | null;
     drawOfferedBy: number | null;
+    /** The player waiting for an answer to a takeback request (players only) */
+    takebackRequestedBy?: number | null;
     rematchRequestedBy: number | null;
     /** The game the rematch started, once it has */
     rematchGameId?: number | null;
@@ -149,6 +176,9 @@ export type GameErrorMessage = {
 export type GameWebSocketMessage =
   | DrawOfferMessage
   | DrawResponseMessage
+  | TakebackRequestMessage
+  | TakebackResponseMessage
+  | TakebackMessage
   | GameEndedMessage
   | MoveMessage
   | MoveRejectedMessage

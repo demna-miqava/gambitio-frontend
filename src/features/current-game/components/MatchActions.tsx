@@ -1,5 +1,7 @@
-import { Flag, HandshakeIcon, X } from "lucide-react";
+import { Flag, HandshakeIcon, Undo2, X } from "lucide-react";
 import { ActionButton } from "./ActionButton";
+import { GAME_BUTTON_STYLES } from "../constants/button-styles";
+import { cn } from "@/lib/utils";
 import { useSettings } from "@/features/settings/SettingsContext";
 
 interface MatchActionsProps {
@@ -10,17 +12,28 @@ interface MatchActionsProps {
   onOfferDraw: () => void;
   /** Our draw offer is waiting for an answer */
   drawOfferSent: boolean;
+  onRequestTakeback: () => void;
+  /** Our takeback request is waiting for an answer */
+  takebackRequested: boolean;
+  /**
+   * The server would take a takeback request now (there's a move of ours to
+   * take back, nothing pending, not just declined)
+   */
+  canRequestTakeback: boolean;
   /** Offline: nothing could be sent */
   disabled: boolean;
 }
 
-/** Abort, or Resign and Offer draw, while the game is on. */
+/** Abort, or Resign, Offer draw and Takeback, while the game is on. */
 const MatchActions = ({
   hasMoves,
   onAbort,
   onResign,
   onOfferDraw,
   drawOfferSent,
+  onRequestTakeback,
+  takebackRequested,
+  canRequestTakeback,
   disabled,
 }: MatchActionsProps) => {
   const { settings } = useSettings();
@@ -38,8 +51,9 @@ const MatchActions = ({
     );
   }
 
+  // The panel is too narrow for three labelled buttons in a row
   return (
-    <div className="flex gap-2">
+    <div className="grid grid-cols-2 gap-2">
       <ActionButton
         variant="resign"
         onClick={onResign}
@@ -59,6 +73,14 @@ const MatchActions = ({
         confirmTitle={
           confirmDrawResignationEnabled ? "Offer your opponent a draw?" : undefined
         }
+      />
+      <ActionButton
+        variant="takeback"
+        className={cn(GAME_BUTTON_STYLES.takeback, "col-span-2")}
+        onClick={onRequestTakeback}
+        icon={<Undo2 className="size-4" aria-hidden="true" />}
+        label={takebackRequested ? "Takeback requested…" : "Ask for a takeback"}
+        disabled={disabled || !canRequestTakeback}
       />
     </div>
   );

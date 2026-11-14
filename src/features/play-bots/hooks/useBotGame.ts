@@ -14,6 +14,7 @@ import { attachTouchDragAssist } from "@/features/game/utils/touchDragAssist";
 import { BotEngine } from "../services/botEngine";
 import type { Bot } from "../constants/bots";
 import { botThinkDelayMs } from "../utils/thinkDelay";
+import { botUndoPlies } from "../utils/botUndo";
 import { useBoardOrientation } from "@/features/game/hooks/useBoardOrientation";
 
 /** How a bot game ended, in the server's terms (POST /games/bot) */
@@ -106,6 +107,14 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
   // Set as soon as the game ends (including by resignation, which doesn't
   // change the position), so a late engine reply or user move is ignored
   const finishedRef = useRef(false);
+  // Bumped by every bot search and by Undo: a search whose number is no
+  // longer current was cancelled, and its reply is dropped
+  const searchIdRef = useRef(0);
+  // The engine search under way, if any. Undo stops it, and the next search
+  // waits for its (dropped) reply first: the engine answers one search at a
+  // time, and a new search started before the stopped one has answered
+  // would get that answer.
+  const searchRef = useRef<Promise<unknown> | null>(null);
   const [pendingPromotion, setPendingPromotion] = useState<{
     from: Square;
     to: Square;
@@ -158,15 +167,25 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
     const engine = engineRef.current;
     const chess = chessRef.current;
     if (!engine || chess.isGameOver() || finishedRef.current) return;
+    const searchId = ++searchIdRef.current;
+    const isCurrent = () => searchIdRef.current === searchId;
     setThinking(true);
     try {
+      await searchRef.current?.catch(() => {});
+      if (!isCurrent()) return;
       const fen = chess.fen();
       const minDelay = wait(botThinkDelayMs(bot.rating));
-      const uci = await engine.bestMove(fen, bot.rating);
+      const search = engine.bestMove(fen, bot.rating);
+      searchRef.current = search;
+      const uci = await search.finally(() => {
+        if (searchRef.current === search) searchRef.current = null;
+      });
       await minDelay;
-      // Ignore a reply that arrives after the position changed (e.g. resign/restart)
+      // Ignore a reply that arrives after the position changed (e.g.
+      // undo/resign/restart)
       if (
         !uci ||
+        !isCurrent() ||
         finishedRef.current ||
         chessRef.current !== chess ||
         chess.fen() !== fen
@@ -181,7 +200,8 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
     } catch {
       setEngineError(true);
     } finally {
-      setThinking(false);
+      // A cancelled search leaves "thinking" to the one that replaced it
+      if (isCurrent()) setThinking(false);
     }
   }, [afterMove, bot.rating]);
 
@@ -342,6 +362,32 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
     return playUserMove(move.from, move.to, move.promotion) ? null : "That move couldn't be played.";
   };
 
+  /**
+   * Takes back the player's last move and the bot's reply, or only the
+   * player's move while the bot is still thinking (the search is cancelled).
+   * Either way it's the player's move again. Not once the game is over.
+   * Returns the number of moves left, or null if nothing was taken back.
+   */
+  const undo = (): number | null => {
+    const chess = chessRef.current;
+    if (finishedRef.current || engineError) return null;
+    const plies = botUndoPlies(chess.history({ verbose: true }), playerCode);
+    if (plies === 0) return null;
+    searchIdRef.current += 1;
+    if (searchRef.current) engineRef.current?.stop();
+    setThinking(false);
+    for (let i = 0; i < plies; i++) chess.undo();
+    setPendingPromotion(null);
+    // A premove or selection was for the position that's gone
+    cgRef.current?.cancelPremove();
+    cgRef.current?.selectSquare(null);
+    navigation.goToLastMove();
+    syncBoard();
+    const moves = chess.history({ verbose: true });
+    setHistory(moves);
+    return moves.length;
+  };
+
   const resign = () => {
     if (result || finishedRef.current) return;
     finishedRef.current = true;
@@ -360,6 +406,9 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
     selectPromotion,
     cancelPromotion,
     resign,
+    undo,
+    /** Undo would take something back (see undo) */
+    canUndo: !result && !engineError && botUndoPlies(history, playerCode) > 0,
     submitTypedMove,
     navigation,
     orientation,

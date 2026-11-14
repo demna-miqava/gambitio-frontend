@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -22,6 +23,11 @@ export default defineConfig({
         ws: true,
       },
     },
+  },
+  test: {
+    // Tests skip CSS by default (imports come back empty); the share-GIF
+    // tests read the piece images out of this one with ?raw
+    css: { include: [/chessground\.cburnett\.css/] },
   },
   build: {
     rollupOptions: {

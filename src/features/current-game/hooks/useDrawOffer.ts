@@ -4,6 +4,7 @@ import type {
   DrawResponseMessage,
   InitialGameStateMessage,
   MoveMessage,
+  TakebackMessage,
 } from "@/features/game/types/websocket-messages";
 import { useUser } from "@/hooks/useUser";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
@@ -87,6 +88,14 @@ export const useDrawOffer = () => {
     [id]
   );
 
+  // The server drops a pending draw offer when moves are taken back
+  const handleTakeback = useCallback(() => {
+    setIncomingOffer(false);
+    setOfferSent(false);
+    setOpponentDeclined(false);
+    toast.dismiss(DRAW_TOAST_ID);
+  }, []);
+
   const handleInitialState = useCallback(
     ({ data }: InitialGameStateMessage) => {
       const incoming =
@@ -110,6 +119,7 @@ export const useDrawOffer = () => {
     handleDrawResponse
   );
   useMessageDispatcher<MoveMessage>(gameMessages, GAME_MESSAGE_TYPES.MOVE, handleMove);
+  useMessageDispatcher<TakebackMessage>(gameMessages, GAME_MESSAGE_TYPES.TAKEBACK, handleTakeback);
   useMessageDispatcher<InitialGameStateMessage>(
     gameMessages,
     GAME_MESSAGE_TYPES.INITIAL_GAME_STATE,

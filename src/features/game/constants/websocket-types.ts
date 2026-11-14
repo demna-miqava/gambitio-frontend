@@ -12,6 +12,11 @@ export const enum GAME_MESSAGE_TYPES {
   DRAW_OFFER = "draw_offer",
   DRAW_RESPONSE = "draw_response",
 
+  // Takeback actions. TAKEBACK_REQUEST and TAKEBACK_RESPONSE go both ways
+  // (the opponent gets the request; the requester gets a decline)
+  TAKEBACK_REQUEST = "takeback_request",
+  TAKEBACK_RESPONSE = "takeback_response",
+
   // Rematch actions
   REMATCH_REQUEST = "rematch_request",
   REMATCH_RESPONSE = "rematch_response",
@@ -30,4 +35,6 @@ export const enum GAME_MESSAGE_TYPES {
   SPECTATORS = "spectators",
   // A player gave the other time; sent to everyone on the game
   TIME_ADDED = "time_added",
+  // A takeback was accepted: the new position; sent to everyone on the game
+  TAKEBACK = "takeback",
 }

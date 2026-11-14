@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { BookMarked, Copy, Download, FileUp, FlipVertical2, MoreHorizontal, RotateCcw, UsersRound } from "lucide-react";
+import { BookMarked, Copy, Download, FileUp, Film, FlipVertical2, Loader2, MoreHorizontal, RotateCcw, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAnalysis } from "@/features/engine-analysis";
+import { useShareGif } from "@/features/share-gif";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { cn } from "@/lib/utils";
 import { useArchiveGame } from "../contexts/ArchiveGameContext";
@@ -24,10 +25,12 @@ interface IconActionProps {
   hint?: string;
   onClick: () => void;
   disabled?: boolean;
+  /** Shows a spinner while its action runs (stays focusable; the action ignores repeat clicks) */
+  busy?: boolean;
 }
 
 /** 36px icon button with a tooltip and an accessible name. */
-const IconAction = ({ icon: Icon, label, hint, onClick, disabled = false }: IconActionProps) => (
+const IconAction = ({ icon: Icon, label, hint, onClick, disabled = false, busy = false }: IconActionProps) => (
   <Tooltip>
     <TooltipTrigger asChild>
       <Button
@@ -37,9 +40,11 @@ const IconAction = ({ icon: Icon, label, hint, onClick, disabled = false }: Icon
         onClick={onClick}
         disabled={disabled}
         aria-label={label}
+        aria-busy={busy || undefined}
+        aria-disabled={busy || undefined}
         className="text-muted-foreground hover:text-foreground disabled:opacity-40"
       >
-        <Icon aria-hidden="true" />
+        {busy ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Icon aria-hidden="true" />}
       </Button>
     </TooltipTrigger>
     <TooltipContent side="bottom" sideOffset={4}>
@@ -64,6 +69,8 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
   const noMoves = root.children.length === 0;
   const lineActions = useLineActions();
   const { flipBoard } = useChessBoardContext();
+  // Finished games only (null on the import page and the analysis board)
+  const shareGif = useShareGif();
 
   return (
     <div className={cn("h-13 shrink-0 items-center gap-1 border-b border-border/70 pr-3 pl-4", className)}>
@@ -79,6 +86,16 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
           onClick={resetAnalysis}
           disabled={!hasAnalysis}
         />
+        {shareGif && (
+          <IconAction
+            icon={Film}
+            label={shareGif.isGenerating ? "Making GIF" : "Share GIF"}
+            hint={shareGif.isGenerating ? "Making GIF…" : "Share the game as an animated GIF"}
+            onClick={shareGif.shareGif}
+            disabled={!shareGif.canShareGif}
+            busy={shareGif.isGenerating}
+          />
+        )}
         <DropdownMenu>
           <Tooltip>
             <TooltipTrigger asChild>

@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { OpeningName } from "@/features/openings";
 import { nodesAlong } from "../utils/analysisTree";
 import { useLineActions } from "../hooks/useLineActions";
+import { ShareGifButton } from "@/features/share-gif";
 
 /** Phones: the desktop header (with these in its menu) is hidden */
 const MobileLineActions = () => {
@@ -36,6 +37,8 @@ const MobileLineActions = () => {
       <Button variant="outline" size="md" onClick={openStudy}>
         <UsersRound aria-hidden="true" /> Study together
       </Button>
+      {/* Finished games only */}
+      <ShareGifButton className="col-span-2" />
       {dialogs}
     </div>
   );

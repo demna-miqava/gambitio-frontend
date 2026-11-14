@@ -6,6 +6,7 @@ import type {
   GameErrorMessage,
   GameEndedMessage,
   InitialGameStateMessage,
+  TakebackMessage,
   TimeAddedMessage,
 } from "@/features/game/types/websocket-messages";
 import { getLastMove, syncBoard } from "@/features/game/utils/board-utils";
@@ -38,6 +39,8 @@ const DROPPED_LABELS: Record<string, string> = {
   [GAME_MESSAGE_TYPES.ABORT]: "abort",
   [GAME_MESSAGE_TYPES.DRAW_OFFER]: "draw offer",
   [GAME_MESSAGE_TYPES.DRAW_RESPONSE]: "draw reply",
+  [GAME_MESSAGE_TYPES.TAKEBACK_REQUEST]: "takeback request",
+  [GAME_MESSAGE_TYPES.TAKEBACK_RESPONSE]: "takeback reply",
   [GAME_MESSAGE_TYPES.REMATCH_REQUEST]: "rematch request",
   [GAME_MESSAGE_TYPES.REMATCH_RESPONSE]: "rematch reply",
   [GAME_MESSAGE_TYPES.CANCEL_REMATCH]: "rematch cancel",
@@ -60,6 +63,8 @@ interface UseLiveGameMessagesOptions {
   onOpponentMove?: (san: string, userId: number) => void;
   /** Called when either player gives the other time */
   onTimeAdded?: (data: TimeAddedMessage) => void;
+  /** Called when a takeback was accepted, after the board went back */
+  onTakeback?: (data: TakebackMessage) => void;
   /**
    * Asks the server for the full game state (answered with
    * initial_game_state). Move messages carry only the move and the FEN after
@@ -83,13 +88,14 @@ export const useLiveGameMessages = ({
   setRatingChanges,
   onOpponentMove,
   onTimeAdded,
+  onTakeback,
   requestSync,
   turnStartedAtRef,
 }: UseLiveGameMessagesOptions) => {
   const { chessRef, cgRef, color, setTurn, inputLockedRef, setInputLocked } =
     useChessBoardContext();
   const { goToLastMove } = useGameNavigation();
-  const { playSoundForMove } = useChessSound();
+  const { playSoundForMove, playGenericSound } = useChessSound();
   const { id: currentUserId } = useUser();
 
   const [whiteTimeLeft, setWhiteTimeLeft] = useState<number | undefined>(
@@ -111,9 +117,12 @@ export const useLiveGameMessages = ({
     []
   );
 
-  /** Replaces the local position with the server's. */
+  /**
+   * Replaces the local position with the server's. `playPremove`: play a
+   * premove the player queued, if it's their turn now.
+   */
   const syncFromServerState = useCallback(
-    (pgn: string) => {
+    (pgn: string, playPremove = true) => {
       const chess = chessRef.current;
       const cg = cgRef.current;
       if (!chess || !cg) return false;
@@ -132,7 +141,7 @@ export const useLiveGameMessages = ({
         chess,
         movableColor: inputLockedRef.current ? undefined : color,
         lastMove: getLastMove(chess),
-        playPremove: true,
+        playPremove,
       });
       setTurn(turn);
       goToLastMove();
@@ -236,6 +245,26 @@ export const useLiveGameMessages = ({
     [setGameEnded, setRatingChanges, setInputLocked, chessRef, requestSync]
   );
 
+  // Both players agreed to take moves back. Everyone on the game (spectators
+  // too) gets the position as PGN, since moves are dropped, not added. A
+  // premove or selection was made for the old position: drop it rather than
+  // play it on the new one.
+  const handleTakeback = useCallback(
+    (data: TakebackMessage) => {
+      setWhiteTimeLeft(data.whiteTimeLeft);
+      setBlackTimeLeft(data.blackTimeLeft);
+      setClockRunning(data.clockRunning);
+      serverFenRef.current = data.fen;
+      cgRef.current?.cancelPremove();
+      cgRef.current?.cancelMove();
+      const synced = syncFromServerState(data.pgn, false);
+      playGenericSound();
+      onTakeback?.(data);
+      if (!synced || chessRef.current.fen() !== data.fen) requestSync();
+    },
+    [cgRef, chessRef, syncFromServerState, requestSync, playGenericSound, onTakeback]
+  );
+
   // Only the clock that got the time changes: the other one keeps counting
   // from where this device has it
   const handleTimeAdded = useCallback(
@@ -285,6 +314,7 @@ export const useLiveGameMessages = ({
     GAME_MESSAGE_TYPES.INITIAL_GAME_STATE,
     handleInitialState
   );
+  useMessageDispatcher<TakebackMessage>(gameMessages, GAME_MESSAGE_TYPES.TAKEBACK, handleTakeback);
 
   return { whiteTimeLeft, blackTimeLeft, clockRunning };
 };

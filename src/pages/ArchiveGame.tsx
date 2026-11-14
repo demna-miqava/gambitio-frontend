@@ -15,6 +15,7 @@ import { GameModeProvider } from "@/features/game/modes/GameModeProvider";
 import { GAME_MODES } from "@/features/game/modes/types";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { GameReviewProvider } from "@/features/game-review";
+import { ShareGifProvider } from "@/features/share-gif";
 
 const ArchiveGame = () => {
   const { gameId } = useParams();
@@ -64,16 +65,18 @@ const ArchiveGame = () => {
   };
 
   const page = (
-    <GameModeProvider mode={GAME_MODES.ARCHIVE}>
-      <h1 className="sr-only">
-        {`Game review: ${gameData.whitePlayer.username} vs ${gameData.blackPlayer.username}`}
-      </h1>
-      <GameLayout
-        board={<BoardSection gameData={gameData} />}
-        fitPanel
-        sidebar={<ArchiveGameSidebar />}
-      />
-    </GameModeProvider>
+    <ShareGifProvider game={gameData} viewerId={currentUserId}>
+      <GameModeProvider mode={GAME_MODES.ARCHIVE}>
+        <h1 className="sr-only">
+          {`Game review: ${gameData.whitePlayer.username} vs ${gameData.blackPlayer.username}`}
+        </h1>
+        <GameLayout
+          board={<BoardSection gameData={gameData} />}
+          fitPanel
+          sidebar={<ArchiveGameSidebar />}
+        />
+      </GameModeProvider>
+    </ShareGifProvider>
   );
 
   return (

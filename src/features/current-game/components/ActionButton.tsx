@@ -23,6 +23,8 @@ type ActionButtonProps = {
   /** Confirm button label; defaults to the action's own label (e.g. "Resign") */
   confirmText?: string;
   disabled?: boolean;
+  /** Accessible name when the visible label alone is ambiguous ("Accept" what?) */
+  ariaLabel?: string;
 };
 
 export const ActionButton = ({
@@ -34,6 +36,7 @@ export const ActionButton = ({
   confirmTitle,
   confirmText,
   disabled = false,
+  ariaLabel,
 }: ActionButtonProps) => {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -53,6 +56,7 @@ export const ActionButton = ({
       onClick={needsConfirmation ? undefined : onClick}
       className={className || GAME_BUTTON_STYLES[variant]}
       disabled={disabled}
+      aria-label={ariaLabel}
     >
       {icon}
       {label}

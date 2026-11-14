@@ -21,6 +21,9 @@ describe("errorMayHaveDroppedMove", () => {
       errorMayHaveDroppedMove({ message: "No draw offer", request: { type: "draw_response" } } as never)
     ).toBe(false);
     expect(errorMayHaveDroppedMove({ message: "Failed", request: { type: "sync" } } as never)).toBe(false);
+    expect(
+      errorMayHaveDroppedMove({ message: "Declined", request: { type: "takeback_request" } } as never)
+    ).toBe(false);
   });
 });
 
@@ -32,6 +35,9 @@ describe("gameErrorText", () => {
     expect(gameErrorText({ message: "Too many messages", code: "RATE_LIMITED", request: { type: "move" } })).toBe(
       "Too many messages"
     );
+    expect(
+      gameErrorText({ message: "Too many messages", code: "RATE_LIMITED", request: { type: "takeback_request" } })
+    ).toBe("Too many messages: your takeback request wasn't sent. Try again.");
     expect(gameErrorText({ message: "No draw offer", code: "NO_OFFER", request: { type: "draw_response" } })).toBe(
       "No draw offer"
     );

@@ -2,7 +2,8 @@ import {
   GameModeMoveControls,
   GameModeMovesList,
 } from "@/features/game/modes/GameModeContext";
-import DrawOffer from "./DrawOffer";
+import { HandshakeIcon, Undo2 } from "lucide-react";
+import { OfferPrompt, OfferStatus } from "./OfferPrompt";
 import { useMatchmaking } from "@/features/matchmaking/hooks/useMatchmaking";
 import MatchActions from "./MatchActions";
 import PostGameActions from "./PostGameActions";
@@ -10,9 +11,10 @@ import GameResultDialog from "./GameResultDialog";
 import { TypeMoveInput } from "./TypeMoveInput";
 import { useLiveGame } from "../contexts/LiveGameContext";
 import { useDrawOffer } from "../hooks/useDrawOffer";
+import { useTakeback } from "../hooks/useTakeback";
 import { useGameActions } from "../hooks/useGameActions";
 import { useRematch } from "../hooks/useRematch";
-import { formatTimeControl, getTimeControlIcon } from "@/utils/timeControl";
+import { formatTimeControl } from "@/utils/timeControl";
 import { OpeningName } from "@/features/openings";
 import { useShownLine } from "@/features/game/hooks/useShownLine";
 import { useLiveSeries } from "@/features/series/hooks/useLiveSeries";
@@ -47,7 +49,7 @@ export const MovesContainer = () => {
     acceptDraw,
     declineDraw,
   } = useDrawOffer();
-  const TypeIcon = getTimeControlIcon(game.type);
+  const takeback = useTakeback();
   const shownLine = useShownLine();
   const { id: viewerId } = useUser();
   // A series game shows the series score; the rematch becomes "Next game"
@@ -60,7 +62,6 @@ export const MovesContainer = () => {
       <div className="hidden items-center justify-between lg:flex">
         <h2 className="text-sm font-semibold text-foreground">Moves</h2>
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          {TypeIcon && <TypeIcon className="size-3.5" aria-hidden="true" />}
           <span className="tabular-nums">
             {formatTimeControl(game.time, game.increment)}
           </span>
@@ -76,16 +77,29 @@ export const MovesContainer = () => {
         <GameModeMovesList />
       </div>
 
-      {showDrawOffer && <DrawOffer onAccept={acceptDraw} onDecline={declineDraw} />}
-      {showOpponentDeclined && (
-        <div
-          className="w-full rounded-xl border border-border/70 bg-muted/50 px-4 py-3"
-          role="status"
-        >
-          <p className="text-sm text-muted-foreground">
-            Your opponent declined the draw.
-          </p>
-        </div>
+      {showDrawOffer && (
+        <OfferPrompt
+          icon={<HandshakeIcon className="size-5 text-primary" aria-hidden="true" />}
+          message="Your opponent offered a draw"
+          subject="draw"
+          onAccept={acceptDraw}
+          onDecline={declineDraw}
+        />
+      )}
+      {showOpponentDeclined && <OfferStatus>Your opponent declined the draw.</OfferStatus>}
+      {takeback.showTakebackRequest && (
+        <OfferPrompt
+          icon={<Undo2 className="size-5 text-primary" aria-hidden="true" />}
+          message="Your opponent asked to take back their last move"
+          subject="takeback"
+          onAccept={takeback.acceptTakeback}
+          onDecline={takeback.declineTakeback}
+        />
+      )}
+      {takeback.showTakebackDeclined && (
+        <OfferStatus>
+          Your opponent declined the takeback. You can ask again after the next move.
+        </OfferStatus>
       )}
 
       <div className="space-y-2 lg:border-t lg:border-border/70 lg:pt-3">
@@ -124,6 +138,9 @@ export const MovesContainer = () => {
             onResign={onResign}
             onOfferDraw={offerDraw}
             drawOfferSent={drawOfferSent}
+            onRequestTakeback={takeback.requestTakeback}
+            takebackRequested={takeback.takebackRequested}
+            canRequestTakeback={takeback.canRequestTakeback}
             disabled={!isConnected}
           />
         )}

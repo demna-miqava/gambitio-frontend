@@ -6,6 +6,7 @@ const base =
 export const GAME_BUTTON_STYLES = {
   resign: `${base} border border-border bg-transparent text-foreground hover:border-loss/40 hover:bg-loss-bg hover:text-loss`,
   draw: `${base} border border-border bg-transparent text-foreground hover:bg-accent`,
+  takeback: `${base} border border-border bg-transparent text-foreground hover:bg-accent`,
   abort: `${base} w-full border border-border bg-transparent text-foreground hover:bg-accent`,
   accept: `${base} bg-primary text-primary-foreground hover:bg-primary/90`,
   decline: `${base} border border-border bg-transparent text-foreground hover:bg-accent`,
