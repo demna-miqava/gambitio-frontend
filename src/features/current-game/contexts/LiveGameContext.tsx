@@ -144,7 +144,7 @@ export const LiveGameProvider = ({
   }, [queryClient, gameEnded]);
 
   // A finished game changes the player's history, stats and ratings (Home's
-  // "Your last game" and results, the header ratings). Only when it ends
+  // recent games and results, the header ratings). Only when it ends
   // while open here: a finished game opened later changed nothing.
   const startedLiveRef = useRef(game.status !== "finished");
   useEffect(() => {
