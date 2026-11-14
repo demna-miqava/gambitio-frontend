@@ -691,6 +691,11 @@
  * content fades with it so it doesn't appear clipped mid-way. Closing is a
  * little faster than opening. The chevrons use the same curve
  * (ease-disclosure, duration-disclosure).
+ *
+ * Overflow is clipped only while the height animates (it's set in the
+ * keyframes, the same at both ends, so it holds for the whole run). At rest
+ * the content overflows freely, so a focus ring or selection ring on
+ * something at its edge (the palette cards in Settings) isn't cut off.
  */
 @theme {
   --ease-disclosure: cubic-bezier(0.32, 0.72, 0, 1);
@@ -700,10 +705,12 @@
   from {
     height: 0;
     opacity: 0;
+    overflow: hidden;
   }
   to {
     height: var(--disclosure-height);
     opacity: 1;
+    overflow: hidden;
   }
 }
 
@@ -711,15 +718,16 @@
   from {
     height: var(--disclosure-height);
     opacity: 1;
+    overflow: hidden;
   }
   to {
     height: 0;
     opacity: 0;
+    overflow: hidden;
   }
 }
 
 @utility disclosure {
-  overflow: hidden;
   &[data-state="open"] {
     animation: disclosure-open 300ms var(--ease-disclosure);
   }
