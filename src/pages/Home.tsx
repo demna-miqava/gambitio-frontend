@@ -27,24 +27,22 @@ const Home = () => {
       <Challenges className="rounded-2xl border border-border/70 bg-card p-5" />
       <Header />
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6">
+      {/* One grid, so recent games follow the tiles however tall the side column is */}
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-6 lg:gap-y-8">
         <QuickPairing />
-        <div className="space-y-4">
+        <aside className="space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <LastGameCard />
           <ResultsSummary />
-        </div>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
-        <GameTable
-          variant="preview"
-          limit={HOME_GAMES_LIMIT}
-          skipLatest
-          actionHref={getProfileGamesRoute(id || 0)}
-        />
-        <aside>
           <TopPlayers />
         </aside>
+        <div className="lg:col-start-1 lg:row-start-2">
+          <GameTable
+            variant="preview"
+            limit={HOME_GAMES_LIMIT}
+            skipLatest
+            actionHref={getProfileGamesRoute(id || 0)}
+          />
+        </div>
       </div>
     </PageContainer>
   );
