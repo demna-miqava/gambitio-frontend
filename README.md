@@ -1,55 +1,67 @@
 # Gambitio
 
-A modern, real-time chess application built with React, TypeScript, and WebSockets. Play chess online with friends, track your statistics, and improve your game.
+Real-time online chess: play rated games against people or bots, review them with Stockfish, and train with puzzles, endgame drills and your own opening repertoire. Built with React, TypeScript and WebSockets.
+
+**[Play it live → gambitio.mipupu.com](https://gambitio.mipupu.com)** · Backend: [gambitio-backend](https://github.com/demna-miqava/gambitio-backend)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/live-game-dark.png">
+  <img alt="A live rapid game: board, clocks and move list with the opening name" src="docs/screenshots/live-game.png">
+</picture>
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img alt="Game review with accuracy, mistake counts and an evaluation graph" src="docs/screenshots/game-review.png"><br><sub><b>Game review</b>: accuracy and mistakes for every move, computed in your browser</sub></td>
+    <td width="50%"><img alt="Rated puzzle: find the best move for White" src="docs/screenshots/puzzles.png"><br><sub><b>Puzzles</b>: rated training, Puzzle Rush and Survival</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img alt="Endgame lab with progress and exercise cards" src="docs/screenshots/endgame-lab.png"><br><sub><b>Endgame lab</b>: 45 guided positions against the engine</sub></td>
+    <td width="50%"><img alt="Profile stats with rating, rank and a rating progress chart" src="docs/screenshots/profile-stats.png"><br><sub><b>Stats</b>: rating history, rank and results per time control</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img alt="Home page with ratings, quick pairing, recent games and the leaderboard" src="docs/screenshots/home.png"><br><sub><b>Home</b>: quick pairing, recent games and the last 30 days at a glance</sub></td>
+    <td width="50%" align="center"><img alt="A live game on a phone" src="docs/screenshots/mobile-game.png" width="45%">&nbsp;<img alt="The home page on a phone" src="docs/screenshots/mobile-home.png" width="45%"><br><sub><b>Mobile</b>: the whole app works on a phone</sub></td>
+  </tr>
+</table>
 
 ## Features
 
-### Live Gameplay
+### Play
 
-- **Real-time multiplayer chess** with WebSocket support
-- **Quick match system** with customizable time controls
-- **Visual chessboard** powered by Chessground
-- **Sound effects** for moves, captures, and game events
-- **Move history** with full game navigation
-- **Draw offers and resignation** support
-- **Rematch system** for quick rematches
+- **Real-time multiplayer** over WebSockets, with the server validating every move and running the clocks
+- **Quick pairing** for bullet, blitz and rapid, or a custom game and direct challenges to friends
+- **Bots** from 300 to 2400 rating, for unrated practice
+- **Series**: play a set of games against a friend with a running score
+- **Watch** live games of other players
+- Draw offers, resignation, rematches, premoves and sound effects
 
-### User Experience
+### Analyze
 
-- **Beautiful UI** with vibrant, accessible color palette
-- **Dark and light themes** for comfortable viewing
-- **Responsive design** for desktop and mobile
-- **Real-time game state synchronization**
-- **Accessibility features** with ARIA labels and WCAG compliance
+- **Game review**: accuracy, inaccuracies, mistakes and blunders for every move, with an evaluation graph and the best move at each step
+- **Analysis board** with Stockfish running in a web worker, an evaluation bar and multiple engine lines
+- **Opening names** for every game
+- **Import a game** from a PGN to analyze games played elsewhere
+- **Study rooms**: a shared analysis board where friends add variations and comments together in real time
 
-### Statistics & Profile
+### Train
 
-- **Comprehensive stats** tracking wins, losses, draws
-- **Rating system** with visible rating changes
-- **Game history** with detailed move records
-- **User profiles** with personalized statistics
+- **Puzzles**: rated puzzles at your level, Puzzle Rush (as many as you can in 3 minutes) and Survival (three lives)
+- **Endgame lab**: 45 positions, from basic mates to pawn endgames, each with a clear goal, played against the engine at full strength
+- **Opening repertoire**: save lines from the analysis board, practise them with spaced repetition and see where your games leave your preparation
 
-### Analysis Mode
+### Profile and social
 
-- **Stockfish Integration** - Deep engine analysis running in web workers
-- **Evaluation Bar** - Real-time visual advantage indicator
-- **Multi-PV Analysis** - View multiple best lines with scores
-- **Archive Analysis** - Review past games with engine assistance
+- Bullet, blitz, rapid and puzzle ratings, with rating history, rank and results
+- Full game history
+- Leaderboards per time control
+- Friends, online status and real-time notifications for challenges and friend requests
+- Light and dark themes, responsive layout and keyboard-accessible controls
 
-### Learning & Practice
+### Upcoming
 
-- **Puzzles** - Sharpen your skills with different puzzle modes like Survival
-- **Import Game** - rigorous analysis by importing PGNs from other platforms
-
-### Social & Community
-
-- **Friends System** - Add friends and see their status
-- **Smart Notifications** - Real-time alerts for game invites and friend requests
-
-### Upcoming Features
-
-- **Spectator mode** - Watch ongoing games of your friends
-- **Tournaments** - Organized competitive play events
+- **Tournaments**
 
 ## Tech Stack
 
@@ -62,10 +74,11 @@ A modern, real-time chess application built with React, TypeScript, and WebSocke
 - **TanStack Query** - Server state management
 - **React Hook Form** - Form handling
 - **Zod** - Schema validation
+- **Clerk** - Authentication
 - **Chessground** - Interactive chessboard
 - **Chess.js** - Chess logic and validation
+- **Stockfish** - Engine analysis in a web worker
 - **WebSockets** - Real-time communication
-- **Web Workers** - Off-main-thread processing
 - **Axios** - HTTP client
 
 ## Getting Started
@@ -74,14 +87,15 @@ A modern, real-time chess application built with React, TypeScript, and WebSocke
 
 - Node.js (v18 or higher)
 - npm or yarn
-- A running backend server (see backend repository)
+- A running [backend server](https://github.com/demna-miqava/gambitio-backend)
+- A [Clerk](https://clerk.com) application for sign-in
 
 ### Installation
 
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/demna-miqava/gambitio-frontend.git
 cd gambitio-frontend
 ```
 
@@ -102,7 +116,9 @@ cp .env.example .env
 ```env
 # API Configuration
 VITE_API_BASE_URL=http://localhost:8080/api
-VITE_WS_BASE_URL=ws://localhost:8080/ws
+VITE_WS_BASE_URL=http://localhost:8080/api/ws
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+VITE_STOCKFISH_URL=/stockfish-17.1-lite-single-03e3232.js
 
 # Sound URLs (optional - update with your hosted sound files)
 VITE_MOVE_SOUND_URL=https://example.com/sounds/move.mp3
@@ -112,13 +128,15 @@ VITE_GENERIC_SOUND_URL=https://example.com/sounds/generic.mp3
 
 ### Environment Variables
 
-| Variable                 | Description                  | Example                                  |
-| ------------------------ | ---------------------------- | ---------------------------------------- |
-| `VITE_API_BASE_URL`      | Backend API base URL         | `http://localhost:8080/api`              |
-| `VITE_WS_BASE_URL`       | WebSocket server URL         | `ws://localhost:8080/ws`                 |
-| `VITE_MOVE_SOUND_URL`    | URL for move sound effect    | `https://example.com/sounds/move.mp3`    |
-| `VITE_CAPTURE_SOUND_URL` | URL for capture sound effect | `https://example.com/sounds/capture.mp3` |
-| `VITE_GENERIC_SOUND_URL` | URL for generic sound effect | `https://example.com/sounds/generic.mp3` |
+| Variable                     | Description                     | Example                                   |
+| ---------------------------- | ------------------------------- | ----------------------------------------- |
+| `VITE_API_BASE_URL`          | Backend API base URL            | `http://localhost:8080/api`               |
+| `VITE_WS_BASE_URL`           | WebSocket server URL            | `http://localhost:8080/api/ws`            |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key           | `pk_test_...`                             |
+| `VITE_STOCKFISH_URL`         | Stockfish script in `public/`   | `/stockfish-17.1-lite-single-03e3232.js`  |
+| `VITE_MOVE_SOUND_URL`        | URL for move sound effect       | `https://example.com/sounds/move.mp3`     |
+| `VITE_CAPTURE_SOUND_URL`     | URL for capture sound effect    | `https://example.com/sounds/capture.mp3`  |
+| `VITE_GENERIC_SOUND_URL`     | URL for generic sound effect    | `https://example.com/sounds/generic.mp3`  |
 
 ### Development
 
@@ -163,17 +181,26 @@ src/
 │   ├── auth/          # Authentication
 │   ├── create-game/   # Game creation and setup
 │   ├── current-game/  # Live game functionality
+│   ├── endgames/      # Endgame lab exercises
 │   ├── engine-analysis/ # Stockfish analysis & evaluation
 │   ├── friends/       # Friend system and interactions
 │   ├── game/          # Shared game components
+│   ├── game-review/   # Accuracy and move classification
 │   ├── game-table/    # Game list and observation
 │   ├── import-game/   # PGN import functionality
+│   ├── leaderboard/   # Leaderboards per time control
 │   ├── matchmaking/   # Match finding logic
 │   ├── notifications/ # User notifications
+│   ├── openings/      # Opening names
+│   ├── play-bots/     # Games against the computer
 │   ├── profile/       # User profile management
 │   ├── puzzles/       # Chess puzzles and training
+│   ├── repertoire/    # Opening repertoire practice
+│   ├── series/        # Game series between friends
 │   ├── settings/      # User settings
-│   └── stats/         # Statistics and profiles
+│   ├── stats/         # Statistics and profiles
+│   ├── study/         # Shared study rooms
+│   └── watch/         # Watching live games
 ├── hooks/             # Custom React hooks
 ├── contexts/          # React contexts
 ├── services/          # API services
