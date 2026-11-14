@@ -224,6 +224,9 @@ export const LiveGameProvider = ({
         resyncBoard();
         return null;
       }
+      // The position the move is made in: the server plays it only there
+      // (a takeback accepted while the move is on its way changes it)
+      const ply = chessRef.current.history().length;
       const result = applyMove({
         from: fromSquare,
         to: toSquare,
@@ -244,6 +247,7 @@ export const LiveGameProvider = ({
             to: result.move.to,
             ...(result.move.promotion && { promotion: result.move.promotion }),
           },
+          ply,
           ...(startedAt !== null && {
             thinkMs: Math.max(0, Math.round(performance.now() - startedAt)),
           }),

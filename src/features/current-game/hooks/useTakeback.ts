@@ -18,6 +18,7 @@ import {
   INITIAL_TAKEBACK_STATE,
   canRequestTakeback,
   takebackReducer,
+  takebackRequestText,
 } from "../utils/takeback";
 
 const TAKEBACK_TOAST_ID = "takeback_request";
@@ -60,14 +61,15 @@ export const useTakeback = () => {
     [sendMessage]
   );
 
-  const showRequestToast = useCallback(() => {
-    toast("Your opponent asked to take back their last move", {
+  // `ply`: the position the request is for (the board may still be catching up)
+  const showRequestToast = useCallback((ply: number) => {
+    toast(takebackRequestText(ply, color), {
       id: TAKEBACK_TOAST_ID,
       duration: Infinity,
       action: { label: "Accept", onClick: () => respond(true) },
       cancel: { label: "Decline", onClick: () => respond(false) },
     });
-  }, [respond]);
+  }, [respond, color]);
 
   const requestTakeback = useCallback(() => {
     if (!sendMessage(JSON.stringify({ type: GAME_MESSAGE_TYPES.TAKEBACK_REQUEST }))) {
@@ -79,8 +81,8 @@ export const useTakeback = () => {
 
   const handleRequest = useCallback(() => {
     dispatch({ type: "incoming" });
-    showRequestToast();
-  }, [showRequestToast]);
+    showRequestToast(currentPly());
+  }, [showRequestToast, currentPly]);
 
   // Only the player who asked receives a decline (an accept is a takeback)
   const handleResponse = useCallback(
@@ -92,7 +94,7 @@ export const useTakeback = () => {
 
   const handleTakeback = useCallback(() => {
     toast.dismiss(TAKEBACK_TOAST_ID);
-    if (sentRef.current) toast.success("Your opponent accepted the takeback", { id: "takeback_done" });
+    if (sentRef.current) toast.success("The takeback was accepted", { id: "takeback_done" });
     dispatch({ type: "takeback" });
   }, []);
 
@@ -116,7 +118,7 @@ export const useTakeback = () => {
         finished: data.isFinished,
         ply: data.numMoves,
       });
-      if (incoming) showRequestToast();
+      if (incoming) showRequestToast(data.numMoves);
       else toast.dismiss(TAKEBACK_TOAST_ID);
     },
     [id, showRequestToast]
@@ -164,6 +166,8 @@ export const useTakeback = () => {
   const declined = state.declinedAtPly === ply;
   return {
     showTakebackRequest: !gameEnded && state.incoming,
+    /** The side panel's prompt for the opponent's request (the toast says the same) */
+    takebackRequestMessage: takebackRequestText(ply, color),
     takebackRequested: !gameEnded && sent,
     showTakebackDeclined: !gameEnded && declined,
     /**

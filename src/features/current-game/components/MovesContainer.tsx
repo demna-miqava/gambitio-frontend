@@ -58,9 +58,9 @@ export const MovesContainer = () => {
   useFlipBoardKey(flipBoard);
 
   return (
-    <div className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
+    <div className="flex flex-col gap-3 lg:rounded-2xl lg:bg-card lg:p-4">
       <div className="hidden items-center justify-between lg:flex">
-        <h2 className="text-sm font-semibold text-foreground">Moves</h2>
+        <h2 className="text-base font-display text-foreground">Moves</h2>
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className="tabular-nums">
             {formatTimeControl(game.time, game.increment)}
@@ -72,7 +72,7 @@ export const MovesContainer = () => {
       {series && <SeriesStrip series={series} seriesGame={seriesGame} viewerId={viewerId} />}
 
       {/* Phones: moves strip sits right under the board */}
-      <div className="rounded-xl border border-border/70 bg-card px-1 py-1.5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
+      <div className="rounded-xl bg-card px-1 py-1.5 lg:rounded-none lg:bg-transparent lg:p-0">
         <OpeningName fens={shownLine} className="px-1.5 pb-1 lg:px-0 lg:pb-2" />
         <GameModeMovesList />
       </div>
@@ -90,7 +90,7 @@ export const MovesContainer = () => {
       {takeback.showTakebackRequest && (
         <OfferPrompt
           icon={<Undo2 className="size-5 text-primary" aria-hidden="true" />}
-          message="Your opponent asked to take back their last move"
+          message={takeback.takebackRequestMessage}
           subject="takeback"
           onAccept={takeback.acceptTakeback}
           onDecline={takeback.declineTakeback}
@@ -102,7 +102,7 @@ export const MovesContainer = () => {
         </OfferStatus>
       )}
 
-      <div className="space-y-2 lg:border-t lg:border-border/70 lg:pt-3">
+      <div className="space-y-2 lg:border-t lg:border-border lg:pt-3">
         <div className="flex gap-1.5">
           <div className="min-w-0 flex-1">
             <GameModeMoveControls />
@@ -114,7 +114,7 @@ export const MovesContainer = () => {
           <div className="space-y-3 pt-1">
             {finish && (
               <div className="text-center">
-                <p className="font-display text-lg font-semibold text-foreground">
+                <p className="font-display text-lg text-foreground">
                   {finish.title}
                 </p>
                 {finish.description && (

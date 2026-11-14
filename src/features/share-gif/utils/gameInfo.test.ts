@@ -35,6 +35,9 @@ describe("labels", () => {
     expect(resultLabel("white_win", "checkmate")).toBe("1-0 · checkmate");
     expect(resultLabel("black_win", "time")).toBe("0-1 · on time");
     expect(resultLabel("draw", "threefold_repetition")).toBe("½-½ · repetition");
+    expect(resultLabel("draw", "timeout_vs_insufficient_material")).toBe(
+      "½-½ · time vs insufficient material"
+    );
     expect(resultLabel("draw", "some_new_reason")).toBe("½-½ · some new reason");
     expect(resultLabel("white_win", null)).toBe("1-0");
     expect(resultLabel("aborted", "abandonment")).toBe("");

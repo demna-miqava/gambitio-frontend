@@ -33,6 +33,7 @@ const END_REASONS: Record<string, string> = {
   threefold_repetition: "repetition",
   fifty_move_rule: "50-move rule",
   insufficient_material: "insufficient material",
+  timeout_vs_insufficient_material: "time vs insufficient material",
   agreement: "agreement",
   draw_agreement: "agreement",
   abandonment: "abandonment",

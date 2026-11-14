@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { Bot as BotIcon, Flag, Loader2, RotateCcw, Undo2 } from "lucide-react";
+import { Bot as BotIcon, Loader2, RotateCcw } from "lucide-react";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { GameLayout } from "@/features/game/components/GameLayout";
 import { PromotionSelector } from "@/features/game/components/PromotionSelector";
@@ -106,8 +106,9 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
   // player's own moves aren't repeated back)
   const lastMove = history.at(-1);
   const playerCode = color === "white" ? "w" : "b";
+  // Not once the game is over: resigning doesn't change the move count
   const undoAnnouncement =
-    undone !== null && undone.ply === history.length
+    undone !== null && undone.ply === history.length && !result
       ? `Move taken back. ${
           lastMove
             ? `Last move: ${lastMove.color === playerCode ? "you" : bot.name} played ${describeMove(lastMove)}. `
@@ -197,7 +198,7 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
   );
 
   const sidebar = (
-    <div className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
+    <div className="flex flex-col gap-3 lg:rounded-2xl lg:bg-card lg:p-4">
       <div
         className={cn(
           "rounded-xl px-4 py-3 text-sm font-medium",
@@ -211,7 +212,7 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
       </div>
 
       {/* Phones: moves strip sits right under the board */}
-      <div className="rounded-xl border border-border/70 bg-card px-1 py-1.5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
+      <div className="rounded-xl bg-card px-1 py-1.5 lg:rounded-none lg:bg-transparent lg:p-0">
         <OpeningName fens={shownLine} className="px-1.5 pb-1 lg:px-0 lg:pb-2" />
         <MovesListView
           moves={history}
@@ -225,7 +226,7 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
         <TypedMoveInput onSubmit={submitTypedMove} />
       )}
 
-      <div className="space-y-2 lg:border-t lg:border-border/70 lg:pt-3">
+      <div className="space-y-2 lg:border-t lg:border-border lg:pt-3">
         <div className="flex gap-1.5">
           <div className="min-w-0 flex-1">
             <MoveNavigationControls {...navigation} />
@@ -237,15 +238,13 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
             <ActionButton
               variant="takeback"
               onClick={takeBack}
-              icon={<Undo2 className="size-4" aria-hidden="true" />}
               label="Undo"
-              ariaLabel="Undo your last move"
+              ariaLabel="Undo your last move and the computer's reply"
               disabled={!canUndo}
             />
             <ActionButton
               variant="resign"
               onClick={resign}
-              icon={<Flag className="size-4" aria-hidden="true" />}
               label="Resign"
               confirmTitle={confirmResign ? "Resign this game?" : undefined}
             />

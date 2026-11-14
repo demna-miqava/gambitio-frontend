@@ -5,6 +5,7 @@ import {
   canRequestTakeback,
   takebackPlies,
   takebackReducer,
+  takebackRequestText,
   type TakebackEvent,
   type TakebackState,
 } from "./takeback";
@@ -16,8 +17,7 @@ describe("takebackPlies", () => {
   it("undoes the requester's move and the reply when it's their turn", () => {
     // 1.e4 e5 2.Nf3 Nc6: white to move asks, back to 1.e4 e5
     expect(takebackPlies(4, "white")).toBe(2);
-    // 1.e4 e5 2.Nf3: black to move asks, back to 1.e4
-    expect(takebackPlies(3, "black")).toBeNull();
+    // 1.e4 e5 2.Nf3 Nc6 3.Bb5: black to move asks, back to 1.e4 e5 2.Nf3
     expect(takebackPlies(5, "black")).toBe(2);
   });
 
@@ -42,6 +42,20 @@ describe("canRequestTakeback", () => {
     expect(canRequestTakeback(3, "black")).toBe(false);
     expect(canRequestTakeback(4, "white")).toBe(true);
     expect(canRequestTakeback(4, "black")).toBe(true);
+  });
+});
+
+describe("takebackRequestText", () => {
+  it("says when accepting also undoes this player's reply", () => {
+    // 1.e4 e5 2.Nf3 Nc6, white (to move) asked: black's Nc6 goes too
+    expect(takebackRequestText(4, "black")).toBe(
+      "Your opponent asked to take back their last move and your reply"
+    );
+    // 1.e4 e5 2.Nf3, white asked: only Nf3
+    expect(takebackRequestText(3, "black")).toBe("Your opponent asked to take back their last move");
+    expect(takebackRequestText(5, "white")).toBe(
+      "Your opponent asked to take back their last move and your reply"
+    );
   });
 });
 

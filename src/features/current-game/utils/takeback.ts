@@ -23,6 +23,18 @@ export const takebackPlies = (ply: number, requester: PlayerColor): number | nul
 export const canRequestTakeback = (ply: number, requester: PlayerColor): boolean =>
   takebackPlies(ply, requester) !== null;
 
+const opponentOf = (color: PlayerColor): PlayerColor => (color === "white" ? "black" : "white");
+
+/**
+ * The prompt for the opponent's request, seen by `me` at `ply`: accepting
+ * undoes the opponent's last move, and this player's reply too when the
+ * opponent is to move (see takebackPlies).
+ */
+export const takebackRequestText = (ply: number, me: PlayerColor): string =>
+  takebackPlies(ply, opponentOf(me)) === 2
+    ? "Your opponent asked to take back their last move and your reply"
+    : "Your opponent asked to take back their last move";
+
 /** A player's view of takeback requests (see useTakeback) */
 export interface TakebackState {
   /** The opponent is waiting for this player's answer */

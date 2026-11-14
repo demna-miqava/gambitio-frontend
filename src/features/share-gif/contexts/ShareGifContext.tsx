@@ -9,7 +9,7 @@ interface ShareGifContextValue {
   /** Makes the GIF, then opens the share sheet or downloads it */
   shareGif: () => void;
   isGenerating: boolean;
-  /** False when the game has no moves to animate */
+  /** False when the game has no moves to animate, or was aborted (nothing was played) */
   canShareGif: boolean;
 }
 
@@ -32,13 +32,16 @@ export const ShareGifProvider = ({ game, viewerId, children }: ShareGifProviderP
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const pgn = game.pgn ?? "";
+  const aborted = game.result === "aborted";
   const canShareGif = useMemo(() => {
+    // An aborted game may hold a move, but it isn't a game anyone would share
+    if (aborted) return false;
     try {
       return gameFrames(pgn).length > 1;
     } catch {
       return false;
     }
-  }, [pgn]);
+  }, [pgn, aborted]);
 
   const shareGif = useCallback(async () => {
     if (busyRef.current || !canShareGif) return;
