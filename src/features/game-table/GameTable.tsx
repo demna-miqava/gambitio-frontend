@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Swords } from "lucide-react";
+import { Swords } from "lucide-react";
 import { createColumns } from "./Columns";
 import { useUserGames } from "./hooks/useUserGames";
 import { DataTable } from "./DataTable";
@@ -82,9 +82,9 @@ export const GameTable = ({
             games.length > 0 && (
               <Link
                 to={actionHref}
-                className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
               >
-                View all <ArrowRight className="size-3.5" aria-hidden="true" />
+                View all
               </Link>
             )
           }
@@ -96,7 +96,7 @@ export const GameTable = ({
               <>
                 {title}
                 {total ? (
-                  <span className="font-normal text-muted-foreground"> {total.toLocaleString()}</span>
+                  <span className="text-muted-foreground"> {total.toLocaleString()}</span>
                 ) : null}
               </>
             }

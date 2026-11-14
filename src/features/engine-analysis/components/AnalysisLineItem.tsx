@@ -20,7 +20,7 @@ export const AnalysisLineItem = ({
   const content = (
     // 44px with the border on touch screens, 38px otherwise
     <div className="relative flex h-9 items-center gap-2 px-3 pointer-coarse:h-[42px] lg:px-4">
-      <span className="w-11 shrink-0 text-sm font-semibold tabular-nums">
+      <span className="w-11 shrink-0 text-sm font-medium tabular-nums">
         {formatScore(line, playerColor)}
       </span>
       <span className="truncate text-sm text-foreground/90">
@@ -29,7 +29,7 @@ export const AnalysisLineItem = ({
     </div>
   );
 
-  const className = "relative w-full overflow-hidden rounded-md border border-border/50 bg-muted/30";
+  const className = "relative w-full overflow-hidden rounded-md border border-border bg-muted/30";
 
   if (!onPlay) return <div className={className}>{content}</div>;
 

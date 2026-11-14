@@ -79,7 +79,7 @@ export const MoveStrip = () => {
               className={cn(
                 "flex min-h-9 items-center rounded-md px-2 text-sm tabular-nums transition-colors",
                 active
-                  ? "bg-brand-soft font-semibold text-foreground"
+                  ? "bg-foreground font-medium text-background"
                   : node.isGameMove
                     ? "text-foreground/85 hover:bg-accent"
                     : "text-primary hover:bg-accent"

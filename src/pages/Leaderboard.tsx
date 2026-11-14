@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { AlertCircle, Globe, Trophy, Users } from "lucide-react";
+import { AlertCircle, Trophy } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { PageContainer } from "@/components/PageContainer";
 import { Pagination } from "@/components/Pagination";
@@ -27,9 +27,9 @@ import {
 } from "@/features/leaderboard/variants";
 import type { LeaderboardScope } from "@/features/leaderboard/types";
 
-const SCOPES: { value: LeaderboardScope; label: string; icon: typeof Globe }[] = [
-  { value: "global", label: "Global", icon: Globe },
-  { value: "friends", label: "Friends", icon: Users },
+const SCOPES: { value: LeaderboardScope; label: string }[] = [
+  { value: "global", label: "Global" },
+  { value: "friends", label: "Friends" },
 ];
 
 const Leaderboard = () => {
@@ -122,7 +122,7 @@ const Leaderboard = () => {
   const board = isError ? (
     <div
       role="alert"
-      className="flex flex-col items-center gap-3 rounded-2xl border border-border/70 bg-card px-6 py-12 text-center"
+      className="flex flex-col items-center gap-3 rounded-2xl bg-card px-6 py-12 text-center"
     >
       <AlertCircle className="size-6 text-destructive" aria-hidden="true" />
       <p className="font-medium text-foreground">Couldn't load the leaderboard</p>
@@ -173,9 +173,9 @@ const Leaderboard = () => {
           <div
             role="group"
             aria-label="Players to rank"
-            className="inline-flex h-9 items-center rounded-lg bg-muted p-[3px]"
+            className="inline-flex h-10 items-center gap-5 border-b border-border"
           >
-            {SCOPES.map(({ value, label: scopeLabel, icon: Icon }) => (
+            {SCOPES.map(({ value, label: scopeLabel }) => (
               <button
                 key={value}
                 type="button"
@@ -183,13 +183,12 @@ const Leaderboard = () => {
                 onClick={() => scope !== value && update({ scope: value })}
                 className={cn(
                   // 30px tall; touch-target extends the hit area to 44px on touch screens
-                  "relative touch-target inline-flex h-full items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                  "relative touch-target inline-flex h-full items-center gap-1.5 px-0.5 text-sm font-medium transition-colors after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
                   scope === value
-                    ? "bg-background text-foreground shadow-sm dark:bg-input/30"
+                    ? "text-foreground after:bg-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="size-4" aria-hidden="true" />
                 {scopeLabel}
               </button>
             ))}
@@ -199,10 +198,8 @@ const Leaderboard = () => {
 
       <Tabs value={variant} onValueChange={(value) => update({ variant: value })} className="gap-4">
         <TabsList aria-label="Time control" className="w-full sm:w-fit">
-          {LEADERBOARD_VARIANTS.map(({ value, label: tabLabel, icon: Icon }) => (
+          {LEADERBOARD_VARIANTS.map(({ value, label: tabLabel }) => (
             <TabsTrigger key={value} value={value} className="relative touch-target px-2 sm:px-4">
-              {/* Icons drop out on the narrowest phones so all four tabs fit */}
-              <Icon aria-hidden="true" className="hidden min-[400px]:block" />
               {tabLabel}
             </TabsTrigger>
           ))}

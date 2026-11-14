@@ -12,11 +12,11 @@ const buttonVariants = cva(
         // Each variant has a pressed (active) state, so taps give feedback
         // on touch screens where there is no hover
         default:
-          "bg-primary-solid text-primary-solid-foreground shadow-xs hover:bg-primary-solid/90 active:bg-primary-solid/80",
+          "bg-primary-solid text-primary-solid-foreground hover:bg-primary-solid/90 active:bg-primary-solid/80",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 active:bg-destructive/80 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground active:bg-active-bg dark:bg-input/30 dark:border-input dark:hover:bg-input/50 dark:active:bg-active-bg",
+          "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground active:bg-active-bg dark:bg-input/30 dark:border-input dark:hover:bg-input/50 dark:active:bg-active-bg",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-active-bg",
         ghost:
@@ -32,9 +32,9 @@ const buttonVariants = cva(
         sm: "relative touch-target h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         md: "h-10 px-4 has-[>svg]:px-3",
         lg: "h-11 px-5 has-[>svg]:px-4",
-        xl: "h-12 rounded-lg px-6 text-base has-[>svg]:px-5",
+        xl: "h-12 px-6 text-base has-[>svg]:px-5",
         icon: "relative touch-target size-9",
-        "icon-lg": "size-11 rounded-lg",
+        "icon-lg": "size-11",
       },
     },
     defaultVariants: {

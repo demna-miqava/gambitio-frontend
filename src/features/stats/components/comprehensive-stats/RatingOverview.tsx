@@ -50,14 +50,14 @@ const RatingOverview = ({
   return (
     <section
       aria-label="Rating"
-      className="flex flex-col gap-6 rounded-2xl border border-border/70 bg-card p-5 sm:p-6 md:flex-row md:items-end md:justify-between"
+      className="flex flex-col gap-6 rounded-2xl bg-card p-5 sm:p-6 md:flex-row md:items-end md:justify-between"
     >
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground">
           {unrated ? "Starting rating" : variant === "all" ? "Average rating" : "Rating"}
         </p>
         <div className="flex items-baseline gap-3">
-          <span className="font-display text-5xl font-semibold tabular-nums text-foreground">
+          <span className="font-display-num text-5xl text-foreground">
             {currentRating.toLocaleString()}
           </span>
           <RatingDelta delta={ratingGain} className="text-sm font-medium" />
@@ -79,7 +79,7 @@ const RatingOverview = ({
           {ranks.map(({ label, value }) => (
             <div key={label} className="space-y-0.5">
               <dt className="text-xs text-muted-foreground">{label}</dt>
-              <dd className="text-xl font-semibold tabular-nums text-foreground">{value}</dd>
+              <dd className="text-xl font-medium tabular-nums text-foreground">{value}</dd>
             </div>
           ))}
         </dl>

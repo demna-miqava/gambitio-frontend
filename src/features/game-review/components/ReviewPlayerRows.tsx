@@ -45,7 +45,7 @@ export const ReviewPlayerRows = ({ review, players, currentIndex, onJump }: Revi
             </span>
             <span
               className={cn(
-                "w-14 shrink-0 text-right text-sm font-semibold tabular-nums",
+                "w-14 shrink-0 text-right text-sm font-medium tabular-nums",
                 stats ? "text-foreground" : "text-muted-foreground"
               )}
             >

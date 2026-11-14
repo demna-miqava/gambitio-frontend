@@ -40,7 +40,7 @@ const EndgameLab = () => {
 
       <section
         aria-label="Your progress"
-        className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-card p-5 sm:flex-row sm:items-center sm:gap-6"
+        className="flex flex-col gap-3 rounded-2xl bg-card p-5 sm:flex-row sm:items-center sm:gap-6"
       >
         <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-primary">
           <Trophy className="size-5" aria-hidden="true" />

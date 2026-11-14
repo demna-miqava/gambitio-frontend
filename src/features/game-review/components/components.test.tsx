@@ -89,7 +89,7 @@ describe("review components", () => {
     expect(html).toContain('aria-live="polite"');
     expect(html).toContain("3... Nf6");
     expect(html).toContain("Blunder.");
-    expect(html).toContain('Best was <span class="font-semibold text-foreground">g6</span>');
+    expect(html).toContain('Best was <span class="font-medium text-foreground">g6</span>');
     expect(html).toContain("Black&#x27;s winning chances");
     expect(renderToStaticMarkup(<VerdictLine move={undefined} label={undefined} currentIndex={-1} />)).toContain(
       "variation"
@@ -126,7 +126,7 @@ describe("review components", () => {
   test("note names the better move", () => {
     const html = renderToStaticMarkup(<SelectedMoveNote move={review.moves[5]} label={labels[6]} currentIndex={6} />);
     expect(html).toContain("a blunder");
-    expect(html).toContain("Best was <span class=\"font-semibold\">g6</span>");
+    expect(html).toContain("Best was <span class=\"font-medium\">g6</span>");
     const variation = renderToStaticMarkup(<SelectedMoveNote move={undefined} label={undefined} currentIndex={-1} />);
     expect(variation).toContain("variation");
   });

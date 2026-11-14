@@ -8,7 +8,7 @@ import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 
 const barClass =
-  "sticky top-0 z-30 flex items-center border-b border-border/60 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70";
+  "sticky top-0 z-30 flex items-center border-b border-border bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70";
 
 /**
  * Phones only (below 768px; from there the sidebar is always on screen).

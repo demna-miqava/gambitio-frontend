@@ -30,10 +30,10 @@ export const LineCard = ({ line, now, onRename, onSwitchColor, onDelete }: LineC
   const other = line.color === "white" ? "Black" : "White";
 
   return (
-    <li className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 sm:flex-row sm:items-start">
+    <li className="flex flex-col gap-3 rounded-xl bg-card p-4 sm:flex-row sm:items-start">
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <h4 className="truncate font-semibold text-foreground">{line.name}</h4>
+          <h4 className="truncate font-display text-foreground">{line.name}</h4>
           <span
             className={cn(
               "rounded-full px-2 py-0.5 text-xs font-medium",

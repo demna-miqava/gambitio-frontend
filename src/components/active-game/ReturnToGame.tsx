@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Swords } from "lucide-react";
+import { Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   SidebarMenu,
@@ -29,25 +29,18 @@ export const ReturnToGameBanner = () => {
   return (
     <section
       aria-label="Game in progress"
-      className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-brand-soft p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+      className="flex flex-col gap-3 rounded-2xl bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
     >
-      <div className="flex items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-          <Swords className="size-5" aria-hidden="true" />
-        </span>
-        <div className="min-w-0">
-          <p className="flex items-center gap-2 font-semibold text-foreground">
-            <LiveDot className="text-primary" />
-            Game in progress
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Pick up where you left off.
-          </p>
-        </div>
+      <div className="min-w-0">
+        <p className="flex items-center gap-2.5 font-display text-xl text-foreground">
+          <LiveDot className="text-primary" />
+          Game in progress
+        </p>
+        <p className="text-sm text-muted-foreground">Pick up where you left off.</p>
       </div>
       <Button asChild className="h-11 sm:h-10">
         <Link to={getGameRoute(gameId)}>
-          Return to game <ArrowRight aria-hidden="true" />
+          Return to game
         </Link>
       </Button>
     </section>
@@ -64,7 +57,7 @@ export const ReturnToGameTopBarLink = () => {
       to={getGameRoute(gameId)}
       aria-label={LABEL}
       data-return-to-game=""
-      className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-primary px-2.5 text-xs font-semibold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-primary px-2.5 text-xs font-medium text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <LiveDot />
       Return to game
@@ -84,7 +77,7 @@ export const ReturnToGameSidebarItem = () => {
         <SidebarMenuButton
           asChild
           tooltip="Return to game"
-          className="relative h-10 gap-3 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground [&>svg]:size-[18px]"
+          className="relative h-10 gap-3 bg-primary font-medium text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground [&>svg]:size-[18px]"
         >
           <Link
             to={getGameRoute(gameId)}

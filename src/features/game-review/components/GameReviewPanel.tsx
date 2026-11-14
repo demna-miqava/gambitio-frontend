@@ -71,7 +71,7 @@ export const GameReviewPanel = ({ className }: { className?: string }) => {
   const percent = progressPercent(progress);
 
   const heading = (
-    <h3 id={headingId} className="shrink-0 text-sm font-semibold text-foreground">
+    <h3 id={headingId} className="shrink-0 text-base font-display text-foreground">
       Game review
     </h3>
   );
@@ -87,7 +87,7 @@ export const GameReviewPanel = ({ className }: { className?: string }) => {
             type="button"
             aria-expanded={false}
             onClick={() => setExpanded(true)}
-            className="-mr-1.5 ml-auto flex h-8 min-w-0 items-center gap-3 rounded-md px-1.5 text-sm font-semibold tabular-nums text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="-mr-1.5 ml-auto flex h-8 min-w-0 items-center gap-3 rounded-md px-1.5 text-sm font-medium tabular-nums text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {(["white", "black"] as const).map((side) => (
               <span key={side} className="flex items-center gap-1.5">
@@ -168,7 +168,7 @@ export const GameReviewPanel = ({ className }: { className?: string }) => {
         break;
       case "idle":
         graph = (
-          <SlotBox className="justify-center border border-dashed border-border bg-transparent">
+          <SlotBox className="justify-center bg-background">
             <Button size="sm" onClick={start}>
               <ChartSpline aria-hidden="true" />
               Review game
@@ -217,7 +217,7 @@ export const GameReviewPanel = ({ className }: { className?: string }) => {
         break;
       case "empty":
         graph = (
-          <SlotBox className="justify-center border border-dashed border-border bg-transparent">
+          <SlotBox className="justify-center bg-background">
             <p className="text-xs text-muted-foreground">There are no moves to review yet.</p>
           </SlotBox>
         );

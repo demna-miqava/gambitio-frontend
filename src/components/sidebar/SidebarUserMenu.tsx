@@ -39,7 +39,7 @@ export function SidebarUserMenu() {
               className="gap-3 data-[state=open]:bg-sidebar-accent"
               aria-label="Account menu"
             >
-              <UserAvatar src={image} username={username} className="size-8 rounded-lg" />
+              <UserAvatar src={image} username={username} className="size-8" />
               <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate text-sm font-medium">{username}</span>
               </div>

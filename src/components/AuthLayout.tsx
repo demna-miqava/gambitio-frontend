@@ -14,7 +14,7 @@ export const AuthLayout = ({ children }: { children: ReactNode }) => (
       <div className="flex flex-1 items-center justify-center py-10">{children}</div>
     </div>
 
-    <aside className="relative hidden overflow-hidden border-l border-border/70 bg-sidebar lg:flex lg:flex-col lg:items-center lg:justify-center lg:gap-10 lg:p-12">
+    <aside className="relative hidden overflow-hidden border-l border-border bg-sidebar lg:flex lg:flex-col lg:items-center lg:justify-center lg:gap-10 lg:p-12">
       <DecorativeBoard className="relative max-w-md" />
       <blockquote className="relative max-w-md text-center">
         <p className="font-display text-2xl leading-snug italic text-foreground">

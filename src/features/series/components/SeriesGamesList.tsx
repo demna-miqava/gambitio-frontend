@@ -2,9 +2,8 @@ import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { getArchiveGameRoute, getGameRoute } from "@/constants/routes";
 import { ResultBadge } from "@/features/game-table/components/ResultBadge";
-import { getResult } from "@/features/game-table/utils/gameResult";
+import { getResult, getScore } from "@/features/game-table/utils/gameResult";
 import type { StoredGameListItem } from "@/types";
-import { cn } from "@/lib/utils";
 
 const SCORE: Record<string, string> = {
   white_win: "1–0",
@@ -38,7 +37,7 @@ export const SeriesGamesList = ({
     viewerId !== undefined && (g.whitePlayer.id === viewerId || g.blackPlayer.id === viewerId);
 
   return (
-    <ol className="divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70 bg-card">
+    <ol className="divide-y divide-border overflow-hidden rounded-2xl bg-card">
       {games.map((game) => {
         const live = game.id === liveGameId || game.status === "in_progress";
         const aborted = game.result === "aborted";
@@ -69,13 +68,11 @@ export const SeriesGamesList = ({
                 </span>
               </span>
               {live ? (
-                <span className="inline-flex h-6 items-center rounded-full bg-brand-soft px-2.5 text-xs font-semibold text-primary">
-                  Live
-                </span>
+                <span className="text-sm italic text-primary">Live</span>
               ) : aborted ? null : isPlayer(game) ? (
-                <ResultBadge result={getResult(game, viewerId)} />
+                <ResultBadge result={getResult(game, viewerId)} score={getScore(game)} />
               ) : (
-                <span className={cn("text-sm font-semibold tabular-nums")}>
+                <span className="font-display-num text-base">
                   {game.result ? SCORE[game.result] : ""}
                 </span>
               )}

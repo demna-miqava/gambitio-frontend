@@ -1,40 +1,41 @@
 import type { Move } from "chess.js";
-import { PIECE_SVGS } from "@/features/game/constants/promotion";
 import type { ReactNode } from "react";
-import type { PlayerColor } from "@/features/game/types/game.types";
 
-export const renderMoveNotation = (
-  move: Move,
-  showIcons: boolean
-): ReactNode => {
-  if (!showIcons) {
-    return move.san;
-  }
-
-  const san = move.san;
-  const pieceColor: PlayerColor = move.color === "w" ? "white" : "black";
-
-  // Check if the move starts with a piece letter (Q, R, B, N)
-  const pieceMatch = san.match(/^([QRBN])/);
-
-  if (pieceMatch) {
-    const pieceLetter = pieceMatch[1];
-    const pieceKey = pieceLetter.toLowerCase() as "q" | "r" | "b" | "n";
-    const pieceIcon = PIECE_SVGS[pieceColor][pieceKey];
-    const restOfNotation = san.slice(1);
-
-    return (
-      <span className="inline-flex items-center gap-0.5 align-middle">
-        <img
-          src={pieceIcon}
-          alt={pieceLetter}
-          className="w-5 h-5 object-contain flex-shrink-0"
-        />
-        <span>{restOfNotation}</span>
-      </span>
-    );
-  }
-
-  // For pawn moves, castling, or moves without piece letters, show as text
-  return san;
+// Figurine algebraic notation uses one set of figurines for both sides, as
+// printed books do. U+FE0E asks for the text glyph, never an emoji.
+const FIGURINES: Record<string, string> = {
+  K: "\u2654\uFE0E",
+  Q: "\u2655\uFE0E",
+  R: "\u2656\uFE0E",
+  B: "\u2657\uFE0E",
+  N: "\u2658\uFE0E",
 };
+const NAMES: Record<string, string> = {
+  K: "King",
+  Q: "Queen",
+  R: "Rook",
+  B: "Bishop",
+  N: "Knight",
+};
+
+/**
+ * A move in SAN, or with `figurines` in figurine notation: the piece letter
+ * (also in a promotion, "e8=Q") becomes the piece's figurine as a text glyph
+ * that follows the text colour, "\u2658f3" for "Nf3". Pawn moves and castling
+ * are unchanged.
+ */
+export const renderSan = (san: string, figurines: boolean): ReactNode => {
+  if (!figurines || !/[KQRBN]/.test(san)) return san;
+  return san.split(/([KQRBN])/).map((part, i) =>
+    FIGURINES[part] ? (
+      <span key={i} className="figurine" role="img" aria-label={NAMES[part]}>
+        {FIGURINES[part]}
+      </span>
+    ) : (
+      part
+    )
+  );
+};
+
+export const renderMoveNotation = (move: Move, showIcons: boolean): ReactNode =>
+  renderSan(move.san, showIcons);

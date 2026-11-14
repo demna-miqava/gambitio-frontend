@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Chessground } from "@lichess-org/chessground";
 import "@lichess-org/chessground/assets/chessground.base.css";
 import "@lichess-org/chessground/assets/chessground.brown.css";
-import "@lichess-org/chessground/assets/chessground.cburnett.css";
+import "@/assets/pieces/chessground.merida.css";
 import type { PlayerColor } from "@/features/game/types/game.types";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ export const MiniBoard = ({
   }, [fen, orientation]);
 
   return (
-    <div aria-hidden="true" className={cn("relative aspect-square w-full overflow-hidden rounded-lg", className)}>
+    <div aria-hidden="true" className={cn("board-frame relative aspect-square w-full", className)}>
       <div ref={ref} className="h-full w-full" />
     </div>
   );

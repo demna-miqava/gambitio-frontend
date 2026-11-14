@@ -11,7 +11,7 @@ export const AccountSettingsForm = () => {
     <div className="space-y-8">
       {hasPassword && <ChangePasswordForm />}
 
-      <div className={hasPassword ? "border-t border-border/70 pt-6" : undefined}>
+      <div className={hasPassword ? "border-t border-border pt-6" : undefined}>
         <DeleteAccountSection />
       </div>
     </div>

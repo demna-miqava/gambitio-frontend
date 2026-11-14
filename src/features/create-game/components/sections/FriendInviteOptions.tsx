@@ -47,7 +47,7 @@ export const FriendInviteOptions = () => {
 
   if (!selectedFriend) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-4 py-8 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-xl bg-card px-4 py-8 text-center">
         <p className="text-sm text-muted-foreground">Couldn't load this player.</p>
         <Button size="lg" variant="outline" onClick={goBack}>
           Back to friends
@@ -68,7 +68,7 @@ export const FriendInviteOptions = () => {
           className="size-11 shrink-0"
         />
         <div className="min-w-0 leading-tight">
-          <p className="truncate font-semibold">{selectedFriend.username}</p>
+          <p className="truncate font-medium">{selectedFriend.username}</p>
           {rating != null && (
             <p className="text-xs capitalize text-muted-foreground tabular-nums">
               {timeControl.format} {rating}
@@ -86,7 +86,7 @@ export const FriendInviteOptions = () => {
           <section className="space-y-2">
             <p
               aria-hidden="true"
-              className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+              className="text-sm text-muted-foreground"
             >
               Match format
             </p>
@@ -107,7 +107,7 @@ export const FriendInviteOptions = () => {
           <section className="space-y-2">
             <p
               aria-hidden="true"
-              className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+              className="text-sm text-muted-foreground"
             >
               {bestOf > 1 ? "I play first as" : "I play as"}
             </p>

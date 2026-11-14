@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { StoredGame } from "@/types";
-import { getResult } from "./gameResult";
+import { getResult, getScore } from "./gameResult";
 
 const player = (id: number | null, username: string) => ({
   id,
@@ -62,5 +62,27 @@ describe("getResult", () => {
   it("falls back to winnerId for rows without a result", () => {
     expect(getResult(game({ result: null, winnerId: 2 }), 2)).toBe("win");
     expect(getResult(game({ result: null, winnerId: 2 }), 1)).toBe("loss");
+  });
+
+  it("tells an aborted game apart from a draw", () => {
+    expect(getResult(game({ result: "aborted" }), 1)).toBe("aborted");
+  });
+});
+
+describe("getScore", () => {
+  it("writes the score White first, or nothing while the game is on", () => {
+    expect(getScore(game({ result: "white_win", winnerId: 1 }))).toBe("1–0");
+    expect(getScore(game({ result: "black_win", winnerId: 2 }))).toBe("0–1");
+    expect(getScore(game({ result: "draw" }))).toBe("½–½");
+    expect(getScore(game({ status: "in_progress", result: null }))).toBeUndefined();
+  });
+
+  it("gives an aborted game no score", () => {
+    expect(getScore(game({ result: "aborted" }))).toBeUndefined();
+  });
+
+  it("falls back to winnerId for rows without a result", () => {
+    expect(getScore(game({ result: null, winnerId: 2 }))).toBe("0–1");
+    expect(getScore(game({ result: null, winnerId: null }))).toBe("½–½");
   });
 });

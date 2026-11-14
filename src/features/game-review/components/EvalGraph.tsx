@@ -85,7 +85,7 @@ export const EvalGraph = ({ evals, moves, labels, currentIndex, onSelect, compac
             <>
               <span className="font-medium text-foreground">{labels[shown]}</span>
               {shownMove && isFlagged(shownMove.classification) && (
-                <span className={cn("ml-1 font-semibold", CLASSIFICATION_META[shownMove.classification].textClass)}>
+                <span className={cn("ml-1 font-medium", CLASSIFICATION_META[shownMove.classification].textClass)}>
                   {CLASSIFICATION_META[shownMove.classification].label}
                 </span>
               )}

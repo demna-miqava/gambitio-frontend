@@ -15,7 +15,7 @@ const PARTS = [
 const percent = (n: number, total: number) => (total ? Math.round((n / total) * 100) : 0);
 
 /**
- * Won / drawn / lost as one thin segmented bar with a legend underneath.
+ * Won / drawn / lost as one thin segmented rule with a legend underneath.
  * The legend carries the numbers (in text colours, beside a colour dot), so
  * the bar itself needs no labels or hover to be read.
  */
@@ -33,7 +33,7 @@ export const ResultsBar = ({
       <div
         // A 2px gap between parts (the surface shows through) separates
         // them without relying on the colours alone
-        className="flex h-2 w-full gap-0.5 overflow-hidden rounded-full bg-muted"
+        className="flex h-1.5 w-full gap-0.5 bg-muted"
         role="img"
         aria-label={`${wins} won, ${draws} drawn, ${losses} lost`}
       >
@@ -42,22 +42,22 @@ export const ResultsBar = ({
             counts[key] > 0 ? (
               <span
                 key={key}
-                className={cn("h-full first:rounded-l-full last:rounded-r-full", dot)}
+                className={cn("h-full", dot)}
                 style={{ flexGrow: counts[key], flexBasis: 0 }}
               />
             ) : null
           )}
       </div>
 
-      <dl className="grid grid-cols-3 gap-2">
+      <dl className="grid grid-cols-3 gap-4">
         {PARTS.map(({ key, label, dot }) => (
-          <div key={key} className="rounded-xl bg-muted/50 px-3 py-2.5">
+          <div key={key}>
             <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span className={cn("size-2 shrink-0 rounded-full", dot)} aria-hidden="true" />
               {label}
             </dt>
             <dd className="mt-0.5 flex items-baseline gap-1.5">
-              <span className="text-lg font-semibold tabular-nums text-foreground">
+              <span className="font-display-num text-xl text-foreground">
                 {counts[key].toLocaleString()}
               </span>
               {total > 0 && (

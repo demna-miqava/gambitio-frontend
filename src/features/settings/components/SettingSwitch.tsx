@@ -21,7 +21,7 @@ export const SettingSwitch = ({ name, label, description }: SettingSwitchProps) 
   const descriptionId = `${id}-description`;
 
   return (
-    <div className="flex items-center justify-between gap-6 border-b border-border/70 py-4 first:pt-0 last:border-0 last:pb-0">
+    <div className="flex items-center justify-between gap-6 border-b border-border py-4 first:pt-0 last:border-0 last:pb-0">
       <div className="space-y-0.5">
         <Label htmlFor={id}>{label}</Label>
         <p id={descriptionId} className="text-sm text-muted-foreground">

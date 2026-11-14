@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 interface PageHeaderProps {
   title: ReactNode;
   description?: ReactNode;
-  /** Small label above the title */
+  /** A short line above the title, in plain text */
   eyebrow?: ReactNode;
   actions?: ReactNode;
   className?: string;
@@ -29,16 +29,13 @@ export const PageHeader = ({
   >
     <div className="min-w-0 space-y-1.5">
       {eyebrow && (
-        <p className="flex items-center gap-2.5 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          <span className="h-px w-6 bg-gold" aria-hidden="true" />
-          {eyebrow}
-        </p>
+        <p className="text-sm text-muted-foreground">{eyebrow}</p>
       )}
-      <Heading className="font-display text-3xl font-medium text-foreground dark:text-cream sm:text-[2.25rem]">
+      <Heading className="font-display text-3xl leading-tight text-foreground sm:text-4xl">
         {title}
       </Heading>
       {description && (
-        <p className="max-w-2xl text-sm text-muted-foreground sm:text-[0.95rem]">
+        <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
           {description}
         </p>
       )}
@@ -58,7 +55,7 @@ export const SectionHeader = ({
   className?: string;
 }) => (
   <div className={cn("flex items-center justify-between gap-4", className)}>
-    <h2 className="text-base font-semibold tracking-tight text-foreground">
+    <h2 className="font-display text-xl text-foreground">
       {title}
     </h2>
     {action}

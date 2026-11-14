@@ -1,5 +1,4 @@
 import { CountingNumber } from "@/components/ui/shadcn-io/counting-number";
-import { TrendingUp, TrendingDown } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface PlayerDisplayProps {
@@ -26,11 +25,11 @@ export const PlayerDisplay = ({
   const hasDetails = showNewRating || startingRating !== undefined || Boolean(material);
 
   return (
-    <div className="flex items-center justify-between gap-3 px-3 py-1.5 sm:px-4 sm:py-2.5">
+    <div className="flex items-center justify-between gap-3 px-3 py-1.5 sm:px-0 sm:py-2.5">
       <div className="flex min-w-0 items-center gap-2.5">
         {avatar}
         <div className="min-w-0 leading-tight">
-          <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+          <p className="truncate text-sm font-medium text-foreground">{name}</p>
           {hasDetails && (
             <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
               {showNewRating ? (
@@ -46,19 +45,12 @@ export const PlayerDisplay = ({
                     <span
                       className={
                         ratingChange >= 0
-                          ? "flex items-center gap-0.5 font-medium text-rating-up"
-                          : "flex items-center gap-0.5 font-medium text-rating-down"
+                          ? "tabular-nums text-rating-up"
+                          : "tabular-nums text-rating-down"
                       }
                     >
-                      {ratingChange >= 0 ? (
-                        <TrendingUp className="size-3" aria-hidden="true" />
-                      ) : (
-                        <TrendingDown className="size-3" aria-hidden="true" />
-                      )}
-                      <span className="tabular-nums">
-                        {ratingChange >= 0 ? "+" : ""}
-                        {ratingChange}
-                      </span>
+                      {ratingChange >= 0 ? "+" : "−"}
+                      {Math.abs(ratingChange)}
                     </span>
                   )}
                 </span>

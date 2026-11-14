@@ -38,7 +38,7 @@ export const SeriesResultNote = ({
         className
       )}
     >
-      <p className="flex items-center gap-1.5 text-sm font-semibold">
+      <p className="flex items-center gap-1.5 text-sm font-medium">
         {over && <Trophy className="size-4" aria-hidden="true" />}
         {over ? seriesStatusLabel(series, viewerId) : `Series score ${formatScoreline(left, right)}`}
         {over && <span className="tabular-nums">({formatScoreline(left, right)})</span>}

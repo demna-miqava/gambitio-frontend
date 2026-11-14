@@ -24,22 +24,23 @@ export const BaseMoveControls = ({
 }: BaseMoveControlsProps) => {
   return (
     <div className={className}>
-      <nav className="flex w-full gap-1.5" aria-label="Move navigation">
+      {/* Four plain icon buttons in a row: no slabs, no borders */}
+      <nav className="flex w-full gap-1" aria-label="Move navigation">
         {controls.map((control) => (
           <Button
             key={control.id}
             type="button"
-            variant="secondary"
+            variant="ghost"
             className={cn(
-              "h-11 flex-1 rounded-lg sm:h-10",
-              "disabled:cursor-not-allowed disabled:opacity-40"
+              "h-11 flex-1 text-foreground sm:h-9",
+              "disabled:cursor-not-allowed disabled:opacity-35"
             )}
             title={control.title}
             aria-label={control.title}
             onClick={control.onClick}
             disabled={control.disabled}
           >
-            <control.icon className="size-5" aria-hidden="true" />
+            <control.icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
           </Button>
         ))}
       </nav>

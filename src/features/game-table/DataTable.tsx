@@ -57,7 +57,7 @@ export function DataTable<TData, TValue>({
   const isEmpty = !isLoading && data.length === 0;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/70 bg-card">
+    <div>
       <Table>
         {!isEmpty && (
           <TableHeader>
@@ -67,7 +67,7 @@ export function DataTable<TData, TValue>({
                   return (
                     <TableHead
                       key={header.id}
-                      className="h-10 px-4 text-xs font-medium text-muted-foreground"
+                      className="h-9 px-4 text-xs font-normal text-muted-foreground"
                     >
                       {header.isPlaceholder
                         ? null
@@ -99,10 +99,10 @@ export function DataTable<TData, TValue>({
                     if ((event.target as HTMLElement).closest("a")) return;
                     if (gameId) navigate(getArchiveGameRoute(String(gameId)));
                   }}
-                  className="cursor-pointer border-border/60 focus-within:bg-accent/60"
+                  className="cursor-pointer focus-within:bg-accent/60"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3">
+                    <TableCell key={cell.id} className="px-4 py-2.5">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -126,7 +126,7 @@ export function DataTable<TData, TValue>({
         </TableBody>
       </Table>
       {enablePagination && (
-        <div className="border-t border-border/60 py-3">
+        <div className="border-t border-border py-3">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

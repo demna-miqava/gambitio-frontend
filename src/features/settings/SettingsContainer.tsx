@@ -55,11 +55,11 @@ export const SettingsContainer = () => {
       // the header you just tapped up the screen
       <Accordion
         type="multiple"
-        className="w-full overflow-hidden rounded-2xl border border-border/70 bg-card"
+        className="w-full overflow-hidden rounded-2xl bg-card"
       >
         {sections.map(
           ({ value, label, icon: Icon, description, component: Component }) => (
-            <AccordionItem key={value} value={value} className="border-border/70 px-4">
+            <AccordionItem key={value} value={value} className="border-border px-4">
               <AccordionTrigger className="py-4 hover:no-underline">
                 <div className="flex items-center gap-3">
                   <Icon className="size-[18px] text-muted-foreground" aria-hidden="true" />
@@ -87,13 +87,13 @@ export const SettingsContainer = () => {
     >
       <TabsList
         aria-label="Settings sections"
-        className="sticky top-8 flex h-auto w-full flex-col items-stretch gap-0.5 bg-transparent p-0"
+        className="sticky top-8 flex h-auto w-full flex-col items-stretch gap-0.5 border-0 bg-transparent p-0"
       >
         {sections.map(({ icon: Icon, label, value }) => (
           <TabsTrigger
             value={value}
             key={value}
-            className="h-10 justify-start gap-3 rounded-lg border-0 px-3 text-sm font-medium text-muted-foreground shadow-none hover:bg-accent hover:text-foreground data-[state=active]:bg-accent data-[state=active]:text-foreground data-[state=active]:shadow-none dark:data-[state=active]:bg-accent dark:text-muted-foreground"
+            className="h-10 flex-none justify-start gap-3 rounded-lg border-0 px-3 text-sm font-medium text-muted-foreground shadow-none after:hidden hover:bg-accent hover:text-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-none dark:data-[state=active]:bg-accent dark:text-muted-foreground"
           >
             <Icon className="size-[18px]" aria-hidden="true" />
             {label}
@@ -105,11 +105,11 @@ export const SettingsContainer = () => {
         <TabsContent
           key={value}
           value={value}
-          className="rounded-2xl border border-border/70 bg-card p-6"
+          className="rounded-2xl bg-card p-6"
         >
           <div className="space-y-4">
-            <div className="border-b border-border/70 pb-4">
-              <h2 className="text-lg font-semibold">{label}</h2>
+            <div className="border-b border-border pb-4">
+              <h2 className="text-xl font-display">{label}</h2>
               <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
             </div>
             {Component && <Component />}

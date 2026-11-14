@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 import "@lichess-org/chessground/assets/chessground.base.css";
 import "@lichess-org/chessground/assets/chessground.brown.css";
-import "@lichess-org/chessground/assets/chessground.cburnett.css";
+import "@/assets/pieces/chessground.merida.css";
 import { PlayerDisplay } from "./PlayerDisplay";
 import { MaterialDisplay } from "./MaterialDisplay";
 import { getMaterial } from "../utils/material";
@@ -39,7 +39,8 @@ interface BoardLayoutProps {
  * Reusable board layout component that displays a chess board
  * with player information and clocks at the top and bottom.
  *
- * Inside GameLayout the card is capped at --board-max, and the player rows
+ * No card: the board sits in a thin ink frame with the players above and
+ * below it. Inside GameLayout the column is capped at --board-max, and the player rows
  * have a fixed minimum height (3rem, 4rem from 640px) that the cap in
  * index.css counts on. The board is a size container so the coordinates can
  * scale with the squares.
@@ -67,14 +68,14 @@ export const BoardLayout = ({
   const top: PlayerColor = bottom === "white" ? "black" : "white";
 
   return (
-    <section className="flex w-full max-w-(--board-max) flex-col overflow-hidden bg-card sm:rounded-2xl sm:border sm:border-border/70 sm:shadow-sm">
+    <section className="flex w-full max-w-(--board-max) flex-col">
       {topPlayer && (
         <div className={PLAYER_ROW}>
           <PlayerDisplay {...topPlayer} clock={topPlayerClock} material={materialFor(top)} />
         </div>
       )}
 
-      <div className="@container relative aspect-square w-full">
+      <div className="board-frame @container relative aspect-square w-full">
         <div
           ref={boardRef}
           className="h-full w-full"

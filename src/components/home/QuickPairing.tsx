@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Loader2, SlidersHorizontal } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useMatchmaking } from "@/features/matchmaking/hooks/useMatchmaking";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
@@ -46,72 +46,65 @@ export const QuickPairing = () => {
   };
 
   return (
-    <section
-      aria-labelledby="quick-pairing-title"
-      className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-6"
-    >
-      <div className="relative flex items-start justify-between gap-4">
-        <div>
-          <h2 id="quick-pairing-title" className="font-display text-2xl font-medium">
-            Quick pairing
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pick a time control and we'll find you an opponent.
-          </p>
-        </div>
-        <Button variant="outline" size="sm" asChild className="shrink-0">
-          <Link to={ROUTES.PLAY} state={{ section: "new" }}>
-            <SlidersHorizontal aria-hidden="true" /> More options
-          </Link>
-        </Button>
-      </div>
+    <section aria-labelledby="quick-pairing-title" className="rounded-2xl bg-card p-5 sm:p-6">
+      <h2 id="quick-pairing-title" className="font-display text-2xl">
+        Quick pairing
+      </h2>
+      <p className="mt-0.5 text-sm text-muted-foreground">
+        Pick a time control and we'll find you an opponent.
+      </p>
 
       {isSearching ? (
         <div
-          className="relative mt-6 flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border bg-muted/40 px-4 py-8 text-center"
+          className="mt-5 flex min-h-[9.75rem] flex-col items-center justify-center gap-3 rounded-xl bg-background px-4 py-6 text-center"
           role="status"
           aria-live="polite"
         >
-          <Loader2 className="size-6 animate-spin text-primary" aria-hidden="true" />
           <div>
-            <p className="font-medium">
+            <p className="flex items-center gap-2.5 font-display text-2xl">
               {isConnecting ? "Connecting…" : "Finding an opponent…"}
+              <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden="true" />
             </p>
             <p className="text-sm text-muted-foreground tabular-nums">
               {selected.label} · {selected.type}
             </p>
           </div>
-          <Button size="lg"
-            variant="outline"
-            onClick={() => setShouldConnect(false)}
-          >
+          <Button variant="outline" onClick={() => setShouldConnect(false)}>
             Cancel
           </Button>
         </div>
       ) : (
-        <div className="relative mt-5 grid grid-cols-4 gap-2 sm:mt-6 sm:gap-2.5">
+        <div className="mt-5 grid grid-cols-4 gap-2 sm:gap-2.5">
           {PAIRINGS.map((pairing) => (
             <button
               key={pairing.label}
               type="button"
               onClick={() => start(pairing)}
               className={cn(
-                "group flex h-16 flex-col items-center justify-center gap-0.5 rounded-xl border border-border/70 bg-background/60 transition-colors sm:h-20",
-                "hover:border-primary/50 hover:bg-brand-soft active:bg-brand-soft active:border-primary",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                "flex h-16 flex-col items-center justify-center gap-0.5 rounded-xl bg-background transition-colors sm:h-[4.625rem]",
+                "hover:bg-primary-solid hover:text-primary-solid-foreground active:bg-primary-solid/90 active:text-primary-solid-foreground",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
               )}
               aria-label={`Play ${pairing.label} ${pairing.type}`}
             >
-              <span className="font-display-num text-lg font-medium text-foreground sm:text-2xl">
+              <span className="font-display-num text-xl leading-none sm:text-[1.625rem]">
                 {pairing.label}
               </span>
-              <span className="text-xs text-muted-foreground group-hover:text-foreground/70">
-                {pairing.type}
-              </span>
+              <span className="text-xs opacity-70">{pairing.type}</span>
             </button>
           ))}
         </div>
       )}
+      <div className="mt-4 flex items-center justify-between gap-4 text-sm text-muted-foreground">
+        <span>Custom time, play a friend or the computer</span>
+        <Link
+          to={ROUTES.PLAY}
+          state={{ section: "new" }}
+          className="relative touch-target shrink-0 underline-offset-4 transition-colors hover:text-foreground hover:underline"
+        >
+          More options →
+        </Link>
+      </div>
     </section>
   );
 };

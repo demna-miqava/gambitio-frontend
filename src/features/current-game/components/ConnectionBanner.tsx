@@ -33,7 +33,7 @@ export const ConnectionBanner = ({ status }: { status: GameConnectionStatus }) =
       >
         <WifiOff className="size-5 shrink-0 text-loss" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Connection lost</p>
+          <p className="text-sm font-medium">Connection lost</p>
           <p className="text-xs text-muted-foreground">
             Reload to get back into the game.
           </p>
@@ -52,7 +52,7 @@ export const ConnectionBanner = ({ status }: { status: GameConnectionStatus }) =
     >
       <Loader2 className="size-5 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" />
       <div className="min-w-0">
-        <p className="text-sm font-semibold">
+        <p className="text-sm font-medium">
           {status === "connecting" ? "Connecting…" : "Reconnecting…"}
         </p>
         <p className="text-xs text-muted-foreground">

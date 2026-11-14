@@ -12,7 +12,7 @@ const PuzzlesLanding = () => {
       boardIsDecorative
       board={<LandingBoard />}
       sidebar={
-        <div className="flex flex-col gap-6 rounded-2xl border border-border/70 bg-card p-5">
+        <div className="flex flex-col gap-6 rounded-2xl bg-card p-5">
           <PageHeader
             title="Puzzles"
             description="Find the best move. Pick a mode to start training your tactics."

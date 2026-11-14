@@ -82,14 +82,14 @@ const LineDrill = ({ line, lines, nextLine, onNext, onRestart }: DrillProps) => 
   );
 
   const sidebar = (
-    <div className="flex flex-col gap-4 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
+    <div className="flex flex-col gap-4 lg:rounded-2xl lg:bg-card lg:p-4">
       <RepertoireNav current="practice" className="hidden lg:block" />
 
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {line.color === "white" ? "White" : "Black"} line · {drill.ply}/{line.moves.length} moves
         </p>
-        <h2 className="text-lg font-semibold text-foreground">{line.name}</h2>
+        <h2 className="text-xl font-display text-foreground">{line.name}</h2>
         <p className="text-xs text-muted-foreground">
           {accuracy === null
             ? "First practice"
@@ -111,7 +111,7 @@ const LineDrill = ({ line, lines, nextLine, onNext, onRestart }: DrillProps) => 
         />
       </div>
 
-      <div className="min-h-12 rounded-xl border border-border/70 px-3 py-2">
+      <div className="min-h-12 rounded-xl bg-card px-3 py-2">
         {drill.playedMoves.length > 0 ? (
           <MoveText moves={drill.playedMoves} />
         ) : (
@@ -150,7 +150,7 @@ const LineDrill = ({ line, lines, nextLine, onNext, onRestart }: DrillProps) => 
           >
             {result ? <Check className="size-5" aria-hidden="true" /> : <X className="size-5" aria-hidden="true" />}
             <div className="text-sm">
-              <p className="font-semibold">{result ? "Recalled perfectly" : "Finished with mistakes"}</p>
+              <p className="font-medium">{result ? "Recalled perfectly" : "Finished with mistakes"}</p>
               <p className="text-xs opacity-90">
                 {record.isPending ? (
                   <span className="inline-flex items-center gap-1">

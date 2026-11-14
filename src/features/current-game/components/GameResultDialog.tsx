@@ -33,7 +33,7 @@ const GameResultDialog = ({
       <DialogContent
         showCloseButton
         className={cn(
-          "gap-5 border-border/70 p-6 shadow-2xl",
+          "gap-5 border-border p-6 shadow-2xl",
           // Phones: bottom sheet
           "top-auto bottom-0 left-0 max-w-none translate-x-0 translate-y-0 rounded-none rounded-t-2xl pb-[calc(1.5rem+env(safe-area-inset-bottom))]",
           // Larger screens: small centered card
@@ -41,7 +41,7 @@ const GameResultDialog = ({
         )}
       >
         <DialogHeader>
-          <DialogTitle className="text-center font-display text-2xl font-semibold">
+          <DialogTitle className="text-center font-display text-2xl">
             {title}
           </DialogTitle>
           {description ? (

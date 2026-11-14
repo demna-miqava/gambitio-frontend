@@ -35,7 +35,7 @@ const FriendPopover = ({
         <div className="flex min-w-0 items-center gap-3">
           <UserAvatar src={avatarSrc(id, avatarUrl)} username={username} className="size-10 shrink-0" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">{username}</p>
+            <p className="truncate text-sm font-medium text-foreground">{username}</p>
             {friendsSince && (
               <p className="text-xs text-muted-foreground">
                 Friends since {formatShortDate(friendsSince)}

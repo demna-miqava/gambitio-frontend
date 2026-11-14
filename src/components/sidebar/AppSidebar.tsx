@@ -51,7 +51,7 @@ import { useNavBadges } from "@/components/navBadges";
 // of the 40px rail button) in both states, so collapsing and expanding only
 // animate the width instead of making every item jump
 const itemClass =
-  "relative h-10 gap-3 pl-[11px] group-data-[collapsible=icon]:pl-[11px]! group-data-[collapsible=icon]:justify-start text-[0.925rem] text-sidebar-foreground/80 data-[active=true]:text-sidebar-accent-foreground [&>svg]:size-[18px] data-[active=true]:[&>svg]:text-primary";
+  "relative h-10 gap-3 pl-[11px] group-data-[collapsible=icon]:pl-[11px]! group-data-[collapsible=icon]:justify-start text-[0.9375rem] text-sidebar-foreground/80 [&>svg]:size-[18px] [&>svg]:stroke-[1.5] data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-foreground";
 
 /**
  * The phone sheet (only rendered below 768px) gets 44px rows and toggles so
@@ -66,7 +66,7 @@ const NavBadge = ({ count }: { count?: number }) => {
     <span
       aria-hidden="true"
       className={cn(
-        "absolute top-1/2 right-10 flex h-5 min-w-5 -translate-y-1/2 items-center justify-center rounded-full bg-primary px-1.5 text-[0.7rem] font-semibold leading-none text-primary-foreground tabular-nums group-data-[collapsible=icon]:top-0.5 group-data-[collapsible=icon]:right-0.5 group-data-[collapsible=icon]:h-4 group-data-[collapsible=icon]:min-w-4 group-data-[collapsible=icon]:translate-y-0 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:text-[0.625rem]",
+        "absolute top-1/2 right-10 flex h-5 min-w-5 -translate-y-1/2 items-center justify-center rounded-full bg-primary px-1.5 text-[0.7rem] font-medium leading-none text-primary-foreground tabular-nums group-data-[collapsible=icon]:top-0.5 group-data-[collapsible=icon]:right-0.5 group-data-[collapsible=icon]:h-4 group-data-[collapsible=icon]:min-w-4 group-data-[collapsible=icon]:translate-y-0 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:text-[0.625rem]",
         // Clear of the wider expand toggle in the phone sheet
         isMobile && "right-12"
       )}
@@ -182,7 +182,7 @@ const ExpandedGroup = ({
                 asChild
                 isActive={!sub.state && pathname === sub.url}
                 className={cn(
-                  "h-8 text-sidebar-foreground/70",
+                  "h-8 text-sidebar-foreground/70 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-foreground",
                   isMobile && "h-11"
                 )}
               >
@@ -247,7 +247,7 @@ export function AppSidebar() {
           <Link
             to={ROUTES.HOME}
             aria-label="Gambitio home"
-            className="min-w-0 overflow-hidden rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="min-w-0 overflow-hidden rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <BrandLogo />
           </Link>

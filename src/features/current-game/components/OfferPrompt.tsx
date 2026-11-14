@@ -18,7 +18,7 @@ interface OfferPromptProps {
  * announces it.
  */
 export const OfferPrompt = ({ icon, message, subject, onAccept, onDecline }: OfferPromptProps) => (
-  <div className="w-full rounded-xl border border-border/70 bg-muted/50 p-4">
+  <div className="w-full rounded-xl bg-muted/50 p-4">
     <div className="mb-3 flex items-center gap-2">
       {icon}
       <p className="text-sm font-medium text-foreground">{message}</p>
@@ -44,7 +44,7 @@ export const OfferPrompt = ({ icon, message, subject, onAccept, onDecline }: Off
 
 /** A one-line note in the side panel, e.g. "Your opponent declined the draw." */
 export const OfferStatus = ({ children }: { children: ReactNode }) => (
-  <div className="w-full rounded-xl border border-border/70 bg-muted/50 px-4 py-3" role="status">
+  <div className="w-full rounded-xl bg-muted/50 px-4 py-3" role="status">
     <p className="text-sm text-muted-foreground">{children}</p>
   </div>
 );

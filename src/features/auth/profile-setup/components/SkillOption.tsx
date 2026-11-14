@@ -14,15 +14,15 @@ const SkillOption = ({ skill }: SkillOptionProps) => {
       value={skill.value}
       aria-describedby={descriptionId}
       className={cn(
-        "group flex w-full items-center justify-between gap-4 rounded-xl border px-4 py-3.5 text-left transition-colors",
+        "group flex w-full items-center justify-between gap-4 rounded-xl bg-card px-4 py-3.5 text-left transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         // Same selected look as the other option cards (bots, time controls)
-        "border-border/70 bg-card hover:border-primary/40 hover:bg-accent/60",
+        "border-border bg-card hover:border-primary/40 hover:bg-accent/60",
         "data-[state=checked]:border-primary data-[state=checked]:bg-brand-soft data-[state=checked]:hover:bg-brand-soft"
       )}
     >
       <span className="flex flex-col">
-        <span className="text-sm font-semibold text-foreground">{skill.title}</span>
+        <span className="text-sm font-medium text-foreground">{skill.title}</span>
         <span id={descriptionId} className="text-sm text-muted-foreground">
           {skill.description}
         </span>

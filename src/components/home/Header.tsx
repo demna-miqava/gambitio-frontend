@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useUser } from "@/hooks/useUser";
-import { getTimeControlIcon } from "@/utils/timeControl";
 import { getProfileStatsRoute } from "@/constants/routes";
 import { useGetStats } from "@/features/stats/hooks/useGetStats";
 import RatingDelta from "@/features/stats/components/RatingDelta";
@@ -32,10 +31,9 @@ export const Header = () => {
       actions={
         <nav
           aria-label="Your ratings"
-          className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto sm:gap-3"
+          className="flex w-full justify-between gap-6 sm:w-auto sm:justify-start sm:gap-9"
         >
           {RATINGS.map(({ key, label }) => {
-            const Icon = getTimeControlIcon(key);
             const delta = stats?.[key]?.delta;
             return (
               <Link
@@ -45,18 +43,14 @@ export const Header = () => {
                   delta ? `, ${delta > 0 ? "up" : "down"} ${Math.abs(delta)} in the last 30 days` : ""
                 }, view stats`}
                 title={delta ? "Rating change in the last 30 days" : undefined}
-                className="flex min-w-0 flex-col gap-1 rounded-xl border border-border/70 bg-card px-3 py-3 transition-colors hover:border-primary/40 hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-28 sm:px-4 lg:min-w-32"
+                className="group flex min-w-0 flex-col gap-0.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background [&_.font-display-num]:underline-offset-4 hover:[&_.font-display-num]:underline"
               >
-                <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                  <Icon className="size-3.5 shrink-0" aria-hidden="true" />
-                  {label}
-                </span>
-                {/* Delta under the number on phones, beside it from sm */}
-                <span className="flex flex-col items-start gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
-                  <span className="font-display-num text-2xl font-medium text-foreground">
+                <span className="text-xs text-muted-foreground">{label}</span>
+                <span className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="font-display-num text-2xl leading-tight text-foreground sm:text-[1.75rem]">
                     {ratings[key] ?? "–"}
                   </span>
-                  <RatingDelta delta={delta} className="text-xs font-medium" />
+                  <RatingDelta delta={delta} className="text-xs" />
                 </span>
               </Link>
             );

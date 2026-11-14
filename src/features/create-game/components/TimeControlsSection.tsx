@@ -1,5 +1,4 @@
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import { Settings2 } from "lucide-react";
 import { PLAY_TIME_CONTROLS } from "../constants/timeControls";
 import { useGameSetup } from "../GameSetupContext";
 import { formatTimeControl } from "@/utils/timeControl";
@@ -41,13 +40,9 @@ export const TimeControlsSection = ({ showCustom = true }: TimeControlsSectionPr
         aria-label="Time control"
         className="space-y-4"
       >
-        {PLAY_TIME_CONTROLS.map(({ label: format, icon: Icon, options }) => (
+        {PLAY_TIME_CONTROLS.map(({ label: format, options }) => (
           <div key={format} className="space-y-2">
-            <p
-              className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground"
-              aria-hidden="true"
-            >
-              <Icon className="size-3.5" />
+            <p className="text-sm capitalize text-muted-foreground" aria-hidden="true">
               {format}
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -57,10 +52,10 @@ export const TimeControlsSection = ({ showCustom = true }: TimeControlsSectionPr
                   value={valueOf(time, increment)}
                   aria-label={`${label} ${format}`}
                   className={cn(
-                    "h-11 rounded-lg border text-sm font-semibold tabular-nums transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    "border-border bg-background text-foreground/85 hover:border-primary/40 hover:bg-accent",
-                    "data-[state=checked]:border-primary data-[state=checked]:bg-brand-soft data-[state=checked]:text-foreground",
+                    "h-12 rounded-xl bg-background font-display-num text-xl text-foreground transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+                    "hover:bg-accent",
+                    "data-[state=checked]:bg-primary-solid data-[state=checked]:text-primary-solid-foreground",
                     "disabled:pointer-events-none disabled:opacity-50"
                   )}
                 >
@@ -78,14 +73,13 @@ export const TimeControlsSection = ({ showCustom = true }: TimeControlsSectionPr
           onClick={openCustomTime}
           disabled={isSearching}
           className={cn(
-            "flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-dashed text-sm font-medium transition-colors",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+            "flex h-11 w-full items-center justify-center rounded-xl text-sm font-medium transition-colors",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:pointer-events-none disabled:opacity-50",
             !isPreset
-              ? "border-primary bg-brand-soft text-foreground"
-              : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              ? "bg-primary-solid text-primary-solid-foreground"
+              : "bg-background text-muted-foreground hover:bg-accent hover:text-foreground"
           )}
         >
-          <Settings2 className="size-4" aria-hidden="true" />
           {isPreset ? (
             "Custom time"
           ) : (

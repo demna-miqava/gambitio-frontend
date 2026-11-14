@@ -23,13 +23,13 @@ const Home = () => {
   return (
     <PageContainer className="space-y-8 lg:space-y-10">
       <ReturnToGameBanner />
-      <Challenges className="rounded-2xl border border-border/70 bg-card p-5" />
+      <Challenges className="rounded-2xl bg-card p-5 sm:p-6" />
       <Header />
 
       {/* One grid, so recent games follow the tiles however tall the side column is */}
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-6 lg:gap-y-8">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_19rem] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-6 lg:gap-y-10">
         <QuickPairing />
-        <aside className="space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+        <aside className="space-y-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <ResultsSummary />
           <TopPlayers />
         </aside>

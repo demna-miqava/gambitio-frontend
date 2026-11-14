@@ -43,8 +43,8 @@ const RatingChart = ({ ratingHistory }: { ratingHistory: RatingDataPoint[] }) =>
 
   if (ratingHistory.length === 0) {
     return (
-      <section className="rounded-2xl border border-border/70 bg-card p-5 sm:p-6">
-        <h3 className="text-base font-semibold text-foreground">Rating progress</h3>
+      <section className="rounded-2xl bg-card p-5 sm:p-6">
+        <h3 className="text-lg font-display text-foreground">Rating progress</h3>
         <p className="flex h-40 items-center justify-center text-sm text-muted-foreground">
           No rated games in this period yet.
         </p>
@@ -88,9 +88,9 @@ const RatingChart = ({ ratingHistory }: { ratingHistory: RatingDataPoint[] }) =>
   const tooltipLeft = active !== null ? Math.min(Math.max(x(active), 60), width - 60) : 0;
 
   return (
-    <section className="rounded-2xl border border-border/70 bg-card p-5 sm:p-6">
+    <section className="rounded-2xl bg-card p-5 sm:p-6">
       <div className="mb-4 flex items-baseline justify-between gap-4">
-        <h3 className="text-base font-semibold text-foreground">Rating progress</h3>
+        <h3 className="text-lg font-display text-foreground">Rating progress</h3>
         <p className="text-sm tabular-nums text-muted-foreground">
           {first.rating} → <span className="font-medium text-foreground">{final.rating}</span>
         </p>
@@ -187,10 +187,10 @@ const RatingChart = ({ ratingHistory }: { ratingHistory: RatingDataPoint[] }) =>
             {point && (
               <div
                 aria-live="polite"
-                className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 rounded-lg border border-border/70 bg-popover px-2.5 py-1.5 text-center shadow-md"
+                className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 rounded-lg border border-border bg-popover px-2.5 py-1.5 text-center shadow-md"
                 style={{ left: tooltipLeft }}
               >
-                <p className="text-sm font-semibold tabular-nums text-popover-foreground">
+                <p className="text-sm font-medium tabular-nums text-popover-foreground">
                   {point.rating}
                 </p>
                 <p className="text-xs text-muted-foreground">{point.date}</p>

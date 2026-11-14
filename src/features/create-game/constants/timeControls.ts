@@ -1,4 +1,3 @@
-import { TIME_CONTROL_ICONS } from "@/constants/timeControlIcons";
 import { formatTimeControl } from "@/utils/timeControl";
 import type { TimeControlType } from "@/types";
 
@@ -16,7 +15,6 @@ export const getTimeControlFormat = (timeInSeconds: number): TimeControlType => 
 export const PLAY_TIME_CONTROLS = [
   {
     label: "bullet" as TimeControlType,
-    icon: TIME_CONTROL_ICONS.bullet,
     options: [
       { time: 60, increment: 0 },
       { time: 60, increment: 1 },
@@ -25,7 +23,6 @@ export const PLAY_TIME_CONTROLS = [
   },
   {
     label: "blitz" as TimeControlType,
-    icon: TIME_CONTROL_ICONS.blitz,
     options: [
       { time: 180, increment: 0 },
       { time: 180, increment: 2 },
@@ -34,7 +31,6 @@ export const PLAY_TIME_CONTROLS = [
   },
   {
     label: "rapid" as TimeControlType,
-    icon: TIME_CONTROL_ICONS.rapid,
     options: [
       { time: 600, increment: 0 },
       { time: 900, increment: 10 },

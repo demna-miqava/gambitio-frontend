@@ -73,7 +73,7 @@ export const MaterialDisplay = memo(
         })}
         {advantage > 0 && (
           <span
-            className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground"
+            className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground"
             aria-hidden="true"
           >
             +{advantage}

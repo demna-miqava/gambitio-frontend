@@ -34,7 +34,7 @@ export const PuzzleRatingCard = () => {
         {attempt.hintUsed && <span className="text-xs text-muted-foreground">Hint used</span>}
         <span
           className={cn(
-            "text-sm font-semibold tabular-nums",
+            "text-sm font-medium tabular-nums",
             ratingChange > 0 && "text-rating-up",
             ratingChange < 0 && "text-rating-down",
             ratingChange === 0 && "text-muted-foreground"
@@ -48,11 +48,11 @@ export const PuzzleRatingCard = () => {
   }
 
   return (
-    <div className="flex h-12 items-center justify-between rounded-xl border border-border/70 bg-card px-3">
+    <div className="flex h-12 items-center justify-between rounded-xl bg-card px-3">
       <span className="text-sm font-medium text-muted-foreground">Puzzle rating</span>
       <div className="flex items-center gap-2.5" role="status" aria-live="polite" aria-atomic="true">
         {change}
-        <span className="text-2xl font-semibold tabular-nums text-foreground">
+        <span className="text-2xl font-medium tabular-nums text-foreground">
           {rating ?? <span aria-label="Loading rating">–</span>}
         </span>
       </div>

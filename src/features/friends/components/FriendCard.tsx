@@ -125,7 +125,7 @@ export function FriendCard<T extends Friend>({
 
   if (mode === "pick") {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-card p-3">
+      <div className="flex items-center justify-between gap-3 rounded-xl bg-card p-3">
         <div className="flex min-w-0 items-center gap-3">{identity}</div>
         {onChallenge && (
           <Button size="lg"
@@ -143,7 +143,7 @@ export function FriendCard<T extends Friend>({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-card p-3 sm:p-4">
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-card p-3 sm:p-4">
       <Link
         to={getProfileRoute(friend.id)}
         className="flex min-w-0 items-center gap-3 transition-opacity hover:opacity-80"

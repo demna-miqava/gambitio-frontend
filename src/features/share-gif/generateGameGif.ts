@@ -4,7 +4,7 @@
  * bundle.
  */
 import { GIFEncoder, applyPalette, quantize } from "gifenc";
-import cburnettCss from "@lichess-org/chessground/assets/chessground.cburnett.css?raw";
+import pieceSetCss from "@/assets/pieces/chessground.merida.css?raw";
 import { capFrames, gameFrames } from "./utils/frames";
 import { MAX_GIF_FRAMES, frameDelays } from "./utils/schedule";
 import { GIF_HEIGHT, GIF_WIDTH, SQUARE_SIZE, drawFrame, type GifScene, type GifTheme } from "./utils/draw";
@@ -38,7 +38,7 @@ let spritesPromise: Promise<Sprites> | null = null;
 
 function loadSprites(): Promise<Sprites> {
   spritesPromise ??= (async () => {
-    const uris = parsePieceSet(cburnettCss);
+    const uris = parsePieceSet(pieceSetCss);
     const entries = await Promise.all(
       PIECE_KEYS.map(async (key) => {
         const uri = uris[key];

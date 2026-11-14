@@ -62,7 +62,7 @@ const EngineStrip = ({ fen }: { fen: string }) => {
         className="h-7 min-w-16 text-sm font-medium"
       >
         {engineEnabled ? (
-          <span className="text-lg font-semibold tabular-nums">
+          <span className="text-lg font-medium tabular-nums">
             {best ? formatScore(best, "white") : "…"}
           </span>
         ) : (
@@ -167,14 +167,14 @@ export const AnalysisPanel = ({ onLoadAnotherPgn }: { onLoadAnotherPgn?: () => v
   useFlipBoardKey(flipBoard);
 
   return (
-    <div className="flex w-full flex-col gap-3 lg:h-full lg:min-h-0 lg:gap-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:shadow-sm">
+    <div className="flex w-full flex-col gap-3 lg:h-full lg:min-h-0 lg:gap-0 lg:overflow-hidden lg:rounded-2xl lg:bg-card">
       <AnalysisPanelHeader onLoadAnotherPgn={onLoadAnotherPgn} className="hidden lg:order-1 lg:flex" />
 
       {/* Desktop review: always visible above the moves. Renders nothing
           where no review is offered (e.g. the analysis board) */}
-      <GameReviewPanel className="hidden shrink-0 border-b border-border/70 lg:order-2 lg:block" />
+      <GameReviewPanel className="hidden shrink-0 border-b border-border lg:order-2 lg:block" />
 
-      <div className="order-1 space-y-2 lg:order-5 lg:shrink-0 lg:border-t lg:border-border/70 lg:p-3">
+      <div className="order-1 space-y-2 lg:order-5 lg:shrink-0 lg:border-t lg:border-border lg:p-3">
         <GameModeMoveControls />
         {/* Keyboard play; appears when it gets focus */}
         <TypedMoveInput onSubmit={submitTypedMove} />
@@ -185,7 +185,7 @@ export const AnalysisPanel = ({ onLoadAnotherPgn }: { onLoadAnotherPgn?: () => v
       </div>
 
       {engineEnabled && (
-        <div className="order-3 lg:shrink-0 lg:border-b lg:border-border/70 lg:px-3 lg:py-2.5">
+        <div className="order-3 lg:shrink-0 lg:border-b lg:border-border lg:px-3 lg:py-2.5">
           <EngineAnalysisPanel
             numLines={3}
             fen={currentNode.fen}
@@ -210,10 +210,10 @@ export const AnalysisPanel = ({ onLoadAnotherPgn }: { onLoadAnotherPgn?: () => v
       <div className="order-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
         <OpeningName
           fens={lineFens}
-          className="px-1 pb-2 lg:shrink-0 lg:border-b lg:border-border/70 lg:px-4 lg:py-2.5"
+          className="px-1 pb-2 lg:shrink-0 lg:border-b lg:border-border lg:px-4 lg:py-2.5"
         />
         <div className={cn("lg:hidden", showAllMoves && "hidden")}>
-          <div className="rounded-xl border border-border/70 bg-card px-1">
+          <div className="rounded-xl bg-card px-1">
             <MoveStrip />
           </div>
         </div>

@@ -35,7 +35,7 @@ export const VerdictLine = ({ move, label, currentIndex }: VerdictLineProps) => 
   } else if (move.forced) {
     main = (
       <>
-        <span className="font-semibold text-foreground">{label}</span>{" "}
+        <span className="font-medium text-foreground">{label}</span>{" "}
         <span className="text-muted-foreground">Only legal move.</span>
       </>
     );
@@ -43,13 +43,13 @@ export const VerdictLine = ({ move, label, currentIndex }: VerdictLineProps) => 
     const meta = CLASSIFICATION_META[move.classification];
     main = (
       <>
-        <span className="font-semibold text-foreground">{label}</span>
+        <span className="font-medium text-foreground">{label}</span>
         <ClassificationGlyph classification={move.classification} />{" "}
-        <span className={cn("font-semibold", meta.textClass)}>{VERDICT[move.classification]}</span>
+        <span className={cn("font-medium", meta.textClass)}>{VERDICT[move.classification]}</span>
         {move.bestMoveSan && (
           <>
             {" "}
-            Best was <span className="font-semibold text-foreground">{move.bestMoveSan}</span>.
+            Best was <span className="font-medium text-foreground">{move.bestMoveSan}</span>.
           </>
         )}
       </>

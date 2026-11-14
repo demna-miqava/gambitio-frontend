@@ -13,7 +13,7 @@ import {
 
 const CountBadge = ({ count }: { count: number }) =>
   count > 0 ? (
-    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[0.7rem] font-semibold leading-none text-primary-foreground tabular-nums">
+    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[0.7rem] font-medium leading-none text-primary-foreground tabular-nums">
       {count}
     </span>
   ) : null;
@@ -28,7 +28,7 @@ export const PendingFriendRequests = () => {
     mutate({ requestId: `${request.id}`, action });
 
   return (
-    <aside className="space-y-4 self-start rounded-2xl border border-border/70 bg-card p-5">
+    <aside className="space-y-4 self-start rounded-2xl bg-card p-5">
       <SectionHeader title="Friend requests" />
 
       {isPending ? (

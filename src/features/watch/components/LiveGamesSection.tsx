@@ -47,7 +47,7 @@ export const LiveGamesSection = ({
             key={i}
             // One card per row on phones: more would only be scrolled past
             className={cn(
-              "overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm",
+              "overflow-hidden rounded-2xl bg-card",
               i > 0 && "max-sm:hidden"
             )}
           >
@@ -67,7 +67,7 @@ export const LiveGamesSection = ({
     body = (
       <div
         role="alert"
-        className="flex flex-col items-start gap-3 rounded-2xl border border-border/70 bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
+        className="flex flex-col items-start gap-3 rounded-2xl bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
       >
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <AlertCircle className="size-4 text-destructive" aria-hidden="true" />
@@ -81,7 +81,7 @@ export const LiveGamesSection = ({
     );
   } else if (!games || games.length === 0) {
     body = (
-      <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground">
         {empty}
       </div>
     );

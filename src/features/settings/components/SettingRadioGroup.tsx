@@ -26,7 +26,7 @@ export const SettingRadioGroup = ({
   onValueChange,
   disabled,
 }: SettingRadioGroupProps) => (
-  <div className="space-y-4 border-b border-border/70 py-4 first:pt-0 last:border-0 last:pb-0">
+  <div className="space-y-4 border-b border-border py-4 first:pt-0 last:border-0 last:pb-0">
     <div className="space-y-0.5">
       <p id={`${id}-label`} className="text-sm font-medium leading-none">
         {label}

@@ -27,7 +27,7 @@ export default defineConfig({
   test: {
     // Tests skip CSS by default (imports come back empty); the share-GIF
     // tests read the piece images out of this one with ?raw
-    css: { include: [/chessground\.cburnett\.css/] },
+    css: { include: [/chessground\.merida\.css/] },
   },
   build: {
     rollupOptions: {

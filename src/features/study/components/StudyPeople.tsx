@@ -160,7 +160,7 @@ export const StudyPeople = ({
   return (
     <section aria-labelledby="study-people" className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <h3 id="study-people" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <h3 id="study-people" className="text-sm text-muted-foreground">
           People <span className="normal-case tracking-normal">· {online} here</span>
         </h3>
         <Button size="sm" variant="ghost" onClick={() => setInviting(true)} className="-mr-2">
@@ -173,7 +173,7 @@ export const StudyPeople = ({
           return (
             <li
               key={member.id}
-              className="group flex items-center gap-1.5 rounded-full border border-border/70 py-0.5 pr-1 pl-0.5"
+              className="group flex items-center gap-1.5 rounded-full border border-border py-0.5 pr-1 pl-0.5"
             >
               <span className="relative">
                 <UserAvatar src={member.avatarUrl} username={member.username} className="size-6" />

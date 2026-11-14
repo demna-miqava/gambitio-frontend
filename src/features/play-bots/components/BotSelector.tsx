@@ -88,7 +88,7 @@ export const BotSelector = ({
   };
 
   return (
-    <div className="flex flex-col gap-5 rounded-2xl border border-border/70 bg-card p-4 sm:p-5">
+    <div className="flex flex-col gap-5 rounded-2xl bg-card p-4 sm:p-5">
       <PageHeader
         title="Play the computer"
         description="Choose an opponent. Games against the computer aren't rated."
@@ -115,7 +115,7 @@ export const BotSelector = ({
       <div className="space-y-2">
         <p
           aria-hidden="true"
-          className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+          className="text-sm text-muted-foreground"
         >
           I play as
         </p>
@@ -135,7 +135,7 @@ export const BotSelector = ({
       */}
       <div
         className={cn(
-          "sticky z-10 -mx-4 -mb-4 rounded-b-2xl border-t border-border/70 bg-card/95 px-4 pt-3 pb-4 backdrop-blur-md supports-[backdrop-filter]:bg-card/80",
+          "sticky z-10 -mx-4 -mb-4 rounded-b-2xl border-t border-border bg-card/95 px-4 pt-3 pb-4 backdrop-blur-md supports-[backdrop-filter]:bg-card/80",
           "bottom-[calc(4rem+env(safe-area-inset-bottom))] sm:-mx-5 sm:-mb-5 sm:px-5 sm:pb-5",
           "md:bottom-0 md:pb-[max(1.25rem,env(safe-area-inset-bottom))]",
           "lg:static lg:m-0 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none lg:supports-[backdrop-filter]:bg-transparent"

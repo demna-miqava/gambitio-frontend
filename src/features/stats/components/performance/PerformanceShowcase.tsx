@@ -1,7 +1,5 @@
-import { Puzzle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PerformanceCard, PerformanceCardSkeleton } from "./PerformanceCard";
-import { TIME_CONTROL_ICONS } from "@/constants/timeControlIcons";
 import { useGetStats } from "../../hooks/useGetStats";
 
 const VARIANTS = [
@@ -21,7 +19,7 @@ export const PerformanceShowcase = () => {
     // 008 always send the puzzle card)
     return (
       <div
-        className={cn("grid gap-2 sm:gap-3", FOUR_CARDS)}
+        className={cn("grid gap-x-6 gap-y-4", FOUR_CARDS)}
         role="status"
         aria-label="Loading ratings"
       >
@@ -33,14 +31,12 @@ export const PerformanceShowcase = () => {
   }
 
   return (
-    <div className={cn("grid gap-2 sm:gap-3", puzzle ? FOUR_CARDS : "grid-cols-3")}>
+    <div className={cn("grid gap-x-6 gap-y-4", puzzle ? FOUR_CARDS : "grid-cols-3")}>
       {VARIANTS.map(({ key, label }) => {
-        const Icon = TIME_CONTROL_ICONS[key];
         const played = stats[key].games > 0;
         return (
           <PerformanceCard
             key={key}
-            icon={<Icon className="size-4" aria-hidden="true" />}
             label={label}
             rating={stats[key].rating}
             delta={stats[key].delta}
@@ -52,7 +48,6 @@ export const PerformanceShowcase = () => {
       })}
       {puzzle && (
         <PerformanceCard
-          icon={<Puzzle className="size-4" aria-hidden="true" />}
           label="Puzzles"
           rating={puzzle.rating}
           delta={puzzle.delta}

@@ -42,7 +42,7 @@ const IconAction = ({ icon: Icon, label, hint, onClick, disabled = false, busy =
         aria-label={label}
         aria-busy={busy || undefined}
         aria-disabled={busy || undefined}
-        className="text-muted-foreground hover:text-foreground disabled:opacity-40"
+        className="size-7 text-muted-foreground hover:text-foreground disabled:opacity-40"
       >
         {busy ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Icon aria-hidden="true" />}
       </Button>
@@ -73,8 +73,8 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
   const shareGif = useShareGif();
 
   return (
-    <div className={cn("h-13 shrink-0 items-center gap-1 border-b border-border/70 pr-3 pl-4", className)}>
-      <h2 className="mr-auto truncate text-sm font-semibold text-foreground">Analysis</h2>
+    <div className={cn("h-13 shrink-0 items-center gap-0.5 border-b border-border pr-3 pl-3.5", className)}>
+      <h2 className="mr-auto truncate font-display text-base text-foreground">Analysis</h2>
 
       <div className="flex items-center">
         <IconAction icon={FlipVertical2} label="Flip board" hint="Flip board (F)" onClick={flipBoard} />
@@ -105,7 +105,7 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
                   variant="ghost"
                   size="icon"
                   aria-label="More actions"
-                  className="text-muted-foreground hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground"
+                  className="size-7 text-muted-foreground hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground"
                 >
                   <MoreHorizontal aria-hidden="true" />
                 </Button>
@@ -138,7 +138,7 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
         </DropdownMenu>
       </div>
 
-      <span className="mx-1.5 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
+      <span className="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
 
       <div className="flex shrink-0 items-center gap-2">
         <Label htmlFor="engine-toggle" className="text-sm font-normal text-muted-foreground">

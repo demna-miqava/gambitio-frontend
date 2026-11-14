@@ -14,7 +14,7 @@ import {
   CUSTOM_MINUTES,
   getTimeControlFormat,
 } from "../../constants/timeControls";
-import { formatTimeControl, getTimeControlIcon } from "@/utils/timeControl";
+import { formatTimeControl } from "@/utils/timeControl";
 
 /** Pick any minutes + increment combination. */
 export const Custom = () => {
@@ -26,7 +26,6 @@ export const Custom = () => {
     CUSTOM_INCREMENTS.includes(timeControl.increment) ? timeControl.increment : 0
   );
   const format = getTimeControlFormat(minutes * 60);
-  const Icon = getTimeControlIcon(format);
 
   return (
     <div className="space-y-6">
@@ -63,10 +62,9 @@ export const Custom = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl bg-muted/50 px-4 py-3">
+      <div className="flex items-center justify-between border-y border-border py-3">
         <span className="text-sm text-muted-foreground">This game will be</span>
-        <span className="flex items-center gap-1.5 text-sm font-semibold capitalize">
-          {Icon && <Icon className="size-4" aria-hidden="true" />}
+        <span className="text-sm font-medium capitalize">
           {format} ·{" "}
           <span className="tabular-nums">{formatTimeControl(minutes * 60, increment)}</span>
         </span>

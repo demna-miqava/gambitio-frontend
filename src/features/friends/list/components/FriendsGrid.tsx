@@ -29,7 +29,7 @@ const FriendsGrid = () => {
     : DEFAULT_SKELETON_COUNT;
 
   return (
-    <aside className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card p-5">
+    <aside className="flex flex-col gap-4 rounded-2xl bg-card p-5">
       <SectionHeader
         title={
           <>

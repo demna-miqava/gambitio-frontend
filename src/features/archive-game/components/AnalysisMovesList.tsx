@@ -14,7 +14,7 @@ import { CLASSIFICATION_META, isFlagged } from "@/features/game-review/classific
 // card, filling the height the rest of the panel leaves (the panel is as
 // tall as the board, see AnalysisPanel), and the only part that scrolls
 const CONTAINER =
-  "w-full rounded-xl border border-border/70 bg-card p-2 lg:min-h-0 lg:flex-1 lg:rounded-none lg:border-0 lg:bg-transparent lg:px-3 lg:py-2";
+  "w-full rounded-xl bg-card p-2 lg:min-h-0 lg:flex-1 lg:rounded-none lg:bg-transparent lg:px-3 lg:py-2";
 
 export const AnalysisMovesList = () => {
   const { root, currentNode, goTo } = useArchiveGame();

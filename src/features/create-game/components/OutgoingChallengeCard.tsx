@@ -21,7 +21,7 @@ export const OutgoingChallengeCard = ({ className }: { className?: string }) => 
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-4 rounded-xl border border-dashed border-border bg-muted/40 px-4 py-8 text-center",
+        "flex flex-col items-center gap-4 rounded-xl bg-card px-4 py-8 text-center",
         className
       )}
       role="status"

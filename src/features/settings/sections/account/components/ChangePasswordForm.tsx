@@ -18,7 +18,7 @@ export const ChangePasswordForm = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <h3 className="mb-4 text-base font-semibold">Change password</h3>
+          <h3 className="mb-4 text-lg font-display">Change password</h3>
           <div className="space-y-4">
             <FormField
               control={form.control}

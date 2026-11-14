@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
-import cburnettCss from "@lichess-org/chessground/assets/chessground.cburnett.css?raw";
+import pieceSetCss from "@/assets/pieces/chessground.merida.css?raw";
 import { PIECE_KEYS, parsePieceSet } from "./pieceSet";
 
 describe("piece set", () => {
-  test("every cburnett piece is found as an SVG data URI", () => {
-    const pieces = parsePieceSet(cburnettCss);
+  test("every piece of the set is found as an SVG data URI", () => {
+    const pieces = parsePieceSet(pieceSetCss);
     expect(Object.keys(pieces).sort()).toEqual([...PIECE_KEYS].sort());
     for (const uri of Object.values(pieces)) expect(uri).toMatch(/^data:image\/svg\+xml;base64,/);
     expect(pieces.wp).not.toBe(pieces.bp);

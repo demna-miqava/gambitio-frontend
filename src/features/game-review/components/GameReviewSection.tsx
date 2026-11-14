@@ -12,7 +12,7 @@ const Shell = ({ children, busy = false }: { children: ReactNode; busy?: boolean
   <section
     aria-labelledby="game-review-heading"
     aria-busy={busy || undefined}
-    className="space-y-3 rounded-xl border border-border/70 bg-card p-3"
+    className="space-y-3 rounded-xl bg-card p-3"
   >
     {children}
   </section>
@@ -20,7 +20,7 @@ const Shell = ({ children, busy = false }: { children: ReactNode; busy?: boolean
 
 const Heading = ({ children }: { children?: ReactNode }) => (
   <div className="flex items-center justify-between gap-2">
-    <h3 id="game-review-heading" className="text-sm font-semibold text-foreground">
+    <h3 id="game-review-heading" className="text-base font-display text-foreground">
       Game review
     </h3>
     {children}

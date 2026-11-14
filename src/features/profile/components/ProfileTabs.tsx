@@ -28,7 +28,7 @@ export const ProfileTabs = () => {
       }}
       className="w-full"
     >
-      <TabsList className="scrollbar-none flex h-auto w-full justify-start gap-6 overflow-x-auto rounded-none border-b border-border/70 bg-transparent p-0">
+      <TabsList className="scrollbar-none flex h-auto w-full justify-start gap-6 overflow-x-auto rounded-none border-b border-border bg-transparent p-0">
         {tabs.map((tab) => (
           <TabsTrigger
             key={tab.value}

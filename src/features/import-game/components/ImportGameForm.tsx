@@ -19,7 +19,7 @@ export const ImportGameForm = ({ onLoadPgn }: ImportGameFormProps) => {
         event.preventDefault();
         handleLoadPgn();
       }}
-      className="flex flex-col gap-5 rounded-2xl border border-border/70 bg-card p-4 sm:p-5"
+      className="flex flex-col gap-5 rounded-2xl bg-card p-4 sm:p-5"
     >
       {/* The page's h1 is for screen readers; this is the visible title */}
       <PageHeader

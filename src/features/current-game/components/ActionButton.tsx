@@ -11,7 +11,7 @@ type ActionButtonVariant = keyof typeof GAME_BUTTON_STYLES;
 
 type ActionButtonProps = {
   onClick: () => void;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   label: string;
   variant: ActionButtonVariant;
   className?: string;

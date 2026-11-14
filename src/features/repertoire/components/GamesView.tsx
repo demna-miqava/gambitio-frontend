@@ -22,10 +22,10 @@ const GameRow = ({ game }: { game: RepertoireGameCheck }) => {
   const status = STATUS[game.status];
   const d = game.divergence;
   return (
-    <li className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-4 sm:flex-row sm:items-center">
+    <li className="flex flex-col gap-3 rounded-xl bg-card p-4 sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold", status.className)}>
+          <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", status.className)}>
             <status.icon className="size-3.5" aria-hidden="true" />
             {status.label}
           </span>
@@ -118,9 +118,9 @@ export const GamesView = ({ hasLines }: { hasLines: boolean }) => {
           { label: "Opponent deviated", value: summary.opponentDeviated },
           { label: "Not covered", value: summary.notCovered },
         ].map((item) => (
-          <div key={item.label} className="rounded-xl border border-border/70 bg-card px-4 py-3">
+          <div key={item.label} className="rounded-xl bg-card px-4 py-3">
             <dt className="text-xs text-muted-foreground">{item.label}</dt>
-            <dd className="text-2xl font-semibold tabular-nums text-foreground">{item.value}</dd>
+            <dd className="text-2xl font-medium tabular-nums text-foreground">{item.value}</dd>
           </div>
         ))}
       </dl>

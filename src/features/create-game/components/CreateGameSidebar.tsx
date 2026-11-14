@@ -1,4 +1,4 @@
-import { ArrowLeft, Bot } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { New } from "./sections/New";
@@ -31,17 +31,10 @@ const MODES: { section: "new" | "friends"; label: string }[] = [
 const PlayComputerLink = () => (
   <Link
     to={ROUTES.PLAY_BOTS}
-    className="flex items-center gap-3 rounded-xl border border-border/70 p-3 text-sm transition-colors hover:border-primary/40 hover:bg-accent/60"
+    className="rounded-xl bg-background p-3.5 text-sm transition-colors hover:bg-accent"
   >
-    <span className="flex size-9 items-center justify-center rounded-lg bg-brand-soft text-primary">
-      <Bot className="size-4" aria-hidden="true" />
-    </span>
-    <span>
-      <span className="block font-medium">Play the computer</span>
-      <span className="block text-xs text-muted-foreground">
-        No waiting, any strength
-      </span>
-    </span>
+    <span className="block font-medium">Play the computer</span>
+    <span className="block text-xs text-muted-foreground">No waiting, any strength</span>
   </Link>
 );
 
@@ -53,7 +46,7 @@ export const CreateGameSidebar = () => {
 
   if (!isTopLevel) {
     return (
-      <aside className="flex w-full flex-col gap-5 rounded-2xl border border-border/70 bg-card p-4 sm:p-5">
+      <aside className="flex w-full flex-col gap-5 rounded-2xl bg-card p-5 sm:p-6">
         <div className="space-y-2">
           {canGoBack && (
             <Button size="lg"
@@ -72,7 +65,7 @@ export const CreateGameSidebar = () => {
   }
 
   return (
-    <aside className="flex w-full flex-col gap-5 rounded-2xl border border-border/70 bg-card p-4 sm:p-5">
+    <aside className="flex w-full flex-col gap-5 rounded-2xl bg-card p-5 sm:p-6">
       <PageHeader
         title="Play"
         description="Find an opponent online or challenge a friend."

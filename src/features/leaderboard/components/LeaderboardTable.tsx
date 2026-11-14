@@ -31,7 +31,7 @@ interface LeaderboardTableProps {
 }
 
 const YouTag = () => (
-  <span className="rounded-full bg-primary px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase leading-none tracking-wide text-primary-foreground">
+  <span className="text-xs italic text-muted-foreground">
     You
   </span>
 );
@@ -53,12 +53,12 @@ export const LeaderboardTable = ({
 }: LeaderboardTableProps) => {
   const avatarSrc = useAvatarSrc();
   if (!isLoading && entries.length === 0) {
-    return <div className="rounded-2xl border border-border/70 bg-card">{emptyState}</div>;
+    return <div className="rounded-2xl bg-card">{emptyState}</div>;
   }
 
   return (
     <div
-      className="overflow-hidden rounded-2xl border border-border/70 bg-card"
+      className="overflow-hidden rounded-2xl bg-card"
       aria-busy={isLoading || isFetching || undefined}
     >
       <Table className={cn("transition-opacity", isFetching && "opacity-60")}>
@@ -111,7 +111,7 @@ export const LeaderboardTable = ({
                   <TableRow
                     key={entry.id}
                     className={cn(
-                      "relative border-border/60 focus-within:bg-accent/60",
+                      "relative border-border focus-within:bg-accent/60",
                       tier && "bg-muted/30",
                       isMe && "bg-brand-soft hover:bg-brand-soft/80"
                     )}
@@ -136,7 +136,7 @@ export const LeaderboardTable = ({
                         {isMe && <YouTag />}
                       </div>
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-right font-semibold tabular-nums text-foreground">
+                    <TableCell className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
                       {entry.rating}
                     </TableCell>
                     <TableCell className="hidden px-4 py-3 text-right tabular-nums text-muted-foreground sm:table-cell">

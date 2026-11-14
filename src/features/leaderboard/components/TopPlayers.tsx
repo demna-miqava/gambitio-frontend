@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import { SectionHeader } from "@/components/PageHeader";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,15 +27,15 @@ export const TopPlayers = () => {
   const entries = data?.data ?? [];
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border/70 bg-card p-5">
+    <section className="space-y-3 rounded-2xl bg-card p-5 sm:p-6">
       <SectionHeader
         title={`Top ${variantLabel(variant).toLowerCase()} players`}
         action={
           <Link
             to={`${ROUTES.LEADERBOARD}?variant=${variant}`}
-            className="relative inline-flex touch-target items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="relative touch-target text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
           >
-            Leaderboard <ArrowRight className="size-3.5" aria-hidden="true" />
+            Leaderboard
           </Link>
         }
       />
@@ -45,7 +44,7 @@ export const TopPlayers = () => {
         <ul className="space-y-3" aria-hidden="true">
           {Array.from({ length: TOP_COUNT }).map((_, i) => (
             <li key={i} className="flex items-center gap-3">
-              <Skeleton className="size-7 rounded-full" />
+              <Skeleton className="size-5" />
               <Skeleton className="size-8 rounded-lg" />
               <Skeleton className="h-4 flex-1" />
             </li>
@@ -67,8 +66,8 @@ export const TopPlayers = () => {
                   to={getProfileRoute(entry.id)}
                   aria-label={entryLabel(entry, isMe)}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-2 py-1.5 transition-colors hover:bg-accent/50 focus-visible:bg-accent/60 focus-visible:outline-none",
-                    isMe && "bg-brand-soft"
+                    "flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none",
+                    isMe && "bg-background"
                   )}
                 >
                   <RankBadge rank={entry.rank} />
@@ -77,10 +76,10 @@ export const TopPlayers = () => {
                     avatarUrl={avatarSrc(entry.id, entry.avatarUrl)}
                     size="sm"
                   />
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                  <span className="min-w-0 flex-1 truncate text-sm text-foreground">
                     {entry.username}
                   </span>
-                  <span className="text-sm font-semibold tabular-nums text-foreground">
+                  <span className="text-sm tabular-nums text-foreground">
                     {entry.rating}
                   </span>
                 </Link>
@@ -91,8 +90,8 @@ export const TopPlayers = () => {
       )}
 
       {data?.me && !entries.some((e) => e.id === data.me!.id) && (
-        <p className="border-t border-border/60 pt-3 text-xs text-muted-foreground">
-          You are <span className="font-semibold text-foreground">#{data.me.rank}</span> in{" "}
+        <p className="border-t border-border pt-3 text-xs text-muted-foreground">
+          You are <span className="text-foreground">#{data.me.rank}</span> in{" "}
           {variantLabel(variant).toLowerCase()}
         </p>
       )}

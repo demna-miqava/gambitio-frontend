@@ -1,4 +1,3 @@
-import { Flag, HandshakeIcon, Undo2, X } from "lucide-react";
 import { ActionButton } from "./ActionButton";
 import { GAME_BUTTON_STYLES } from "../constants/button-styles";
 import { cn } from "@/lib/utils";
@@ -44,7 +43,6 @@ const MatchActions = ({
       <ActionButton
         variant="abort"
         onClick={onAbort}
-        icon={<X className="size-4" aria-hidden="true" />}
         label="Abort game"
         disabled={disabled}
       />
@@ -53,11 +51,10 @@ const MatchActions = ({
 
   // The panel is too narrow for three labelled buttons in a row
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-1">
       <ActionButton
         variant="resign"
         onClick={onResign}
-        icon={<Flag className="size-4" aria-hidden="true" />}
         label="Resign"
         disabled={disabled}
         confirmTitle={
@@ -67,7 +64,6 @@ const MatchActions = ({
       <ActionButton
         variant="draw"
         onClick={onOfferDraw}
-        icon={<HandshakeIcon className="size-4" aria-hidden="true" />}
         label={drawOfferSent ? "Draw offered…" : "Offer draw"}
         disabled={disabled || drawOfferSent}
         confirmTitle={
@@ -78,7 +74,6 @@ const MatchActions = ({
         variant="takeback"
         className={cn(GAME_BUTTON_STYLES.takeback, "col-span-2")}
         onClick={onRequestTakeback}
-        icon={<Undo2 className="size-4" aria-hidden="true" />}
         label={takebackRequested ? "Takeback requested…" : "Ask for a takeback"}
         disabled={disabled || !canRequestTakeback}
       />

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-const CARD = "rounded-2xl border border-border/70 bg-card p-5 sm:p-6";
+const CARD = "rounded-2xl bg-card p-5 sm:p-6";
 
 /** A placeholder bar centred in a box of one text line's height. */
 const Line = ({ box, bar }: { box: string; bar: string }) => (
@@ -55,7 +55,7 @@ const StatsSkeleton = () => (
           ))}
         </div>
       </div>
-      <div className="grid gap-4 border-t border-border/70 pt-5 sm:grid-cols-3">
+      <div className="grid gap-4 border-t border-border pt-5 sm:grid-cols-3">
         {Array.from({ length: 3 }, (_, i) => (
           <div key={i} className="space-y-0.5">
             <Line box="h-4" bar="h-3 w-20" />

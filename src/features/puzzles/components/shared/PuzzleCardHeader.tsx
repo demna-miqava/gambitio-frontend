@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Eye, XCircle } from "lucide-react";
 import type { PlayerColor } from "@/features/game/types/game.types";
+import { SideDot } from "@/features/game-review/components/SideDot";
 
 interface PuzzleCardHeaderProps {
   status: string;
@@ -41,13 +42,7 @@ const PuzzleCardHeader = ({
     >
       {status === "solving" && (
         <>
-          <span
-            aria-hidden="true"
-            className={cn(
-              "size-4 shrink-0 rounded-[4px] ring-1 ring-foreground/25",
-              side === "black" ? "bg-neutral-900" : "bg-white"
-            )}
-          />
+          {side && <SideDot side={side} className="size-3" />}
           <span>
             {side ? `Find the best move for ${side === "white" ? "White" : "Black"}` : "Find the best move"}
           </span>
@@ -75,7 +70,7 @@ const PuzzleCardHeader = ({
         </>
       )}
       {rating !== undefined && (
-        <span className="ml-auto shrink-0 rounded-md bg-background/60 px-2 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+        <span className="ml-auto shrink-0 rounded-md bg-background/60 px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
           {rating}
         </span>
       )}

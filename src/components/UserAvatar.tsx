@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { cn } from "@/lib/utils";
 import { DEFAULT_AVATAR_URL } from "@/constants/defaults";
-import { getInitials } from "./avatarInitials";
+import { getInitials, isPlaceholderAvatar } from "./avatarInitials";
 
 interface UserAvatarProps {
   src?: string | null;
@@ -26,7 +26,8 @@ export const UserAvatar = ({
 }: UserAvatarProps) => {
   // The generic silhouette counts as "no photo", so everyone without one gets
   // the same initials fallback
-  const image = src && src !== DEFAULT_AVATAR_URL ? src : undefined;
+  const image =
+    src && src !== DEFAULT_AVATAR_URL && !isPlaceholderAvatar(src) ? src : undefined;
   const decorative = alt === "";
 
   return (
@@ -38,7 +39,7 @@ export const UserAvatar = ({
     >
       {image && <AvatarImage src={image} alt="" />}
       <AvatarFallback
-        className={cn("font-semibold", fallbackClassName)}
+        className={fallbackClassName}
         aria-hidden="true"
       >
         {getInitials(username)}

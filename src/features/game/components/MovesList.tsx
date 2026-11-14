@@ -77,11 +77,12 @@ export const MovesListView = ({ moves, activeIndex, onSelect }: MovesListViewPro
         aria-current={active ? "step" : undefined}
         onClick={() => onSelect(index + 1)}
         className={cn(
-          "relative min-h-8 rounded-md px-2 py-1 text-left text-sm tabular-nums transition-colors",
+          "relative min-h-8 rounded-sm px-2 py-1 text-left text-sm tabular-nums transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
+          // The move on the board is set in ink, like a marked line on a scoresheet
           active
-            ? "bg-brand-soft font-semibold text-foreground"
-            : "text-foreground/85 hover:bg-accent hover:text-foreground"
+            ? "bg-foreground text-background"
+            : "text-foreground hover:bg-accent"
         )}
       >
         {/* Keeps the visible SAN in the accessible name */}

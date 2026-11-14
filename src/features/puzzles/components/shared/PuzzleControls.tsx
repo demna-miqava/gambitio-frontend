@@ -28,14 +28,14 @@ export const PuzzleControls = () => {
 
   if (!puzzle) {
     return (
-      <section className="w-full lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
+      <section className="w-full lg:rounded-2xl lg:bg-card lg:p-4">
         <PuzzleFeedNotice />
       </section>
     );
   }
 
   return (
-    <section className="w-full space-y-3 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
+    <section className="w-full space-y-3 lg:rounded-2xl lg:bg-card lg:p-4">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <PuzzleCardHeader

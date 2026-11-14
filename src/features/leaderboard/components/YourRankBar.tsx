@@ -23,7 +23,7 @@ export const YourRankBar = ({ me, total, onShowPage }: YourRankBarProps) => {
       aria-label="Your rank"
       className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-10 md:bottom-4"
     >
-      <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-brand-soft/95 px-4 py-3 shadow-lg backdrop-blur-sm">
+      <div className="flex items-center gap-3 rounded-xl bg-popover px-4 py-3 shadow-lg">
         <RankBadge rank={me.rank} className="text-foreground" />
         <PlayerAvatar
           username={me.username}
@@ -38,11 +38,11 @@ export const YourRankBar = ({ me, total, onShowPage }: YourRankBarProps) => {
             {me.username}
           </Link>
           <p className="text-xs text-muted-foreground">
-            You are <span className="font-semibold text-foreground">#{me.rank}</span> of{" "}
+            You are <span className="font-medium text-foreground">#{me.rank}</span> of{" "}
             {total.toLocaleString()}
           </p>
         </div>
-        <span className="font-semibold tabular-nums text-foreground">{me.rating}</span>
+        <span className="font-medium tabular-nums text-foreground">{me.rating}</span>
         <Button size="sm" variant="outline" onClick={() => onShowPage(me.page)}>
           Show<span className="sr-only sm:not-sr-only">&nbsp;my page</span>
         </Button>

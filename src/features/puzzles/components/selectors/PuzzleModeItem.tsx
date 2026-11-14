@@ -14,7 +14,7 @@ export const PuzzleModeItem = ({ mode }: PuzzleModeItemProps) => {
         <mode.icon className={cn("size-5", mode.iconColor)} aria-hidden="true" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block font-semibold text-foreground">{mode.title}</span>
+        <span className="block font-medium text-foreground">{mode.title}</span>
         <span className="block text-sm text-muted-foreground">{mode.description}</span>
       </span>
       {!mode.disabled && (
@@ -27,7 +27,7 @@ export const PuzzleModeItem = ({ mode }: PuzzleModeItemProps) => {
   );
 
   const className =
-    "group flex items-center gap-4 rounded-xl border border-border/70 p-4 text-left transition-colors";
+    "group flex items-center gap-4 rounded-xl bg-card p-4 text-left transition-colors";
 
   if (mode.disabled) {
     return (

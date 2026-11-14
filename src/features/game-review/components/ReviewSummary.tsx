@@ -43,8 +43,8 @@ export const ReviewSummary = ({ review, players }: ReviewSummaryProps) => (
         <th scope="row" className="py-0.5 text-left font-medium">
           Accuracy
         </th>
-        <td className="py-0.5 text-right text-base font-semibold">{formatAccuracy(review.white.accuracy)}</td>
-        <td className="py-0.5 text-right text-base font-semibold">{formatAccuracy(review.black.accuracy)}</td>
+        <td className="py-0.5 text-right text-base font-medium">{formatAccuracy(review.white.accuracy)}</td>
+        <td className="py-0.5 text-right text-base font-medium">{formatAccuracy(review.black.accuracy)}</td>
       </tr>
       {COUNT_ROWS.map(({ classification, key, label }) => {
         const meta = CLASSIFICATION_META[classification];

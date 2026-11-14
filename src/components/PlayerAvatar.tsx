@@ -21,6 +21,6 @@ export const PlayerAvatar = ({
     src={avatarUrl}
     username={username}
     alt={alt}
-    className={cn("shrink-0 rounded-lg", size === "sm" ? "size-8" : "size-10")}
+    className={cn("shrink-0", size === "sm" ? "size-8" : "size-10")}
   />
 );

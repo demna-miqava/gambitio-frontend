@@ -100,9 +100,9 @@ export const StudyRoomHeader = ({
   };
 
   return (
-    <div className={cn("flex min-h-13 shrink-0 items-center gap-1 lg:border-b lg:border-border/70 lg:pr-3 lg:pl-4", className)}>
+    <div className={cn("flex min-h-13 shrink-0 items-center gap-1 lg:border-b lg:border-border lg:pr-3 lg:pl-4", className)}>
       <div className="mr-auto min-w-0">
-        <h2 className="truncate text-sm font-semibold text-foreground">{name}</h2>
+        <h2 className="truncate text-base font-display text-foreground">{name}</h2>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground" role="status">
           <span
             aria-hidden="true"

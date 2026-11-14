@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useAvatarSrc } from "@/hooks/useAvatarSrc";
 import { getGameRoute } from "@/constants/routes";
-import { formatTimeControl, getTimeControlIcon } from "@/utils/timeControl";
+import { formatTimeControl } from "@/utils/timeControl";
 import { cn } from "@/lib/utils";
 import { fullMoves } from "@/utils/moves";
 import type { LiveGameSummary, LivePlayer } from "@/types/liveGames.types";
@@ -45,7 +45,6 @@ interface LiveGameCardProps {
 }
 
 export const LiveGameCard = ({ game, currentUserId }: LiveGameCardProps) => {
-  const TypeIcon = getTimeControlIcon(game.type);
   const matchup = `${game.whitePlayer.username} vs ${game.blackPlayer.username}`;
   const isOwnGame =
     currentUserId !== undefined &&
@@ -56,7 +55,7 @@ export const LiveGameCard = ({ game, currentUserId }: LiveGameCardProps) => {
   return (
     <article
       aria-label={matchup}
-      className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm"
+      className="flex h-full flex-col overflow-hidden rounded-2xl bg-card"
     >
       <Link
         to={getGameRoute(game.id)}
@@ -70,7 +69,6 @@ export const LiveGameCard = ({ game, currentUserId }: LiveGameCardProps) => {
         <PlayerLine player={game.blackPlayer} side="black" />
         <PlayerLine player={game.whitePlayer} side="white" />
         <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
-          {TypeIcon && <TypeIcon className="size-3.5" aria-hidden="true" />}
           <span className="tabular-nums">{formatTimeControl(game.time, game.increment)}</span>
           <span className="capitalize">{game.type}</span>
           <span aria-hidden="true">·</span>

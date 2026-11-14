@@ -38,7 +38,7 @@ const ChallengeNotification = ({
         <UserAvatar src={avatarUrl} username={username} className="size-10 shrink-0" />
         <div className="min-w-0 leading-tight">
           <p className="text-sm">
-            <span className="font-semibold">{username}</span>
+            <span className="font-medium">{username}</span>
             {rating != null && (
               <span className="text-muted-foreground tabular-nums"> ({rating})</span>
             )}{" "}

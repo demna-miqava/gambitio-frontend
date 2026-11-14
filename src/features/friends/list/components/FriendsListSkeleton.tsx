@@ -33,7 +33,7 @@ export const FriendsListSkeleton = ({
         <div
           key={i}
           className={cn(
-            "flex items-center gap-3 rounded-xl border border-border/70 bg-card p-3",
+            "flex items-center gap-3 rounded-xl bg-card p-3",
             mode === "manage" && "sm:p-4"
           )}
         >

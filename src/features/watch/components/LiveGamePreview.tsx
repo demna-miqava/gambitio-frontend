@@ -3,7 +3,7 @@ import { Chessground } from "@lichess-org/chessground";
 import type { Api } from "@lichess-org/chessground/api";
 import "@lichess-org/chessground/assets/chessground.base.css";
 import "@lichess-org/chessground/assets/chessground.brown.css";
-import "@lichess-org/chessground/assets/chessground.cburnett.css";
+import "@/assets/pieces/chessground.merida.css";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -33,7 +33,7 @@ export const LiveGamePreview = ({ fen }: { fen: string | null }) => {
   }, [fen]);
 
   return (
-    <div aria-hidden="true" className="relative aspect-square w-full">
+    <div aria-hidden="true" className="board-frame relative aspect-square w-full">
       <div ref={ref} className="h-full w-full" />
     </div>
   );

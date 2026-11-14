@@ -20,7 +20,7 @@ export const HeadToHeadCard = ({ userId, viewerId }: { userId: number; viewerId?
   return (
     <section
       aria-labelledby="head-to-head-title"
-      className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card p-5"
+      className="flex flex-col gap-4 rounded-2xl bg-card p-5"
     >
       <SectionHeader title={<span id="head-to-head-title">Head to head</span>} />
       {isPending ? (

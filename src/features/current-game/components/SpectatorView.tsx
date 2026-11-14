@@ -14,7 +14,7 @@ import {
 } from "@/features/game/modes/GameModeContext";
 import type { PlayerColor } from "@/features/game/types/game.types";
 import { ROUTES, getGameReviewRoute } from "@/constants/routes";
-import { formatTimeControl, getTimeControlIcon } from "@/utils/timeControl";
+import { formatTimeControl } from "@/utils/timeControl";
 import { useLiveGame } from "../contexts/LiveGameContext";
 import { useSpectatorState, type SpectatorFinish } from "../hooks/useSpectatorState";
 import { ConnectionBanner } from "./ConnectionBanner";
@@ -139,16 +139,15 @@ const SpectatorPanel = ({
   finish,
 }: SpectatorPanelProps) => {
   const { game, gameEnded } = useLiveGame();
-  const TypeIcon = getTimeControlIcon(game.type);
   // Watchers other than you
   const others = spectatorCount === null ? null : Math.max(0, spectatorCount - 1);
   const shownLine = useShownLine();
   const { series, seriesGame } = useLiveSeries(game);
 
   return (
-    <div className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
+    <div className="flex flex-col gap-3 lg:rounded-2xl lg:bg-card lg:p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-semibold text-foreground">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-medium text-foreground">
           <Eye className="size-3.5" aria-hidden="true" />
           Spectating
           {!gameEnded && (
@@ -171,7 +170,6 @@ const SpectatorPanel = ({
             </span>
           )}
           <span className="flex items-center gap-1.5">
-            {TypeIcon && <TypeIcon className="size-3.5" aria-hidden="true" />}
             <span className="tabular-nums">
               {formatTimeControl(game.time, game.increment)}
             </span>
@@ -182,17 +180,17 @@ const SpectatorPanel = ({
 
       {series && <SeriesStrip series={series} seriesGame={seriesGame} />}
 
-      <div className="rounded-xl border border-border/70 bg-card px-1 py-1.5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
+      <div className="rounded-xl bg-card px-1 py-1.5 lg:rounded-none lg:bg-transparent lg:p-0">
         <OpeningName fens={shownLine} className="px-1.5 pb-1 lg:px-0 lg:pb-2" />
         <GameModeMovesList />
       </div>
 
-      <div className="space-y-3 lg:border-t lg:border-border/70 lg:pt-3">
+      <div className="space-y-3 lg:border-t lg:border-border lg:pt-3">
         <GameModeMoveControls />
 
         {finish && (
           <div className="space-y-1 pt-1 text-center">
-            <p className="font-display text-lg font-semibold text-foreground">
+            <p className="font-display text-lg text-foreground">
               {finish.title}
             </p>
             <p className="text-sm text-muted-foreground">{finish.description}</p>

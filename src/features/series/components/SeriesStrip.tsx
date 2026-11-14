@@ -35,7 +35,7 @@ export const SeriesStrip = ({
       to={getSeriesRoute(series.id)}
       aria-label={`${gameLabel}. Series score: ${name(left.id, left.username)} ${spokenScoreline(left, right)} ${right.username}. Open the series`}
       className={cn(
-        "flex min-h-11 items-center gap-2 rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex min-h-11 items-center gap-2 rounded-xl bg-muted/40 px-3 py-2 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}
     >
@@ -43,7 +43,7 @@ export const SeriesStrip = ({
       <span className="shrink-0 font-medium">{gameLabel}</span>
       <span className="min-w-0 flex-1 truncate text-right text-muted-foreground">
         {name(left.id, left.username)}{" "}
-        <span className="font-semibold tabular-nums text-foreground">{formatScoreline(left, right)}</span>{" "}
+        <span className="font-medium tabular-nums text-foreground">{formatScoreline(left, right)}</span>{" "}
         {right.username}
       </span>
       <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />

@@ -42,7 +42,7 @@ export const PuzzleGameOverDialog = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="rounded-2xl sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-center gap-2 font-display text-2xl font-semibold">
+          <DialogTitle className="flex items-center justify-center gap-2 font-display text-2xl">
             {mode === "survival" && <Skull className="size-6 text-loss" aria-hidden="true" />}
             {mode === "rush" &&
               (strikesOut ? (
@@ -54,7 +54,7 @@ export const PuzzleGameOverDialog = ({
           </DialogTitle>
           <DialogDescription className="pt-2 text-center">
             You solved
-            <span className="block py-2 font-display text-5xl font-semibold text-foreground tabular-nums">
+            <span className="block py-2 font-display-num text-5xl text-foreground">
               {score}
             </span>
             {score === 1 ? "puzzle" : "puzzles"}
@@ -75,7 +75,7 @@ export const PuzzleGameOverDialog = ({
               </>
             ) : (
               <>
-                Personal best: <span className="font-semibold tabular-nums text-foreground">{best}</span>
+                Personal best: <span className="font-medium tabular-nums text-foreground">{best}</span>
               </>
             )}
           </p>

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export const BrandMark = ({ className }: { className?: string }) => (
   <span
     className={cn(
-      "inline-flex size-8 shrink-0 overflow-hidden rounded-[23%] dark:ring-1 dark:ring-white/10",
+      "inline-flex size-8 shrink-0 overflow-hidden rounded-md dark:ring-1 dark:ring-white/15",
       className
     )}
   >
@@ -13,7 +13,8 @@ export const BrandMark = ({ className }: { className?: string }) => (
   </span>
 );
 
-/** Mark + wordmark. The wordmark is text so it follows the theme. */
+/** Mark + wordmark. The wordmark is text, set in the display serif in one
+ *  colour, so it follows the theme. */
 export const BrandLogo = ({
   className,
   markClassName,
@@ -27,13 +28,11 @@ export const BrandLogo = ({
     <BrandMark className={markClassName} />
     <span
       className={cn(
-        "text-[1.15rem] font-semibold tracking-tight text-foreground",
+        "font-display text-[1.375rem] leading-none text-foreground",
         textClassName
       )}
     >
-      {/* The logo's bright green is too light for text on light surfaces
-          (2.4:1); the darker primary green reads at 4.8:1 */}
-      Gambit<span className="text-primary dark:text-brand">io</span>
+      Gambitio
     </span>
   </span>
 );

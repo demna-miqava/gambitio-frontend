@@ -102,7 +102,7 @@ const Series = () => {
           <SeriesScoreboard series={series} viewerId={viewerId} />
 
           {active && (
-            <section aria-label="Next game" className="space-y-3 rounded-2xl border border-border/70 bg-card p-4">
+            <section aria-label="Next game" className="space-y-3 rounded-2xl bg-card p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <p className="flex-1 text-sm">
                   {liveGameId

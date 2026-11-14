@@ -11,7 +11,7 @@ const InfoSection = ({
 }) => {
   return (
     <div className="min-w-0 space-y-1.5">
-      <h1 className="truncate font-display text-3xl font-semibold text-foreground sm:text-4xl">
+      <h1 className="truncate font-display text-3xl text-foreground sm:text-4xl">
         {username}
       </h1>
       <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">

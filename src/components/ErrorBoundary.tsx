@@ -51,7 +51,7 @@ export class ErrorBoundary extends Component<
           isPage ? "min-h-[60vh]" : "min-h-svh"
         )}
       >
-        <h1 className="font-display text-2xl font-semibold text-foreground">
+        <h1 className="font-display text-2xl text-foreground">
           Something went wrong
         </h1>
         <p className="max-w-sm text-sm text-muted-foreground">

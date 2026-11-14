@@ -11,3 +11,18 @@ export const getInitials = (name: string | null | undefined): string => {
   }
   return (Array.from(words[0])[0] + Array.from(words[1])[0]).toUpperCase();
 };
+
+/**
+ * True for the sign-in provider's generated placeholder picture (Clerk's
+ * gradient silhouette). Its URL ends in base64 JSON with `"type":"default"`.
+ * Those are shown as initials, like any account without a picture.
+ */
+export const isPlaceholderAvatar = (src: string): boolean => {
+  if (!src.includes("img.clerk.com/")) return false;
+  try {
+    const encoded = src.split("?")[0].split("/").pop() ?? "";
+    return JSON.parse(atob(encoded)).type === "default";
+  } catch {
+    return false;
+  }
+};

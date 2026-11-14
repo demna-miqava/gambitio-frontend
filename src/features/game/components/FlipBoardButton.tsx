@@ -16,14 +16,14 @@ interface FlipBoardButtonProps {
 export const FlipBoardButton = ({ onFlip, orientation, className }: FlipBoardButtonProps) => (
   <Button
     type="button"
-    variant="secondary"
+    variant="ghost"
     size="icon-lg"
     onClick={onFlip}
     aria-label={orientation ? `Flip board (now ${orientation} at the bottom)` : "Flip board"}
     aria-keyshortcuts="F"
     title="Flip board (F)"
-    className={cn("shrink-0 sm:size-10", className)}
+    className={cn("shrink-0 sm:size-9", className)}
   >
-    <FlipVertical2 className="size-5" aria-hidden="true" />
+    <FlipVertical2 className="size-4" strokeWidth={1.75} aria-hidden="true" />
   </Button>
 );

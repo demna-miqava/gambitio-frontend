@@ -19,7 +19,7 @@ export const PuzzleAnalysis = ({ exploration }: { exploration: Exploration }) =>
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-border/70 p-3">
+    <div className="space-y-3 rounded-xl bg-card p-3">
       <p className="text-xs text-muted-foreground">
         Move pieces on the board to explore, or tap a line to play its first move.
       </p>

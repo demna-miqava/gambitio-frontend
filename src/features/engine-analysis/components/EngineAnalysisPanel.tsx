@@ -54,7 +54,7 @@ export const EngineAnalysisPanel = ({
     <div
       key={`empty-${key}`}
       aria-hidden={!label}
-      className="flex h-[38px] items-center gap-2 rounded-md border border-border/50 bg-muted/30 px-3 text-sm text-muted-foreground pointer-coarse:h-11 lg:px-4"
+      className="flex h-[38px] items-center gap-2 rounded-md border border-border bg-muted/30 px-3 text-sm text-muted-foreground pointer-coarse:h-11 lg:px-4"
     >
       {label}
     </div>

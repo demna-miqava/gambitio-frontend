@@ -30,7 +30,7 @@ export const FriendRequestCard = ({
     : { id: request.receiverId, username: request.receiverUsername, avatarUrl: request.receiverAvatarUrl };
 
   return (
-    <li className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-3">
+    <li className="flex flex-col gap-3 rounded-xl bg-card p-3">
       <Link
         to={getProfileRoute(Number(user.id))}
         className="flex min-w-0 items-center gap-3 rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

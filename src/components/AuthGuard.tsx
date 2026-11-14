@@ -29,7 +29,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
         role="alert"
         className="flex min-h-svh w-full flex-col items-center justify-center gap-4 p-6 text-center"
       >
-        <h1 className="font-display text-2xl font-semibold text-foreground">
+        <h1 className="font-display text-2xl text-foreground">
           Can't reach Gambitio
         </h1>
         <p className="text-sm text-muted-foreground">

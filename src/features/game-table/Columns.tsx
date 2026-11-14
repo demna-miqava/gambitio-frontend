@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { getArchiveGameRoute } from "@/constants/routes";
 import { formatShortDate } from "@/lib/utils";
 import type { StoredGameListItem } from "@/types";
-import { getResult } from "./utils/gameResult";
+import { getResult, getScore } from "./utils/gameResult";
 import { fullMoves } from "@/utils/moves";
 
 export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListItem>[] => [
@@ -44,7 +44,7 @@ export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListI
     cell: ({ row }) => {
       const result =
         row.original.status === "in_progress" ? "live" : getResult(row.original, currentUserId);
-      return <ResultBadge result={result} />;
+      return <ResultBadge result={result} score={getScore(row.original)} />;
     },
   },
   {

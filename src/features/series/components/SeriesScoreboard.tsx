@@ -32,7 +32,7 @@ const PlayerSide = ({
   >
     <UserAvatar src={player.avatarUrl} username={player.username} className="size-12 shrink-0 sm:size-14" />
     <span className="flex min-w-0 max-w-full items-center gap-1.5">
-      <span className="truncate font-semibold">{player.username}</span>
+      <span className="truncate font-medium">{player.username}</span>
       {isWinner && <Crown className="size-4 shrink-0 text-gold" aria-label="Series winner" />}
     </span>
   </Link>
@@ -54,16 +54,16 @@ export const SeriesScoreboard = ({
   return (
     <section
       aria-label="Series score"
-      className="rounded-2xl border border-border/70 bg-card p-4 sm:p-6"
+      className="rounded-2xl bg-card p-4 sm:p-6"
     >
-      <p className="mb-4 flex flex-wrap items-center justify-center gap-x-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+      <p className="mb-4 flex flex-wrap items-center justify-center gap-x-2 text-sm text-muted-foreground">
         <span>{bestOfLabel(series.bestOf)}</span>
         <span aria-hidden="true">·</span>
         <span className="tabular-nums">{formatTimeControl(series.time, series.increment)}</span>
       </p>
       <div className="flex items-center gap-2 sm:gap-4">
         <PlayerSide player={left} isWinner={series.winnerId === left.id} align="start" />
-        <p className="shrink-0 font-display text-4xl font-semibold tabular-nums sm:text-5xl">
+        <p className="shrink-0 font-display-num text-4xl sm:text-5xl">
           <span className="sr-only">{`Score ${left.username} ${spokenScoreline(left, right)} ${right.username}`}</span>
           <span aria-hidden="true">
             {formatPoints(left.score)}

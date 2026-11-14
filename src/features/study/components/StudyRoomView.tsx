@@ -84,7 +84,7 @@ export const StudyRoomView = ({
   );
 
   const sidebar = (
-    <div className="flex w-full flex-col gap-3 lg:h-full lg:min-h-0 lg:gap-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:shadow-sm">
+    <div className="flex w-full flex-col gap-3 lg:h-full lg:min-h-0 lg:gap-0 lg:overflow-hidden lg:rounded-2xl lg:bg-card">
       <StudyRoomHeader
         roomId={room.id}
         name={room.name}
@@ -100,12 +100,12 @@ export const StudyRoomView = ({
       />
 
       {/* Phones: right under the board */}
-      <div className="order-2 space-y-2 lg:order-6 lg:shrink-0 lg:border-t lg:border-border/70 lg:p-3">
+      <div className="order-2 space-y-2 lg:order-6 lg:shrink-0 lg:border-t lg:border-border lg:p-3">
         <StudyControls state={state} onGoTo={goTo} send={send} />
         <TypedMoveInput onSubmit={playTyped} />
       </div>
 
-      <div className="order-5 lg:order-2 lg:shrink-0 lg:border-b lg:border-border/70 lg:px-4 lg:py-3">
+      <div className="order-5 lg:order-2 lg:shrink-0 lg:border-b lg:border-border lg:px-4 lg:py-3">
         <StudyPeople
           roomId={room.id}
           ownerId={room.ownerId}
@@ -115,20 +115,20 @@ export const StudyRoomView = ({
         />
       </div>
 
-      <div className="order-3 flex flex-col rounded-xl border border-border/70 bg-card lg:min-h-0 lg:flex-1 lg:rounded-none lg:border-0 lg:bg-transparent">
-        <OpeningName fens={lineFens} className="px-3 pt-2 lg:shrink-0 lg:border-b lg:border-border/70 lg:px-4 lg:py-2.5" />
+      <div className="order-3 flex flex-col rounded-xl bg-card lg:min-h-0 lg:flex-1 lg:rounded-none lg:bg-transparent">
+        <OpeningName fens={lineFens} className="px-3 pt-2 lg:shrink-0 lg:border-b lg:border-border lg:px-4 lg:py-2.5" />
         <div className="max-h-[min(360px,45svh)] min-h-24 overflow-y-auto p-2 lg:max-h-none lg:min-h-0 lg:flex-1 lg:px-3">
           <StudyMovesList state={state} onGoTo={goTo} />
         </div>
       </div>
 
-      <div className="order-4 lg:order-5 lg:shrink-0 lg:border-t lg:border-border/70 lg:px-3 lg:py-2.5">
+      <div className="order-4 lg:order-5 lg:shrink-0 lg:border-t lg:border-border lg:px-3 lg:py-2.5">
         <StudyComment node={node} send={send} />
       </div>
 
       {/* What others do, read out; also shown as a quiet line */}
       <p
-        className="order-6 min-h-4 truncate px-1 text-xs text-muted-foreground lg:order-7 lg:shrink-0 lg:border-t lg:border-border/70 lg:px-4 lg:py-1.5"
+        className="order-6 min-h-4 truncate px-1 text-xs text-muted-foreground lg:order-7 lg:shrink-0 lg:border-t lg:border-border lg:px-4 lg:py-1.5"
         aria-live="polite"
         aria-atomic="true"
       >

@@ -101,7 +101,7 @@ export const LinesView = ({ lines, color, onColorChange }: LinesViewProps) => {
   return (
     <div className="space-y-6">
       {lines.length > 0 && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-card p-4 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 sm:flex-row sm:items-center">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-primary">
             <Dumbbell className="size-5" aria-hidden="true" />
           </span>

@@ -22,7 +22,7 @@ export const DeleteAccountSection = () => {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="mb-1 text-base font-semibold">Delete account</h3>
+        <h3 className="mb-1 text-lg font-display">Delete account</h3>
         <p className="text-sm text-muted-foreground">
           Permanently delete your account, profile, friends and settings. This
           action cannot be undone.

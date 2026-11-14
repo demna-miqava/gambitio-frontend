@@ -1,6 +1,9 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/**
+ * A rating change as a signed number: "+21", "−7" (a real minus sign).
+ * Nothing for no change.
+ */
 const RatingDelta = ({
   delta,
   className,
@@ -10,17 +13,19 @@ const RatingDelta = ({
 }) => {
   if (delta === 0 || !delta) return null;
 
-  const trend = delta > 0 ? "up" : "down";
-  const trendColor = trend === "up" ? "text-rating-up" : "text-rating-down";
-  const IconComponent = trend === "up" ? TrendingUp : TrendingDown;
+  const up = delta > 0;
 
   return (
-    <span className={cn("inline-flex items-center gap-1", className)}>
-      <IconComponent className={`size-3 ${trendColor}`} aria-hidden="true" />
-      <span className={cn("tabular-nums", trendColor)}>
-        <span className="sr-only">{trend === "up" ? "Up " : "Down "}</span>
-        {Math.abs(delta)}
-      </span>
+    <span
+      className={cn(
+        "tabular-nums",
+        up ? "text-rating-up" : "text-rating-down",
+        className
+      )}
+    >
+      <span className="sr-only">{up ? "Up " : "Down "}</span>
+      <span aria-hidden="true">{up ? "+" : "−"}</span>
+      {Math.abs(delta)}
     </span>
   );
 };

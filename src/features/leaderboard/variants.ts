@@ -1,5 +1,3 @@
-import { TIME_CONTROL_ICONS } from "@/constants/timeControlIcons";
-import { PuzzleRatingIcon } from "./components/PuzzleRatingIcon";
 import { ROUTES, getPuzzleModeRoute } from "@/constants/routes";
 
 /** Copy and links for a game-rating leaderboard (bullet/blitz/rapid). */
@@ -18,12 +16,11 @@ const gameVariant = (label: string) => ({
  * Adding a variant is one entry here.
  */
 export const LEADERBOARD_VARIANTS = [
-  { value: "bullet", icon: TIME_CONTROL_ICONS.bullet, ...gameVariant("Bullet") },
-  { value: "blitz", icon: TIME_CONTROL_ICONS.blitz, ...gameVariant("Blitz") },
-  { value: "rapid", icon: TIME_CONTROL_ICONS.rapid, ...gameVariant("Rapid") },
+  { value: "bullet", ...gameVariant("Bullet") },
+  { value: "blitz", ...gameVariant("Blitz") },
+  { value: "rapid", ...gameVariant("Rapid") },
   {
     value: "puzzle",
-    icon: PuzzleRatingIcon,
     label: "Puzzles",
     countLabel: "Puzzles",
     howToRank: "try a puzzle in Infinite mode",

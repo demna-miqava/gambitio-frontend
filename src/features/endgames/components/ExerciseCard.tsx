@@ -31,7 +31,7 @@ export const ExerciseCard = ({ exercise, progress, progressPending }: ExerciseCa
     <Link
       to={getEndgameExerciseRoute(exercise.id)}
       className={cn(
-        "group flex gap-3 rounded-xl border border-border/70 bg-card p-3 transition-colors",
+        "group flex gap-3 rounded-xl bg-card p-3 transition-colors",
         "hover:border-primary/40 hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         completed && "border-win/30"
       )}
@@ -39,7 +39,7 @@ export const ExerciseCard = ({ exercise, progress, progressPending }: ExerciseCa
       <MiniBoard fen={exercise.fen} orientation={exercise.playerColor} className="w-24 shrink-0 sm:w-28" />
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold leading-tight text-foreground">{exercise.title}</h3>
+          <h3 className="font-display leading-tight text-foreground">{exercise.title}</h3>
           {completed ? (
             <CheckCircle2 className="size-5 shrink-0 text-win" aria-hidden="true" />
           ) : (

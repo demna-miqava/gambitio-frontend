@@ -9,7 +9,7 @@ export const PuzzleSurvivalSidebar = () => {
 
   return (
     <div className="space-y-3">
-      <div className="flex h-12 items-center justify-between rounded-xl border border-border/70 bg-card px-3">
+      <div className="flex h-12 items-center justify-between rounded-xl bg-card px-3">
         <span className="text-sm font-medium text-muted-foreground">Lives</span>
         <div className="flex gap-1" aria-label={`${lives} of 3 lives left`}>
           {[1, 2, 3].map((i) => (
@@ -26,7 +26,7 @@ export const PuzzleSurvivalSidebar = () => {
       </div>
 
       {history.length > 0 && (
-        <div className="rounded-xl border border-border/70 bg-card px-3 py-2.5">
+        <div className="rounded-xl bg-card px-3 py-2.5">
           <div className="mb-1.5 text-xs font-medium text-muted-foreground">This run</div>
           <ol className="flex flex-wrap gap-1.5">
             {history.map((result, idx) => (

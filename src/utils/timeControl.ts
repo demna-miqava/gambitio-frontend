@@ -1,15 +1,3 @@
-import { TIME_CONTROL_ICONS } from "@/constants/timeControlIcons";
-import type { TimeControlType } from "@/types";
-
-/**
- * Get the icon component for a given time control type
- * @param type - The time control type (bullet, blitz, rapid)
- * @returns The corresponding icon component
- */
-export const getTimeControlIcon = (type: string) => {
-  return TIME_CONTROL_ICONS[type as TimeControlType];
-};
-
 const FRACTIONS: Record<number, string> = { 15: "¼", 30: "½", 45: "¾" };
 
 /** Starting time in minutes: whole numbers as is, ¼/½/¾, else a decimal. */

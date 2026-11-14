@@ -107,7 +107,7 @@ export const PuzzleThemePicker = ({ value, onChange, className }: PuzzleThemePic
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--radix-popover-trigger-width) min-w-64 p-0">
-        <div className="relative border-b border-border/70">
+        <div className="relative border-b border-border">
           <Search
             className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"

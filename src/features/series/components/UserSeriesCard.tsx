@@ -15,7 +15,7 @@ export const UserSeriesCard = ({ userId, viewerId }: { userId: number; viewerId?
   return (
     <section
       aria-labelledby="user-series-title"
-      className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-card p-5"
+      className="flex flex-col gap-3 rounded-2xl bg-card p-5"
     >
       <SectionHeader title={<span id="user-series-title">Series</span>} />
       {isPending ? (

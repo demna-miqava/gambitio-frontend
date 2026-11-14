@@ -48,7 +48,7 @@ export const SeriesListItem = ({
         {outcome && (
           <span
             className={cn(
-              "inline-flex h-6 min-w-12 shrink-0 items-center justify-center rounded-full px-2 text-xs font-semibold",
+              "inline-flex h-6 min-w-12 shrink-0 items-center justify-center rounded-full px-2 text-xs font-medium",
               OUTCOME_STYLES[outcome]
             )}
           >
@@ -63,7 +63,7 @@ export const SeriesListItem = ({
             {bestOfLabel(series.bestOf)} · {seriesStatusLabel(series, viewerId)}
           </span>
         </span>
-        <span className="shrink-0 font-semibold tabular-nums">
+        <span className="shrink-0 font-medium tabular-nums">
           <span className="sr-only">{`Score ${spokenScoreline(left, right)}`}</span>
           <span aria-hidden="true">{formatScoreline(left, right)}</span>
         </span>

@@ -30,7 +30,7 @@ export const RushBoardOverlay = () => {
         <>
           <Zap className="size-9 text-blitz" aria-hidden="true" />
           <div className="space-y-1.5">
-            <h2 className="font-display text-2xl font-semibold text-foreground">Ready?</h2>
+            <h2 className="font-display text-2xl text-foreground">Ready?</h2>
             <p className="max-w-xs text-sm text-muted-foreground">
               {`${MINUTES} minutes, ${maxStrikes} strikes. The clock starts after a 3-second countdown.`}
             </p>
@@ -62,7 +62,7 @@ export const RushBoardOverlay = () => {
           <span className="text-sm font-medium text-muted-foreground">Get ready</span>
           <span
             key={countdown}
-            className="font-display text-8xl font-semibold tabular-nums text-foreground animate-in fade-in zoom-in-75 duration-300 motion-reduce:animate-none"
+            className="font-display-num text-8xl text-foreground animate-in fade-in zoom-in-75 duration-300 motion-reduce:animate-none"
           >
             {countdown}
           </span>

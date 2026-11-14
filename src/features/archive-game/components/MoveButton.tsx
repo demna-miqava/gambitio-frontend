@@ -41,15 +41,15 @@ export const MoveButton = ({
       aria-current={isActive ? "step" : undefined}
       // Same current-move style as the live game's list and the phone strip
       className={cn(
-        "inline-flex items-center rounded-md text-left tabular-nums transition-colors",
+        "inline-flex items-center rounded-sm text-left tabular-nums transition-colors",
         // Taller on phones (where this list is opened from the move strip)
         isVariation ? "min-h-8 px-1 py-0.5 text-xs lg:min-h-0" : "min-h-9 px-2 py-1 text-sm lg:min-h-8",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
         isActive
-          ? "bg-brand-soft font-semibold text-foreground"
+          ? "bg-foreground text-background"
           : cn(
               "hover:bg-accent hover:text-foreground",
-              isVariation ? "text-muted-foreground" : "text-foreground/85"
+              isVariation ? "text-muted-foreground" : "text-foreground"
             )
       )}
     >

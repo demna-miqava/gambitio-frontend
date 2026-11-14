@@ -18,7 +18,7 @@ export const PuzzleRushSidebar = () => {
 
   return (
     <div className="space-y-3">
-      <div className="flex h-12 items-center justify-between rounded-xl border border-border/70 bg-card px-3">
+      <div className="flex h-12 items-center justify-between rounded-xl bg-card px-3">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Clock className="size-5" aria-hidden="true" />
           <span className="text-sm font-medium">Time left</span>
@@ -26,7 +26,7 @@ export const PuzzleRushSidebar = () => {
         <span
           role="timer"
           className={cn(
-            "text-2xl font-semibold tabular-nums",
+            "text-2xl font-medium tabular-nums",
             phase === "playing" && timeLeft < 30 ? "text-loss" : "text-foreground"
           )}
         >
@@ -35,19 +35,19 @@ export const PuzzleRushSidebar = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="flex h-16 flex-col justify-center rounded-xl border border-border/70 bg-card px-3">
+        <div className="flex h-16 flex-col justify-center rounded-xl bg-card px-3">
           <span className="text-xs font-medium text-muted-foreground">Solved</span>
           <span
             role="status"
             aria-live="polite"
             aria-atomic="true"
-            className="text-2xl font-semibold tabular-nums text-foreground"
+            className="text-2xl font-medium tabular-nums text-foreground"
           >
             <span className="sr-only">Solved </span>
             {score}
           </span>
         </div>
-        <div className="flex h-16 flex-col justify-center rounded-xl border border-border/70 bg-card px-3">
+        <div className="flex h-16 flex-col justify-center rounded-xl bg-card px-3">
           <span className="text-xs font-medium text-muted-foreground">Strikes</span>
           <div
             role="status"
@@ -95,7 +95,7 @@ export const PuzzleRushSidebar = () => {
 
       <p className="flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
         <Trophy className="size-3.5" aria-hidden="true" />
-        Personal best: <span className="font-semibold tabular-nums text-foreground">{best}</span>
+        Personal best: <span className="font-medium tabular-nums text-foreground">{best}</span>
       </p>
     </div>
   );

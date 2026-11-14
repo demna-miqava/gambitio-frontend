@@ -29,7 +29,7 @@ export const SelectedMoveNote = ({ move, label, currentIndex }: SelectedMoveNote
   } else if (move.forced) {
     content = (
       <>
-        <span className="font-semibold">{label}</span> was the only legal move.
+        <span className="font-medium">{label}</span> was the only legal move.
       </>
     );
   } else {
@@ -38,12 +38,12 @@ export const SelectedMoveNote = ({ move, label, currentIndex }: SelectedMoveNote
     const after = Math.round(toWinPercent(move.winChanceAfter));
     content = (
       <>
-        <span className="font-semibold">{label}</span> is{" "}
-        <span className={cn("font-semibold", meta.textClass)}>{ARTICLE[move.classification]}</span>.
+        <span className="font-medium">{label}</span> is{" "}
+        <span className={cn("font-medium", meta.textClass)}>{ARTICLE[move.classification]}</span>.
         {move.bestMoveSan && (
           <>
             {" "}
-            Best was <span className="font-semibold">{move.bestMoveSan}</span>.
+            Best was <span className="font-medium">{move.bestMoveSan}</span>.
           </>
         )}
         <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground">

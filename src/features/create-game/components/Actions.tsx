@@ -11,7 +11,7 @@ export const Actions = () => {
   if (isSearching) {
     return (
       <div
-        className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-border bg-muted/40 px-4 py-10 text-center"
+        className="flex flex-col items-center gap-4 rounded-xl bg-card px-4 py-10 text-center"
         role="status"
         aria-live="polite"
       >

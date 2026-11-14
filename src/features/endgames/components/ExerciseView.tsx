@@ -168,20 +168,20 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
   const hints = exercise.hints.slice(0, hintsShown);
 
   const sidebar = (
-    <div className="flex flex-col gap-4 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
+    <div className="flex flex-col gap-4 lg:rounded-2xl lg:bg-card lg:p-4">
       <header className="space-y-1.5">
-        <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
           {exercise.category}
           <DifficultyBadge difficulty={exercise.difficulty} className="normal-case tracking-normal" />
         </p>
-        <h1 className="font-display text-2xl font-medium text-foreground dark:text-cream">{exercise.title}</h1>
+        <h1 className="font-display text-2xl text-foreground">{exercise.title}</h1>
       </header>
 
-      <section aria-label="Objective" className="space-y-3 rounded-xl border border-border/70 p-3">
+      <section aria-label="Objective" className="space-y-3 rounded-xl bg-card p-3">
         <div className="flex items-start gap-2.5">
           <Target className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">{objectiveLabel(exercise.objective)}</p>
+            <p className="text-sm font-medium text-foreground">{objectiveLabel(exercise.objective)}</p>
             <p className="text-xs tabular-nums text-muted-foreground">
               {budgetText(exercise, playerMoves)}
               {exercise.par !== undefined && ` · par ${movesLabel(exercise.par)}`}
@@ -206,7 +206,7 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
           {result?.status === "success" && <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />}
           {result?.status === "failure" && <XCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />}
           <span>
-            {result && <span className="font-semibold">{result.status === "success" ? "Solved. " : "Not this time. "}</span>}
+            {result && <span className="font-medium">{result.status === "success" ? "Solved. " : "Not this time. "}</span>}
             {status}
           </span>
         </div>
@@ -272,8 +272,8 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
         onArrow={showArrow}
       />
 
-      <div className="space-y-2 lg:border-t lg:border-border/70 lg:pt-3">
-        <div className="rounded-xl border border-border/70 bg-card px-1 py-1.5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
+      <div className="space-y-2 lg:border-t lg:border-border lg:pt-3">
+        <div className="rounded-xl bg-card px-1 py-1.5 lg:rounded-none lg:bg-transparent lg:p-0">
           <MovesListView moves={history} activeIndex={navigation.currentIndex - 1} onSelect={navigation.goToMove} />
         </div>
         <div className="flex gap-1.5">

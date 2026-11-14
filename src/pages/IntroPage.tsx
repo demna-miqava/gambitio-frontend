@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, Microscope, Puzzle, Swords } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/Brand";
 import { DecorativeBoard } from "@/components/DecorativeBoard";
@@ -8,22 +8,18 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const FEATURES = [
   {
-    icon: Swords,
     title: "Play online",
     text: "Get paired in seconds at bullet, blitz or rapid, or challenge a friend.",
   },
   {
-    icon: Puzzle,
     title: "Solve puzzles",
     text: "Train tactics at your own pace, race the clock, or survive on three lives.",
   },
   {
-    icon: Microscope,
     title: "Analyze games",
     text: "Review every game with Stockfish, right in your browser.",
   },
   {
-    icon: BarChart3,
     title: "Track progress",
     text: "Ratings, results and trends for every time control.",
   },
@@ -50,14 +46,11 @@ const IntroPage = () => {
       <main className="relative mx-auto max-w-6xl px-5 sm:px-8">
         <section className="grid items-center gap-12 py-10 sm:py-16 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:py-20">
           <div className="space-y-7">
-            <p className="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              <span className="h-px w-8 bg-gold" aria-hidden="true" />
-              Free to play · No ads
-            </p>
-            <h1 className="font-display text-[2.6rem] leading-[1.05] font-medium text-foreground sm:text-6xl">
+            <p className="text-sm text-muted-foreground">Free to play · No ads</p>
+            <h1 className="font-display text-[2.6rem] leading-[1.05] text-foreground sm:text-6xl">
               Play better chess,
               <br />
-              <em className="font-normal text-primary">one move at a time.</em>
+              <em className="font-normal text-muted-foreground">one move at a time.</em>
             </h1>
             <p className="max-w-lg text-base text-muted-foreground sm:text-lg">
               Gambitio brings live games, puzzles and engine analysis together
@@ -82,12 +75,11 @@ const IntroPage = () => {
 
         <section
           aria-label="What you can do"
-          className="grid gap-x-8 gap-y-10 border-t border-border py-14 sm:grid-cols-2 lg:grid-cols-4"
+          className="mb-10 grid gap-x-8 gap-y-8 rounded-2xl bg-card p-6 sm:grid-cols-2 sm:p-8 lg:grid-cols-4"
         >
-          {FEATURES.map(({ icon: Icon, title, text }) => (
+          {FEATURES.map(({ title, text }) => (
             <div key={title}>
-              <Icon className="mb-4 size-5 text-gold" strokeWidth={1.5} aria-hidden="true" />
-              <h2 className="font-display text-lg font-medium text-foreground">{title}</h2>
+              <h2 className="font-display text-xl text-foreground">{title}</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{text}</p>
             </div>
           ))}

@@ -30,13 +30,13 @@ export const NotFound = ({
       {code && (
         <p
           aria-hidden="true"
-          className="font-display text-6xl font-semibold text-muted-foreground/60 tabular-nums"
+          className="font-display-num text-6xl text-muted-foreground/60"
         >
           {code}
         </p>
       )}
       <div className="space-y-1.5">
-        <h1 className="font-display text-3xl font-semibold text-foreground sm:text-[2.1rem]">
+        <h1 className="font-display text-3xl text-foreground sm:text-[2.1rem]">
           {title}
         </h1>
         <p className="mx-auto max-w-sm text-sm text-muted-foreground sm:text-[0.95rem]">

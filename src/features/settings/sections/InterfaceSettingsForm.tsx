@@ -18,7 +18,7 @@ const AppearanceSetting = () => {
   const { preference, setPreference } = useTheme();
 
   return (
-    <div className="flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+    <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <div className="space-y-0.5">
         <p className="text-sm font-medium leading-none">Theme</p>
         <p className="text-sm text-muted-foreground">
@@ -87,7 +87,7 @@ const PaletteSetting = () => {
   const palette = settings?.colorPalette ?? devicePalette;
 
   return (
-    <div className="space-y-3 border-b border-border/70 pb-4">
+    <div className="space-y-3 border-b border-border pb-4">
       <div className="space-y-0.5">
         <p className="text-sm font-medium leading-none">Colours</p>
         <p className="text-sm text-muted-foreground">
@@ -108,9 +108,9 @@ const PaletteSetting = () => {
             key={option.id}
             value={option.id}
             className={cn(
-              "group relative flex flex-col gap-2.5 rounded-lg border border-border bg-card p-2 text-left transition-colors",
-              "hover:border-foreground/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              "data-[state=checked]:border-primary data-[state=checked]:ring-1 data-[state=checked]:ring-primary",
+              "group relative flex flex-col gap-2.5 rounded-xl bg-background p-2 text-left transition-colors",
+              "hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "data-[state=checked]:ring-2 data-[state=checked]:ring-primary",
               "disabled:cursor-default disabled:opacity-60"
             )}
           >

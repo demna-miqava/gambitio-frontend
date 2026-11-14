@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Chessground } from "@lichess-org/chessground";
 import "@lichess-org/chessground/assets/chessground.base.css";
 import "@lichess-org/chessground/assets/chessground.brown.css";
-import "@lichess-org/chessground/assets/chessground.cburnett.css";
+import "@/assets/pieces/chessground.merida.css";
 import { cn } from "@/lib/utils";
 
 // A position from the Italian Game, for illustration
@@ -39,7 +39,7 @@ export const DecorativeBoard = ({
     <div
       aria-hidden="true"
       className={cn(
-        "relative aspect-square w-full overflow-hidden rounded-2xl shadow-2xl shadow-black/15 ring-1 ring-black/5 dark:shadow-black/50 dark:ring-white/10",
+        "board-frame relative aspect-square w-full",
         className
       )}
     >

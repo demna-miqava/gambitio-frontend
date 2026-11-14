@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { SideDot } from "@/features/game-review/components/SideDot";
 
 interface CellPlayer {
   /** Null for the computer in a bot game */
@@ -14,16 +15,9 @@ interface PlayerCellProps {
   isBotGame?: boolean;
 }
 
-/** Small "Bot" tag after a computer opponent's name */
+/** A small "bot" after a computer opponent's name */
 export const BotTag = ({ className }: { className?: string }) => (
-  <span
-    className={cn(
-      "shrink-0 rounded bg-muted px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-muted-foreground",
-      className
-    )}
-  >
-    Bot
-  </span>
+  <span className={cn("shrink-0 text-xs italic text-muted-foreground", className)}>bot</span>
 );
 
 const PlayerLine = ({
@@ -37,15 +31,8 @@ const PlayerLine = ({
 }) => (
   <span className="flex min-w-0 items-center gap-2">
     <span className="sr-only">{color === "white" ? "White:" : "Black:"}</span>
-    <span
-      aria-hidden="true"
-      className={
-        color === "white"
-          ? "size-2.5 shrink-0 rounded-[3px] border border-foreground/30 bg-white"
-          : "size-2.5 shrink-0 rounded-[3px] bg-neutral-800 dark:bg-neutral-950 dark:ring-1 dark:ring-white/25"
-      }
-    />
-    <span className="truncate font-medium text-foreground">{player.username}</span>
+    <SideDot side={color} />
+    <span className="truncate text-foreground">{player.username}</span>
     {isBot && <BotTag />}
     <span className="text-xs tabular-nums text-muted-foreground">{player.rating}</span>
   </span>

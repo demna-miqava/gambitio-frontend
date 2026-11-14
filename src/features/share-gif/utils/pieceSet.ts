@@ -17,7 +17,7 @@ const RULE_RE =
 
 /**
  * The piece images of a chessground piece-set stylesheet (e.g.
- * chessground.cburnett.css, which embeds each piece as an SVG data URI),
+ * chessground.merida.css, which embeds each piece as an SVG data URI),
  * keyed by piece.
  */
 export function parsePieceSet(css: string): Partial<Record<PieceKey, string>> {

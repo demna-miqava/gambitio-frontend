@@ -56,9 +56,9 @@ export const ExerciseAnalysis = ({ exercise, fen, enabled, onEnabledChange, paus
     verdict?.outcome === "win" ? "Moves that keep the win" : verdict?.outcome === "draw" ? "Moves that hold the draw" : null;
 
   return (
-    <section aria-label="Analysis" className="space-y-2 rounded-xl border border-border/70 p-3">
+    <section aria-label="Analysis" className="space-y-2 rounded-xl bg-card p-3">
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor="endgame-analysis" className="text-sm font-semibold text-foreground">
+        <Label htmlFor="endgame-analysis" className="text-sm font-medium text-foreground">
           Analysis
         </Label>
         <Switch id="endgame-analysis" checked={enabled} onCheckedChange={onEnabledChange} />
@@ -104,12 +104,12 @@ export const ExerciseAnalysis = ({ exercise, fen, enabled, onEnabledChange, paus
                 <span className="text-loss">The analysis engine couldn't start.</span>
               ) : overrulingSan ? (
                 <>
-                  <span className="font-semibold">{overrulingSan}</span>
+                  <span className="font-medium">{overrulingSan}</span>
                   <span className="text-muted-foreground"> (from the tablebase)</span>
                 </>
               ) : line ? (
                 <>
-                  <span className="mr-2 font-semibold tabular-nums">{formatScore(engineLine!.line, exercise.playerColor)}</span>
+                  <span className="mr-2 font-medium tabular-nums">{formatScore(engineLine!.line, exercise.playerColor)}</span>
                   {line}
                 </>
               ) : (

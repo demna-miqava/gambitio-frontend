@@ -7,7 +7,7 @@ export const EngineAnalysisToggle = () => {
 
   return (
     <div className="flex items-center justify-between">
-      <h2 className="text-sm font-semibold text-foreground">Analysis</h2>
+      <h2 className="text-base font-display text-foreground">Analysis</h2>
       <div className="flex items-center gap-2">
         <Label
           htmlFor="engine-toggle"

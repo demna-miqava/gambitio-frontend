@@ -15,7 +15,7 @@ export const MobileBottomNav = () => {
   return (
     <nav
       aria-label="Main"
-      className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/75 md:hidden"
+      className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/75 md:hidden"
     >
       <ul className="mx-auto grid h-16 max-w-md grid-cols-5">
         {items.map((item) => {
@@ -47,7 +47,7 @@ export const MobileBottomNav = () => {
                   {badge ? (
                     <span
                       aria-hidden="true"
-                      className="absolute -top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[0.625rem] font-semibold leading-none text-primary-foreground tabular-nums ring-2 ring-background"
+                      className="absolute -top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[0.625rem] font-medium leading-none text-primary-foreground tabular-nums ring-2 ring-background"
                     >
                       {badge > 9 ? "9+" : badge}
                     </span>

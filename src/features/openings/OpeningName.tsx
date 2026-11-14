@@ -24,7 +24,7 @@ export const OpeningName = ({ fens, className }: OpeningNameProps) => {
     >
       <BookOpen className="size-3.5 shrink-0" aria-hidden="true" />
       <span className="sr-only">Opening: </span>
-      <span className="shrink-0 font-semibold tabular-nums text-foreground/80">
+      <span className="shrink-0 font-medium tabular-nums text-foreground/80">
         {opening.eco}
       </span>
       <span className="truncate">{opening.name}</span>

@@ -22,7 +22,7 @@ const RoomRow = ({
   isOwner: boolean;
   onRemove: () => void;
 }) => (
-  <li className="flex items-center gap-3 rounded-xl border border-border/70 bg-card p-3 shadow-sm sm:p-4">
+  <li className="flex items-center gap-3 rounded-xl bg-card p-3 sm:p-4">
     <span className="hidden size-10 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-primary sm:flex">
       <BookOpenText className="size-5" aria-hidden="true" />
     </span>

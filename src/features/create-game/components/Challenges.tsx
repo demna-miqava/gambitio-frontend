@@ -41,11 +41,11 @@ export const Challenges = ({ className }: ChallengesProps) => {
   return (
     <section
       aria-labelledby="incoming-challenges-title"
-      className={cn("space-y-3", className ?? "border-t border-border/70 pt-5")}
+      className={cn("space-y-3", className ?? "border-t border-border pt-5")}
     >
       <h2
         id="incoming-challenges-title"
-        className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+        className="text-sm text-muted-foreground"
       >
         Challenges for you
       </h2>
@@ -53,7 +53,7 @@ export const Challenges = ({ className }: ChallengesProps) => {
         {challenges.map((challenge) => (
           <li
             key={challenge.id}
-            className="flex flex-col gap-3 rounded-xl border border-border/70 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-3 rounded-xl bg-card px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex min-w-0 items-center gap-3">
               <UserAvatar
@@ -62,7 +62,7 @@ export const Challenges = ({ className }: ChallengesProps) => {
                 className="size-9 shrink-0"
               />
               <div className="min-w-0 leading-tight">
-                <p className="truncate text-sm font-semibold">
+                <p className="truncate text-sm font-medium">
                   {challenge.username}
                   {challenge.rating != null && (
                     <span className="font-normal text-muted-foreground tabular-nums">
