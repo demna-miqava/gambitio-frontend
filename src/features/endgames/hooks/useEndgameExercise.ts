@@ -14,6 +14,7 @@ import { BotEngine } from "@/features/play-bots/services/botEngine";
 import { BOARD_SETTING_DEFAULTS } from "@/features/play-bots/hooks/useBotGame";
 import type { EndgameExercise, ObjectiveEvaluation } from "../types";
 import { countPlayerMoves, evaluateObjective } from "../utils/objective";
+import { useBoardOrientation } from "@/features/game/hooks/useBoardOrientation";
 
 /** Full strength: the engine always finds the toughest defence (or attack). */
 export const ENDGAME_ENGINE_RATING = 3500;
@@ -42,6 +43,8 @@ export const useEndgameExercise = (exercise: EndgameExercise) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
   const chessRef = useRef(new Chess(exercise.fen));
+  // The player's side at the bottom until they flip the board (a retry keeps the view)
+  const { orientation, flip } = useBoardOrientation(cgRef, exercise.playerColor);
   const engineRef = useRef<BotEngine | null>(null);
   // Engine requests run one after another, so a search for an abandoned
   // attempt can never answer the next one
@@ -327,6 +330,8 @@ export const useEndgameExercise = (exercise: EndgameExercise) => {
     retry,
     submitTypedMove,
     navigation,
+    orientation,
+    flip,
     isPlayerTurn:
       evaluation.status === "playing" && !thinking && chessRef.current.turn() === playerCode,
   };

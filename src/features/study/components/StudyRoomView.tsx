@@ -1,11 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { GameLayout } from "@/features/game/components/GameLayout";
 import { PromotionSelector } from "@/features/game/components/PromotionSelector";
 import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
-import type { PlayerColor } from "@/features/game/types/game.types";
+import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 import { OpeningName } from "@/features/openings";
 import { describeMove } from "@/features/game/utils/describeMove";
 import type { StudyClientMessage, StudyRoomSnapshot } from "../types";
@@ -42,8 +42,8 @@ export const StudyRoomView = ({
   onExit,
 }: StudyRoomViewProps) => {
   const { room, state, members, present } = snapshot;
-  const { boardRef, cgRef, color } = useChessBoardContext();
-  const [orientation, setOrientation] = useState<PlayerColor>(color);
+  const { boardRef, orientation, flipBoard: flip } = useChessBoardContext();
+  useFlipBoardKey(flip);
   const node = nodeOf(state, state.cursor) ?? rootOf(state);
   const { pendingPromotion, selectPromotion, cancelPromotion, playTyped, clearShapes } = useStudyBoard({
     node,
@@ -51,11 +51,6 @@ export const StudyRoomView = ({
     resetKey: boardResetKey,
   });
   const lineFens = [rootOf(state).fen, ...pathTo(state, node.id).map((id) => nodeOf(state, id)!.fen)];
-
-  const flip = useCallback(() => {
-    cgRef.current?.toggleOrientation();
-    setOrientation((o) => (o === "white" ? "black" : "white"));
-  }, [cgRef]);
 
   const copyPgn = useCallback(() => {
     navigator.clipboard

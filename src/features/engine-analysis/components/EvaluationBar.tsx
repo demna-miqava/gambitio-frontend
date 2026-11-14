@@ -4,8 +4,10 @@ import { formatScore, getWhitePercentage } from "../utils/engineAnalysis.utils";
 import { EVAL_BAR } from "../constants";
 import type { EvaluationLine } from "../types";
 import { cn } from "@/lib/utils";
+import type { PlayerColor } from "@/features/game/types/game.types";
 
-export const EvaluationBar = () => {
+/** The live engine's bar. bottom: the side at the bottom of the board. */
+export const EvaluationBar = ({ bottom = "white" }: { bottom?: PlayerColor }) => {
   const { analysis } = useAnalysis();
   const bestLine: EvaluationLine | undefined = analysis.lines[0];
 
@@ -31,6 +33,7 @@ export const EvaluationBar = () => {
       whitePercent={whitePercentage}
       label={label}
       spokenLabel={`Evaluation ${shown ? formatScore(shown, "white") : "0.0"}`}
+      bottom={bottom}
     />
   );
 };
@@ -44,11 +47,20 @@ interface EvaluationBarViewProps {
   spokenLabel: string;
   /** Shown faded, e.g. when it's for another position than the board's */
   muted?: boolean;
+  /** The side at the bottom of the board: its share fills from the bottom */
+  bottom?: PlayerColor;
 }
 
 /** The bar itself, for any source of evaluations (live engine or a game review). */
-export const EvaluationBarView = ({ whitePercent, label, spokenLabel, muted = false }: EvaluationBarViewProps) => {
+export const EvaluationBarView = ({
+  whitePercent,
+  label,
+  spokenLabel,
+  muted = false,
+  bottom = "white",
+}: EvaluationBarViewProps) => {
   const whiteAhead = whitePercent > 50;
+  const whiteAtBottom = bottom === "white";
 
   return (
     <div
@@ -62,7 +74,10 @@ export const EvaluationBarView = ({ whitePercent, label, spokenLabel, muted = fa
       {/* White portion: a transform (not height) so it animates on the GPU,
           with a long ease-out so new depths glide instead of stepping */}
       <div
-        className="absolute inset-0 origin-bottom bg-neutral-200 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none"
+        className={cn(
+          "absolute inset-0 bg-neutral-200 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none",
+          whiteAtBottom ? "origin-bottom" : "origin-top"
+        )}
         style={{ transform: `scaleY(${whitePercent / 100})` }}
       />
 
@@ -70,7 +85,7 @@ export const EvaluationBarView = ({ whitePercent, label, spokenLabel, muted = fa
       <div
         className={cn(
           "absolute left-0 right-0 flex items-center justify-center py-2 writing-mode-vertical",
-          whiteAhead ? "bottom-0" : "top-0"
+          whiteAhead === whiteAtBottom ? "bottom-0" : "top-0"
         )}
         aria-hidden="true"
       >

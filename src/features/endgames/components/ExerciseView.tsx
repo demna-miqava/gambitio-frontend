@@ -6,6 +6,8 @@ import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { GameLayout } from "@/features/game/components/GameLayout";
 import { PromotionSelector } from "@/features/game/components/PromotionSelector";
 import { MoveNavigationControls } from "@/features/game/components/MoveControls";
+import { FlipBoardButton } from "@/features/game/components/FlipBoardButton";
+import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 import { MovesListView } from "@/features/game/components/MovesList";
 import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -57,8 +59,11 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
     retry,
     submitTypedMove,
     navigation,
+    orientation,
+    flip,
     isPlayerTurn,
   } = useEndgameExercise(exercise);
+  useFlipBoardKey(flip);
   const [hintsShown, setHintsShown] = useState(0);
   const { byId } = useEndgameProgress();
   const progress = byId.get(exercise.id);
@@ -121,25 +126,28 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
 
   const shownFen = positions[navigation.currentIndex] ?? exercise.fen;
 
+  const engineRow = {
+    name: ENGINE_NAME,
+    startingRating: ENDGAME_ENGINE_RATING,
+    avatar: <BotAvatar rating={ENDGAME_ENGINE_RATING} className="size-8 rounded-lg" />,
+  };
+  const engineStatus = thinking ? (
+    <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Thinking" />
+  ) : undefined;
+  const playerRow = {
+    name: username,
+    avatar: <PlayerAvatar username={username} avatarUrl={image} size="sm" />,
+  };
+
   const board = (
     <BoardLayout
       boardRef={boardRef}
       boardLabel={boardLabel}
-      material={{ fen: shownFen, bottom: exercise.playerColor }}
-      topPlayer={{
-        name: ENGINE_NAME,
-        startingRating: ENDGAME_ENGINE_RATING,
-        avatar: <BotAvatar rating={ENDGAME_ENGINE_RATING} className="size-8 rounded-lg" />,
-      }}
-      topPlayerClock={
-        thinking ? (
-          <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Thinking" />
-        ) : undefined
-      }
-      bottomPlayer={{
-        name: username,
-        avatar: <PlayerAvatar username={username} avatarUrl={image} size="sm" />,
-      }}
+      material={{ fen: shownFen, bottom: orientation }}
+      // The player is at the bottom unless they flipped the board
+      {...(orientation === exercise.playerColor
+        ? { topPlayer: engineRow, topPlayerClock: engineStatus, bottomPlayer: playerRow }
+        : { topPlayer: playerRow, bottomPlayer: engineRow, bottomPlayerClock: engineStatus })}
     >
       {pendingPromotion && (
         <PromotionSelector
@@ -147,7 +155,7 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
           square={pendingPromotion.to}
           onSelect={selectPromotion}
           onCancel={cancelPromotion}
-          boardOrientation={exercise.playerColor}
+          boardOrientation={orientation}
         />
       )}
     </BoardLayout>
@@ -255,7 +263,12 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
         <div className="rounded-xl border border-border/70 bg-card px-1 py-1.5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
           <MovesListView moves={history} activeIndex={navigation.currentIndex - 1} onSelect={navigation.goToMove} />
         </div>
-        <MoveNavigationControls {...navigation} />
+        <div className="flex gap-1.5">
+          <div className="min-w-0 flex-1">
+            <MoveNavigationControls {...navigation} />
+          </div>
+          <FlipBoardButton onFlip={flip} orientation={orientation} />
+        </div>
         {!result && !engineError && <TypedMoveInput onSubmit={submitTypedMove} />}
         <Link
           to={ROUTES.ENDGAMES}

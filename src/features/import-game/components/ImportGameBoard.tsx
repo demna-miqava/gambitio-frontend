@@ -41,7 +41,7 @@ interface ImportGameBoardProps {
  * Phones keep the bare board.
  */
 const ImportGameBoard = ({ disabled = false, players = DEFAULT_PLAYERS }: ImportGameBoardProps) => {
-  const { boardRef, cgRef, color } = useChessBoardContext();
+  const { boardRef, cgRef, orientation } = useChessBoardContext();
   const { currentNode } = useArchiveGame();
   const showPlayers = useMediaQuery("(min-width: 1024px)");
 
@@ -50,8 +50,9 @@ const ImportGameBoard = ({ disabled = false, players = DEFAULT_PLAYERS }: Import
     cgRef.current.set({ viewOnly: disabled });
   }, [cgRef, disabled]);
 
-  const topSide: Side = color === "white" ? "black" : "white";
-  const bottomSide: Side = color === "white" ? "white" : "black";
+  // Rows follow the board when it's flipped
+  const topSide: Side = orientation === "white" ? "black" : "white";
+  const bottomSide: Side = orientation;
   const row = (side: Side) => ({
     name: players[side].name,
     ...(players[side].rating !== undefined && { startingRating: players[side].rating }),

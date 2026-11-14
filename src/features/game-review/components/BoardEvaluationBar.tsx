@@ -3,6 +3,7 @@ import { EvaluationBar, EvaluationBarView, useAnalysis } from "@/features/engine
 import type { PositionEval } from "../types";
 import { useGameReview } from "../contexts/GameReviewContext";
 import { evalBarValue } from "../utils/evalBar";
+import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 
 /**
  * The evaluation bar beside an analysis board: the live engine's while it's
@@ -12,6 +13,8 @@ import { evalBarValue } from "../utils/evalBar";
  */
 export const BoardEvaluationBar = () => {
   const { engineEnabled } = useAnalysis();
+  // Turns with the board: the bottom side's share fills from the bottom
+  const { orientation } = useChessBoardContext();
   const reviewState = useGameReview();
   const reviewed =
     reviewState?.status === "ready" && reviewState.review && reviewState.currentIndex >= 0
@@ -22,7 +25,7 @@ export const BoardEvaluationBar = () => {
   const [held, setHeld] = useState<PositionEval | undefined>(reviewed);
   if (reviewed && reviewed !== held) setHeld(reviewed);
 
-  if (engineEnabled) return <EvaluationBar />;
+  if (engineEnabled) return <EvaluationBar bottom={orientation} />;
   if (reviewState?.status !== "ready") return null;
   const shown = reviewed ?? held;
   if (!shown) return null;
@@ -32,6 +35,7 @@ export const BoardEvaluationBar = () => {
     <EvaluationBarView
       {...value}
       muted={!reviewed}
+      bottom={orientation}
       spokenLabel={reviewed ? value.spokenLabel : `${value.spokenLabel}, before this variation`}
     />
   );

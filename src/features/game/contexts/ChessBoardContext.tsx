@@ -13,7 +13,14 @@ interface ChessBoardContextValue {
   setTurn: (turn: PlayerColor) => void;
   /** Half-moves played, as of the last setTurn (re-renders on resyncs) */
   ply: number;
+  /** The player's side (whose pieces move in a game) */
   color: PlayerColor;
+  /** The side shown at the bottom: color until the board is flipped */
+  orientation: PlayerColor;
+  /** Turns the board around, for looking at it from the other side */
+  flipBoard: () => void;
+  /** Puts this side at the bottom (use instead of cg.set({ orientation })) */
+  setOrientation: (side: PlayerColor) => void;
   isArchiveMode: boolean;
   /** True while the player can't move (game over, disconnected) */
   inputLocked: boolean;
@@ -48,6 +55,9 @@ export const ChessBoardProvider = ({
     setTurn: chessBoard.setTurn,
     ply: chessBoard.ply,
     color,
+    orientation: chessBoard.orientation,
+    flipBoard: chessBoard.flipBoard,
+    setOrientation: chessBoard.setOrientation,
     isArchiveMode,
     inputLocked: chessBoard.inputLocked,
     inputLockedRef: chessBoard.inputLockedRef,
@@ -60,6 +70,9 @@ export const ChessBoardProvider = ({
     chessBoard.setTurn,
     chessBoard.ply,
     color,
+    chessBoard.orientation,
+    chessBoard.flipBoard,
+    chessBoard.setOrientation,
     isArchiveMode,
     chessBoard.inputLocked,
     chessBoard.inputLockedRef,

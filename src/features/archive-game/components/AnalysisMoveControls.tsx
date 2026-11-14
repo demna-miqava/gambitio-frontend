@@ -7,11 +7,13 @@ import {
   ChevronsRight,
   Copy,
   CornerUpLeft,
+  FlipVertical2,
   MoreHorizontal,
   RotateCcw,
   Trash2,
 } from "lucide-react";
 import { useArchiveGame } from "../contexts/ArchiveGameContext";
+import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -43,6 +45,7 @@ export const AnalysisMoveControls = () => {
     hasAnalysis,
     root,
   } = useArchiveGame();
+  const { flipBoard } = useChessBoardContext();
 
   const controls = useMemo<MoveControl[]>(
     () => [
@@ -130,6 +133,9 @@ export const AnalysisMoveControls = () => {
             <DropdownMenuSeparator />
           </>
         )}
+        <DropdownMenuItem onSelect={flipBoard}>
+          <FlipVertical2 /> Flip board
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={copyPgn} disabled={root.children.length === 0}>
           <Copy /> Copy PGN
         </DropdownMenuItem>

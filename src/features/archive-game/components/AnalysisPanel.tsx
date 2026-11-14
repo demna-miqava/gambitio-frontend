@@ -7,6 +7,7 @@ import {
   GameModeMovesList,
 } from "@/features/game/modes/GameModeContext";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
+import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 import { useArchiveGame } from "@/features/archive-game/contexts/ArchiveGameContext";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -159,6 +160,8 @@ export const AnalysisPanel = ({ onLoadAnotherPgn }: { onLoadAnotherPgn?: () => v
   const [moreLines, setMoreLines] = useState(false);
   const linesId = useId();
   useBestMoveArrow(currentNode.fen);
+  const { flipBoard } = useChessBoardContext();
+  useFlipBoardKey(flipBoard);
 
   return (
     <div className="flex w-full flex-col gap-3 lg:h-full lg:min-h-0 lg:gap-0 lg:overflow-hidden lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:shadow-sm">

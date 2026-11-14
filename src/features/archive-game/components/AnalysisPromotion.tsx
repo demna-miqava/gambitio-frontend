@@ -5,7 +5,7 @@ import { useArchiveGame } from "../contexts/ArchiveGameContext";
 
 /** Promotion picker for analysis boards (either side can promote). */
 export const AnalysisPromotion = () => {
-  const { color: orientation } = useChessBoardContext();
+  const { orientation } = useChessBoardContext();
   const { pendingPromotion, handlePromotionSelect, cancelPromotion } = useArchiveGame();
   const ref = useRef<HTMLDivElement>(null);
 

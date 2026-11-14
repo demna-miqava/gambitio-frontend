@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { BookMarked, Copy, Download, FileUp, MoreHorizontal, RotateCcw, UsersRound } from "lucide-react";
+import { BookMarked, Copy, Download, FileUp, FlipVertical2, MoreHorizontal, RotateCcw, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAnalysis } from "@/features/engine-analysis";
+import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { cn } from "@/lib/utils";
 import { useArchiveGame } from "../contexts/ArchiveGameContext";
 import { useLineActions } from "../hooks/useLineActions";
@@ -62,12 +63,14 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
   const { engineEnabled, setEngineEnabled } = useAnalysis();
   const noMoves = root.children.length === 0;
   const lineActions = useLineActions();
+  const { flipBoard } = useChessBoardContext();
 
   return (
     <div className={cn("h-13 shrink-0 items-center gap-1 border-b border-border/70 pr-3 pl-4", className)}>
       <h2 className="mr-auto truncate text-sm font-semibold text-foreground">Analysis</h2>
 
       <div className="flex items-center">
+        <IconAction icon={FlipVertical2} label="Flip board" hint="Flip board (F)" onClick={flipBoard} />
         <IconAction icon={Copy} label="Copy PGN" hint="Copy PGN with variations" onClick={copyPgn} disabled={noMoves} />
         <IconAction
           icon={RotateCcw}

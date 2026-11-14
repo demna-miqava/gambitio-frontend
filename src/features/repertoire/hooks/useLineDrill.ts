@@ -13,6 +13,7 @@ import { BOARD_SETTING_DEFAULTS } from "@/features/play-bots/hooks/useBotGame";
 import type { RepertoireLine } from "@/services/repertoire";
 import { isPlayerPly, moveSquares, otherLinePlaying } from "../utils/drill";
 import { formatMoves } from "../utils/lines";
+import { useBoardOrientation } from "@/features/game/hooks/useBoardOrientation";
 
 /** Pause before the opponent's reply, so the player sees their own move land. */
 const REPLY_DELAY_MS = 450;
@@ -43,6 +44,8 @@ export const useLineDrill = (
 ) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
+  // The line's colour at the bottom until the player flips the board
+  const { orientation, flip } = useBoardOrientation(cgRef, line.color);
   const chessRef = useRef(new Chess());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const finishRef = useRef(onFinish);
@@ -286,5 +289,7 @@ export const useLineDrill = (
     playedText: formatMoves(line.moves.slice(0, ply)),
     showHint,
     submitTypedMove,
+    orientation,
+    flip,
   };
 };

@@ -40,7 +40,8 @@ export const EngineAnalysisPanel = ({
     numLines,
     ...(fen && { fen }),
   });
-  const { color } = useChessBoardContext();
+  // Scores from the side at the bottom of the board, like the evaluation bar
+  const { orientation } = useChessBoardContext();
   // Only update displayData when analysisFen changes (new analysis arrives)
   // This keeps showing old lines until new analysis is ready
   const displayData = useMemo(() => {
@@ -74,7 +75,7 @@ export const EngineAnalysisPanel = ({
               key={line.multipv}
               line={line}
               fen={displayData.fen}
-              playerColor={color}
+              playerColor={orientation}
               // Lines for an older position can't be played from this one
               {...(onPlayMove && displayData.fen === fen && line.pv[0]
                 ? { onPlay: () => onPlayMove(line.pv[0]!) }

@@ -15,7 +15,7 @@ import { useShownLine } from "@/features/game/hooks/useShownLine";
 
 const CurrentGameBoard = () => {
   const { image } = useUser();
-  const { boardRef, turn, color } = useChessBoardContext();
+  const { boardRef, turn, color, orientation } = useChessBoardContext();
   const {
     game,
     player,
@@ -85,54 +85,59 @@ const CurrentGameBoard = () => {
   const opponentClockActive = clockRunning && turn !== color;
   const playerClockActive = clockRunning && turn === color;
 
+  const opponentRow = {
+    name: opponentUsername,
+    startingRating: opponentRatings.startingRating,
+    newRating: opponentRatings.newRating,
+    ratingChange: gameEnded ? opponentRatings.ratingChange : undefined,
+    avatar: (
+      <PlayerAvatar
+        username={opponentUsername}
+        avatarUrl={opponent.avatarUrl}
+        isOpponent
+        size="sm"
+      />
+    ),
+  };
+  const playerRow = {
+    name: username,
+    startingRating: playerRatings.startingRating,
+    newRating: playerRatings.newRating,
+    ratingChange: gameEnded ? playerRatings.ratingChange : undefined,
+    avatar: <PlayerAvatar username={username} avatarUrl={image} size="sm" />,
+  };
+  const opponentClock = (
+    <div className="flex shrink-0 items-center gap-1">
+      <GiveTimeButton />
+      <Clock
+        startingTime={time}
+        isActive={opponentClockActive}
+        onTimeout={opponentClockActive ? handleTimeout : undefined}
+        gameEnded={gameEnded}
+        serverTimeLeft={color === "white" ? blackTimeLeft : whiteTimeLeft}
+      />
+    </div>
+  );
+  const playerClock = (
+    <Clock
+      startingTime={time}
+      isActive={playerClockActive}
+      onTimeout={playerClockActive ? handleTimeout : undefined}
+      gameEnded={gameEnded}
+      serverTimeLeft={color === "white" ? whiteTimeLeft : blackTimeLeft}
+    />
+  );
+  // The player is at the bottom unless they flipped the board
+  const flipped = orientation !== color;
+
   return (
     <BoardLayout
       boardRef={boardRef}
-      material={{ fen: shownLine[shownLine.length - 1], bottom: color }}
-      topPlayer={{
-        name: opponentUsername,
-        startingRating: opponentRatings.startingRating,
-        newRating: opponentRatings.newRating,
-        ratingChange: gameEnded ? opponentRatings.ratingChange : undefined,
-        avatar: (
-          <PlayerAvatar
-            username={opponentUsername}
-            avatarUrl={opponent.avatarUrl}
-            isOpponent
-            size="sm"
-          />
-        ),
-      }}
-      bottomPlayer={{
-        name: username,
-        startingRating: playerRatings.startingRating,
-        newRating: playerRatings.newRating,
-        ratingChange: gameEnded ? playerRatings.ratingChange : undefined,
-        avatar: (
-          <PlayerAvatar username={username} avatarUrl={image} size="sm" />
-        ),
-      }}
-      topPlayerClock={
-        <div className="flex shrink-0 items-center gap-1">
-          <GiveTimeButton />
-          <Clock
-            startingTime={time}
-            isActive={opponentClockActive}
-            onTimeout={opponentClockActive ? handleTimeout : undefined}
-            gameEnded={gameEnded}
-            serverTimeLeft={color === "white" ? blackTimeLeft : whiteTimeLeft}
-          />
-        </div>
-      }
-      bottomPlayerClock={
-        <Clock
-          startingTime={time}
-          isActive={playerClockActive}
-          onTimeout={playerClockActive ? handleTimeout : undefined}
-          gameEnded={gameEnded}
-          serverTimeLeft={color === "white" ? whiteTimeLeft : blackTimeLeft}
-        />
-      }
+      material={{ fen: shownLine[shownLine.length - 1], bottom: orientation }}
+      topPlayer={flipped ? playerRow : opponentRow}
+      bottomPlayer={flipped ? opponentRow : playerRow}
+      topPlayerClock={flipped ? playerClock : opponentClock}
+      bottomPlayerClock={flipped ? opponentClock : playerClock}
     >
       <ConnectionBanner status={connectionStatus} />
       {pendingPromotion && (
@@ -141,7 +146,7 @@ const CurrentGameBoard = () => {
           square={pendingPromotion.to}
           onSelect={handlePromotionSelect}
           onCancel={cancelPromotion}
-          boardOrientation={color}
+          boardOrientation={orientation}
         />
       )}
     </BoardLayout>

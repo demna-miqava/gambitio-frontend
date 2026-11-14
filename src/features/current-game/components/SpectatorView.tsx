@@ -7,6 +7,7 @@ import Clock from "@/features/game/components/Clock";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { GameLayout } from "@/features/game/components/GameLayout";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
+import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 import {
   GameModeMoveControls,
   GameModeMovesList,
@@ -23,7 +24,6 @@ import { useLiveSeries } from "@/features/series/hooks/useLiveSeries";
 import { SeriesStrip } from "@/features/series/components/SeriesStrip";
 
 // Widgets where "f" is typing, not a shortcut
-const TYPING_TARGETS = "input, textarea, select, [contenteditable='true']";
 
 /**
  * Someone else's live game, read-only: the board (white at the bottom until
@@ -45,17 +45,7 @@ export const SpectatorView = () => {
     cgRef.current?.set({ orientation });
   }, [cgRef, orientation]);
 
-  // "f" flips the board, as on most chess sites
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "f" || event.defaultPrevented) return;
-      if (event.altKey || event.ctrlKey || event.metaKey) return;
-      if (event.target instanceof Element && event.target.closest(TYPING_TARGETS)) return;
-      flip();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [flip]);
+  useFlipBoardKey(flip);
 
   return (
     <GameLayout

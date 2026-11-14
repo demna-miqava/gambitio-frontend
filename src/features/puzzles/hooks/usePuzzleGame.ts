@@ -73,7 +73,7 @@ export const usePuzzleGame = ({
   const currentPuzzle = puzzle;
 
   // inputLockedRef: Rush keeps the board locked outside a running clock
-  const { chessRef, cgRef, inputLockedRef } = useChessBoardContext();
+  const { chessRef, cgRef, inputLockedRef, setOrientation } = useChessBoardContext();
   const { playSound, playGenericSound } = useChessSound();
 
   // Pending reply/solution timers. Cleared when the board resets so a reply
@@ -92,6 +92,8 @@ export const usePuzzleGame = ({
   }, []);
   useEffect(() => clearTimers, [clearTimers]);
 
+  // The puzzle the board was last turned to the solver's side for
+  const orientedPuzzleRef = useRef<Puzzle["id"] | null>(null);
   const resetBoard = useCallback(
     (newPuzzle: Puzzle | null) => {
       if (!newPuzzle) return;
@@ -115,9 +117,14 @@ export const usePuzzleGame = ({
 
       if (cgRef.current) {
         cgRef.current.setAutoShapes([]);
+        // A new puzzle starts from the solver's side, even after a flip; a
+        // retry of the same one keeps the view
+        if (orientedPuzzleRef.current !== newPuzzle.id) {
+          orientedPuzzleRef.current = newPuzzle.id;
+          setOrientation(playerColor);
+        }
         cgRef.current.set({
           fen: newPuzzle.fen,
-          orientation: playerColor,
           turnColor: playerColor,
           lastMove: undefined,
           check: chess.inCheck(),
@@ -128,7 +135,7 @@ export const usePuzzleGame = ({
         });
       }
     },
-    [chessRef, cgRef, inputLockedRef, userColor, isSystemMove, clearTimers, setWrongMove, setRevealed]
+    [chessRef, cgRef, inputLockedRef, setOrientation, userColor, isSystemMove, clearTimers, setWrongMove, setRevealed]
   );
 
   const playOpponentMove = useCallback(
@@ -404,7 +411,6 @@ export const usePuzzleGame = ({
     setRevealed(true);
     api.set({
       fen: puzzle.fen,
-      orientation: playerColor,
       turnColor: playerColor,
       lastMove: undefined,
       check: chess.inCheck(),

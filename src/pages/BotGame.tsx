@@ -5,6 +5,8 @@ import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { GameLayout } from "@/features/game/components/GameLayout";
 import { PromotionSelector } from "@/features/game/components/PromotionSelector";
 import { MoveNavigationControls } from "@/features/game/components/MoveControls";
+import { FlipBoardButton } from "@/features/game/components/FlipBoardButton";
+import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 import { MovesListView } from "@/features/game/components/MovesList";
 import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { ActionButton } from "@/features/current-game/components/ActionButton";
@@ -55,8 +57,11 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
     resign,
     submitTypedMove,
     navigation,
+    orientation,
+    flip,
     isPlayerTurn,
   } = useBotGame(bot, color);
+  useFlipBoardKey(flip);
 
   // Bot games run in the browser and are only saved once finished, so
   // leaving mid-game throws it away
@@ -137,25 +142,28 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
 
   const shownLine = positionsAlong(history, navigation.currentIndex);
 
+  const botRow = {
+    name: bot.name,
+    startingRating: bot.rating,
+    avatar: <BotAvatar rating={bot.rating} className="size-8 rounded-lg" />,
+  };
+  const botStatus = thinking ? (
+    <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Thinking" />
+  ) : undefined;
+  const playerRow = {
+    name: username,
+    avatar: <PlayerAvatar username={username} avatarUrl={image} size="sm" />,
+  };
+
   const board = (
     <BoardLayout
       boardRef={boardRef}
       boardLabel={boardLabel}
-      material={{ fen: shownLine[shownLine.length - 1], bottom: color }}
-      topPlayer={{
-        name: bot.name,
-        startingRating: bot.rating,
-        avatar: <BotAvatar rating={bot.rating} className="size-8 rounded-lg" />,
-      }}
-      topPlayerClock={
-        thinking ? (
-          <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Thinking" />
-        ) : undefined
-      }
-      bottomPlayer={{
-        name: username,
-        avatar: <PlayerAvatar username={username} avatarUrl={image} size="sm" />,
-      }}
+      material={{ fen: shownLine[shownLine.length - 1], bottom: orientation }}
+      // The player is at the bottom unless they flipped the board
+      {...(orientation === color
+        ? { topPlayer: botRow, topPlayerClock: botStatus, bottomPlayer: playerRow }
+        : { topPlayer: playerRow, bottomPlayer: botRow, bottomPlayerClock: botStatus })}
     >
       {pendingPromotion && (
         <PromotionSelector
@@ -163,7 +171,7 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
           square={pendingPromotion.to}
           onSelect={selectPromotion}
           onCancel={cancelPromotion}
-          boardOrientation={color}
+          boardOrientation={orientation}
         />
       )}
     </BoardLayout>
@@ -199,7 +207,12 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
       )}
 
       <div className="space-y-2 lg:border-t lg:border-border/70 lg:pt-3">
-        <MoveNavigationControls {...navigation} />
+        <div className="flex gap-1.5">
+          <div className="min-w-0 flex-1">
+            <MoveNavigationControls {...navigation} />
+          </div>
+          <FlipBoardButton onFlip={flip} orientation={orientation} />
+        </div>
         {!result ? (
           <ActionButton
             variant="resign"

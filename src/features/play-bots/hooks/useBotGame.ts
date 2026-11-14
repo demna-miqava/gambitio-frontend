@@ -14,6 +14,7 @@ import { attachTouchDragAssist } from "@/features/game/utils/touchDragAssist";
 import { BotEngine } from "../services/botEngine";
 import type { Bot } from "../constants/bots";
 import { botThinkDelayMs } from "../utils/thinkDelay";
+import { useBoardOrientation } from "@/features/game/hooks/useBoardOrientation";
 
 /** How a bot game ended, in the server's terms (POST /games/bot) */
 export type BotGameEndReason =
@@ -82,6 +83,8 @@ const lastMoveOf = (chess: Chess): [Key, Key] | undefined => {
 export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
+  // The player's side at the bottom until they flip the board
+  const { orientation, flip } = useBoardOrientation(cgRef, playerColor);
   const chessRef = useRef(new Chess());
   const engineRef = useRef<BotEngine | null>(null);
   const { settings } = useSettings();
@@ -359,6 +362,8 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
     resign,
     submitTypedMove,
     navigation,
+    orientation,
+    flip,
     isPlayerTurn:
       !result && chessRef.current.turn() === playerCode && !thinking,
   };

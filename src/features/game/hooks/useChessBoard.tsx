@@ -8,6 +8,7 @@ import { BOARD_CONFIG } from "../constants/board-config";
 import { useSettings } from "@/features/settings/SettingsContext";
 import { useChessSound } from "../contexts/ChessSoundContext";
 import { attachTouchDragAssist } from "../utils/touchDragAssist";
+import { useBoardOrientation } from "./useBoardOrientation";
 
 interface UseChessBoardOptions {
   color: PlayerColor;
@@ -135,6 +136,9 @@ export const useChessBoard = ({ color, viewOnly = false }: UseChessBoardOptions)
     if (locked) cgRef.current?.stop();
   }, []);
 
+  // The side at the bottom: the player's colour until the board is flipped
+  const { orientation, flip: flipBoard, setOrientation } = useBoardOrientation(cgRef, color);
+
   return {
     boardRef,
     chessRef,
@@ -145,5 +149,8 @@ export const useChessBoard = ({ color, viewOnly = false }: UseChessBoardOptions)
     inputLocked,
     inputLockedRef,
     setInputLocked,
+    orientation,
+    flipBoard,
+    setOrientation,
   };
 };

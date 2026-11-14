@@ -14,6 +14,8 @@ import { useRecordPractice } from "../hooks/useRepertoire";
 import { dueLabel, isDue, lineAccuracy, practiceOrder } from "../utils/lines";
 import { MoveText } from "./MoveText";
 import { RepertoireNav } from "./RepertoireNav";
+import { FlipBoardButton } from "@/features/game/components/FlipBoardButton";
+import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 
 const FeedbackNote = ({ feedback, failed }: { feedback: DrillFeedback | null; failed: boolean }) => {
   if (!feedback) return null;
@@ -63,6 +65,7 @@ const LineDrill = ({ line, lines, nextLine, onNext, onRestart }: DrillProps) => 
     [line.id, record.mutate]
   );
   const drill = useLineDrill(line, lines, onFinish);
+  useFlipBoardKey(drill.flip);
   const accuracy = lineAccuracy(line);
 
   const board = (
@@ -122,13 +125,14 @@ const LineDrill = ({ line, lines, nextLine, onNext, onRestart }: DrillProps) => 
         <>
           <FeedbackNote feedback={drill.feedback} failed={drill.failed} />
           <TypedMoveInput onSubmit={drill.submitTypedMove} />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
             <Button variant="outline" size="md" onClick={drill.showHint} disabled={!drill.isPlayerTurn}>
               <Lightbulb aria-hidden="true" /> Show move
             </Button>
             <Button variant="outline" size="md" onClick={onRestart}>
               <RotateCcw aria-hidden="true" /> Restart
             </Button>
+            <FlipBoardButton onFlip={drill.flip} orientation={drill.orientation} className="size-10" />
           </div>
           {nextLine && (
             <Button variant="ghost" size="sm" className="self-start" onClick={() => onNext(nextLine)}>

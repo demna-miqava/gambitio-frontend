@@ -18,6 +18,9 @@ import { useShownLine } from "@/features/game/hooks/useShownLine";
 import { useLiveSeries } from "@/features/series/hooks/useLiveSeries";
 import { SeriesStrip } from "@/features/series/components/SeriesStrip";
 import { useUser } from "@/hooks/useUser";
+import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
+import { FlipBoardButton } from "@/features/game/components/FlipBoardButton";
+import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 
 export const MovesContainer = () => {
   const { game, gameEnded, isConnected } = useLiveGame();
@@ -49,6 +52,8 @@ export const MovesContainer = () => {
   const { id: viewerId } = useUser();
   // A series game shows the series score; the rematch becomes "Next game"
   const { series, seriesGame, rematchGameId } = useLiveSeries(game);
+  const { orientation, flipBoard } = useChessBoardContext();
+  useFlipBoardKey(flipBoard);
 
   return (
     <div className="flex flex-col gap-3 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
@@ -84,7 +89,12 @@ export const MovesContainer = () => {
       )}
 
       <div className="space-y-2 lg:border-t lg:border-border/70 lg:pt-3">
-        <GameModeMoveControls />
+        <div className="flex gap-1.5">
+          <div className="min-w-0 flex-1">
+            <GameModeMoveControls />
+          </div>
+          <FlipBoardButton onFlip={flipBoard} orientation={orientation} />
+        </div>
         <TypeMoveInput />
         {gameEnded ? (
           <div className="space-y-3 pt-1">

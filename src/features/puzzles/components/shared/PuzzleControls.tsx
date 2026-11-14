@@ -6,12 +6,17 @@ import { PuzzleAnalysis } from "./PuzzleAnalysis";
 import { usePuzzleExploration } from "../../hooks/usePuzzleExploration";
 import { PuzzleFeedNotice } from "./PuzzleFeedNotice";
 import { PuzzleSolutionLine } from "./PuzzleSolutionLine";
+import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
+import { FlipBoardButton } from "@/features/game/components/FlipBoardButton";
+import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 
 export const PuzzleControls = () => {
   const context = usePuzzle();
   const { status, onRetry, onNextPuzzle, puzzle, onHint, onShowSolution, mode, wrongMove, revealed } =
     context;
   const exploration = usePuzzleExploration(status, puzzle?.id);
+  const { orientation, flipBoard } = useChessBoardContext();
+  useFlipBoardKey(flipBoard);
   // Timed modes only get the engine once the run is over
   const engineAllowed = mode === "infinite" || context.isGameOver;
   // Rush and Survival move on by themselves after each result
@@ -31,14 +36,19 @@ export const PuzzleControls = () => {
 
   return (
     <section className="w-full space-y-3 lg:rounded-2xl lg:border lg:border-border/70 lg:bg-card lg:p-4">
-      <PuzzleCardHeader
-        status={status}
-        side={side}
-        rating={puzzle?.rating}
-        wrongMove={status === "failed" ? wrongMove?.san : undefined}
-        revealed={revealed}
-        autoAdvance={autoAdvance}
-      />
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <PuzzleCardHeader
+            status={status}
+            side={side}
+            rating={puzzle?.rating}
+            wrongMove={status === "failed" ? wrongMove?.san : undefined}
+            revealed={revealed}
+            autoAdvance={autoAdvance}
+          />
+        </div>
+        <FlipBoardButton onFlip={flipBoard} orientation={orientation} />
+      </div>
 
       {!autoAdvance && status === "success" && <PuzzleSolutionLine puzzle={puzzle} />}
 

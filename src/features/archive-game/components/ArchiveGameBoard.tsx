@@ -28,27 +28,28 @@ const ArchiveGameBoard = ({
   blackPlayer,
   botSide,
 }: ArchiveGameBoardProps) => {
-  const { boardRef, color } = useChessBoardContext();
+  // Rows follow the board when it's flipped
+  const { boardRef, orientation } = useChessBoardContext();
   const { currentNode } = useArchiveGame();
 
-  const topPlayer = color === "white" ? blackPlayer : whitePlayer;
-  const bottomPlayer = color === "white" ? whitePlayer : blackPlayer;
+  const topSide = orientation === "white" ? "black" : "white";
+  const topPlayer = topSide === "white" ? whitePlayer : blackPlayer;
+  const bottomPlayer = topSide === "white" ? blackPlayer : whitePlayer;
 
   return (
     <BoardLayout
       boardRef={boardRef}
       boardLabel={boardLabel(currentNode)}
-      material={{ fen: currentNode.fen, bottom: color }}
+      material={{ fen: currentNode.fen, bottom: orientation }}
       topPlayer={{
         name: topPlayer.username,
         startingRating: topPlayer.rating,
-        avatar: botSide === (color === "white" ? "black" : "white") ? (
+        avatar: botSide === topSide ? (
           <BotAvatar rating={topPlayer.rating} className="size-8 rounded-lg" />
         ) : (
           <PlayerAvatar
             username={topPlayer.username}
             avatarUrl={topPlayer.avatarUrl}
-            isOpponent={color === "white"}
             size="sm"
           />
         ),
@@ -56,13 +57,12 @@ const ArchiveGameBoard = ({
       bottomPlayer={{
         name: bottomPlayer.username,
         startingRating: bottomPlayer.rating,
-        avatar: botSide === color ? (
+        avatar: botSide === orientation ? (
           <BotAvatar rating={bottomPlayer.rating} className="size-8 rounded-lg" />
         ) : (
           <PlayerAvatar
             username={bottomPlayer.username}
             avatarUrl={bottomPlayer.avatarUrl}
-            isOpponent={color === "black"}
             size="sm"
           />
         ),
