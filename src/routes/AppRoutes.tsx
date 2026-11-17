@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { AppLayout } from "@/components/AppLayout";
+import { FairPlayGate } from "@/components/active-game/FairPlayGate";
 import {
   AnalysisBoard,
   ArchiveGame,
@@ -46,22 +47,25 @@ export const AppRoutes = () => {
         </Route>
         <Route path={ROUTES.PLAY} element={<Play />} />
         <Route path={ROUTES.PLAY_BOTS} element={<PlayBots />} />
-        <Route path={ROUTES.BOT_GAME} element={<BotGame />} />
         <Route path={ROUTES.GAME} element={<CurrentGame />} />
-        <Route path={ROUTES.ARCHIVE_GAME} element={<ArchiveGame />} />
         <Route path={ROUTES.WATCH} element={<Watch />} />
         <Route path={ROUTES.SETTINGS} element={<Settings />} />
         <Route path={ROUTES.PUZZLES} element={<PuzzlesLanding />} />
-        <Route path={ROUTES.PUZZLE_MODE} element={<PuzzleModePage />} />
-        <Route path={ROUTES.TOOLS.IMPORT_GAME} element={<ImportGame />} />
-        <Route path={ROUTES.TOOLS.ANALYSIS_BOARD} element={<AnalysisBoard />} />
         <Route path={ROUTES.LEADERBOARD} element={<Leaderboard />} />
         <Route path={ROUTES.SERIES} element={<Series />} />
-        <Route path={ROUTES.REPERTOIRE} element={<Repertoire />} />
         <Route path={ROUTES.STUDY} element={<StudyRooms />} />
-        <Route path={ROUTES.STUDY_ROOM} element={<StudyRoom />} />
         <Route path={ROUTES.ENDGAMES} element={<EndgameLab />} />
-        <Route path={ROUTES.ENDGAME_EXERCISE} element={<EndgameExercise />} />
+        {/* Engine, analysis and opening preparation: closed while you're in a live game */}
+        <Route element={<FairPlayGate />}>
+          <Route path={ROUTES.BOT_GAME} element={<BotGame />} />
+          <Route path={ROUTES.ARCHIVE_GAME} element={<ArchiveGame />} />
+          <Route path={ROUTES.PUZZLE_MODE} element={<PuzzleModePage />} />
+          <Route path={ROUTES.TOOLS.IMPORT_GAME} element={<ImportGame />} />
+          <Route path={ROUTES.TOOLS.ANALYSIS_BOARD} element={<AnalysisBoard />} />
+          <Route path={ROUTES.ENDGAME_EXERCISE} element={<EndgameExercise />} />
+          <Route path={ROUTES.STUDY_ROOM} element={<StudyRoom />} />
+          <Route path={ROUTES.REPERTOIRE} element={<Repertoire />} />
+        </Route>
         {/* Signed-out users never get here: AuthGuard sends them to sign in */}
         <Route path="*" element={<NotFoundPage />} />
       </Route>

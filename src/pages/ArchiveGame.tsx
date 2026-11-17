@@ -2,8 +2,8 @@ import { ChessBoardProvider } from "@/features/game/contexts/ChessBoardContext";
 import { ArchiveGameProvider } from "@/features/archive-game/contexts/ArchiveGameContext";
 import { GameLoadError } from "@/features/archive-game/components/GameLoadError";
 import { EngineAnalysisProvider } from "@/features/engine-analysis";
-import { useParams, useSearchParams } from "react-router-dom";
-import { REVIEW_PARAM } from "@/constants/routes";
+import { Navigate, useParams, useSearchParams } from "react-router-dom";
+import { REVIEW_PARAM, getGameRoute } from "@/constants/routes";
 import { useGameData } from "@/features/archive-game/hooks/useGameData";
 import { useUser } from "@/hooks/useUser";
 import type { PlayerColor } from "@/features/game/types/game.types";
@@ -40,6 +40,12 @@ const ArchiveGame = () => {
 
   if (error || !gameData) {
     return <GameLoadError error={error} onRetry={() => refetch()} />;
+  }
+
+  // A game still being played has no analysis view, for anyone: it would put
+  // the engine on a live position. It's shown on the live page instead.
+  if (gameData.status === "in_progress") {
+    return <Navigate to={getGameRoute(gameData.id)} replace />;
   }
 
   // Players see the board from their side; everyone else from white's
