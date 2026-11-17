@@ -40,7 +40,6 @@ import {
   QKEY_USER_STATS,
   QKEY_USER_STATS_SUMMARY,
 } from "@/constants/queryKeys";
-import { toast } from "sonner";
 
 interface PendingPromotion {
   from: Square;
@@ -78,6 +77,7 @@ interface LiveGameContextValue {
   announce: (text: string) => void;
   /** Adds time to the opponent's clock (see GIVE_TIME_SECONDS). False if not sent. */
   giveTime: () => boolean;
+  receivedTime: { seconds: number } | null;
 }
 
 const LiveGameContext = createContext<LiveGameContextValue | null>(null);
@@ -117,6 +117,13 @@ export const LiveGameProvider = ({
   const [pendingPromotion, setPendingPromotion] =
     useState<PendingPromotion | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  const [receivedTime, setReceivedTime] = useState<{ seconds: number } | null>(null);
+
+  useEffect(() => {
+    if (!receivedTime) return;
+    const timeout = setTimeout(() => setReceivedTime(null), 4000);
+    return () => clearTimeout(timeout);
+  }, [receivedTime]);
   // When this player's clock last started on this device (see useLiveGameMessages)
   const turnStartedAtRef = useRef<number | null>(null);
 
@@ -365,8 +372,7 @@ export const LiveGameProvider = ({
       if (spectating) {
         announce(`${giver.username} gave ${taker.username} ${seconds} seconds`);
       } else if (receiver === color) {
-        // One toast however many clicks: each replaces the last
-        toast(`${giver.username} gave you ${seconds} seconds`, { id: "time_added" });
+        setReceivedTime({ seconds });
         announce(`${giver.username} gave you ${seconds} seconds`);
       } else {
         announce(`You gave ${taker.username} ${seconds} seconds`);
@@ -423,6 +429,7 @@ export const LiveGameProvider = ({
       announcement,
       announce,
       giveTime,
+      receivedTime,
       whiteTimeLeft,
       blackTimeLeft,
     }),
@@ -444,6 +451,7 @@ export const LiveGameProvider = ({
       announcement,
       announce,
       giveTime,
+      receivedTime,
       whiteTimeLeft,
       blackTimeLeft,
     ]

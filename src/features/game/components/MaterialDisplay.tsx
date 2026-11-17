@@ -46,7 +46,7 @@ export const MaterialDisplay = memo(
       <span
         role="img"
         aria-label={label}
-        className={cn("flex min-w-0 items-center gap-1 overflow-hidden", className)}
+        className={cn("flex min-w-0 items-center gap-1 overflow-hidden rounded-md bg-(--board-light) px-1.5 py-0.5 ring-1 ring-(--board-frame)/15 ring-inset", className)}
       >
         {MATERIAL_PIECES.map((piece) => {
           const count = captured[piece];
@@ -60,11 +60,8 @@ export const MaterialDisplay = memo(
                   alt=""
                   draggable={false}
                   className={cn(
-                    "size-4 select-none sm:size-[1.125rem]",
-                    i > 0 && "-ml-2.5 sm:-ml-3",
-                    // Black pieces get a light rim so they read on dark cards
-                    capturedColor === "black" &&
-                      "dark:drop-shadow-[0_0_1px_rgb(255_255_255/0.55)]"
+                    "size-5 select-none",
+                    i > 0 && "-ml-2.5"
                   )}
                 />
               ))}
@@ -73,7 +70,7 @@ export const MaterialDisplay = memo(
         })}
         {advantage > 0 && (
           <span
-            className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground"
+            className="shrink-0 text-xs font-semibold tabular-nums text-(--board-frame)"
             aria-hidden="true"
           >
             +{advantage}

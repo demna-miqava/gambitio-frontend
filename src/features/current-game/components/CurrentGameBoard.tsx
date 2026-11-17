@@ -30,6 +30,7 @@ const CurrentGameBoard = () => {
     handlePromotionSelect,
     cancelPromotion,
     connectionStatus,
+    receivedTime,
   } = useLiveGame();
   const timeoutSentRef = useRef(false);
   const shownLine = useShownLine();
@@ -119,13 +120,21 @@ const CurrentGameBoard = () => {
     </div>
   );
   const playerClock = (
-    <Clock
-      startingTime={time}
-      isActive={playerClockActive}
-      onTimeout={playerClockActive ? handleTimeout : undefined}
-      gameEnded={gameEnded}
-      serverTimeLeft={color === "white" ? whiteTimeLeft : blackTimeLeft}
-    />
+    <div className="flex shrink-0 flex-col items-center">
+      <Clock
+        startingTime={time}
+        isActive={playerClockActive}
+        onTimeout={playerClockActive ? handleTimeout : undefined}
+        gameEnded={gameEnded}
+        serverTimeLeft={color === "white" ? whiteTimeLeft : blackTimeLeft}
+      />
+      <span
+        className="h-4 text-xs font-semibold tabular-nums text-emerald-700 dark:text-emerald-400"
+        aria-hidden="true"
+      >
+        {receivedTime ? `+${receivedTime.seconds}s received` : ""}
+      </span>
+    </div>
   );
   // The player is at the bottom unless they flipped the board
   const flipped = orientation !== color;
