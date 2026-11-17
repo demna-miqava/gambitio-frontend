@@ -101,7 +101,7 @@ const PaletteSetting = () => {
         }
         disabled={!settings}
         aria-label="Colours"
-        className="grid grid-cols-2 gap-2.5 lg:grid-cols-4"
+        className="grid grid-cols-2 gap-2.5 lg:grid-cols-3"
       >
         {PALETTES.map((option) => (
           <RadioGroupPrimitive.Item
