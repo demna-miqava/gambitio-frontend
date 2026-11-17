@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowUpDown, Eye, Microscope, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { PlayerPopover } from "@/features/profile/components/PlayerPopover";
 import Clock from "@/features/game/components/Clock";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { GameLayout } from "@/features/game/components/GameLayout";
@@ -89,11 +90,13 @@ const SpectatorBoard = ({ orientation }: { orientation: PlayerColor }) => {
       newRating: newRating ?? player.rating,
       ratingChange: gameEnded ? change : undefined,
       avatar: (
-        <PlayerAvatar
-          username={player.username}
-          avatarUrl={player.avatarUrl}
-          size="sm"
-        />
+        <PlayerPopover player={player}>
+          <PlayerAvatar
+            username={player.username}
+            avatarUrl={player.avatarUrl}
+            size="sm"
+          />
+        </PlayerPopover>
       ),
     };
   };

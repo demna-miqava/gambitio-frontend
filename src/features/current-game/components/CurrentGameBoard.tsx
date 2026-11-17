@@ -2,6 +2,7 @@ import { useUser } from "@/hooks/useUser";
 import Clock from "@/features/game/components/Clock";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
+import { PlayerPopover } from "@/features/profile/components/PlayerPopover";
 import { useRef, useMemo } from "react";
 import { useSettings } from "@/features/settings/SettingsContext";
 import { calculatePlayerRating } from "../utils/rating-helpers";
@@ -86,18 +87,27 @@ const CurrentGameBoard = () => {
   const opponentClockActive = clockRunning && turn !== color;
   const playerClockActive = clockRunning && turn === color;
 
+  // The players' cards open from their avatars. They follow the "ratings
+  // during a game" setting, and the profile opens in a new tab while the
+  // game is on so it isn't left.
+  const playerCard = {
+    showRatings: settings?.showRatingsDuringGameEnabled ?? false,
+    profileInNewTab: !gameEnded,
+  };
   const opponentRow = {
     name: opponentUsername,
     startingRating: opponentRatings.startingRating,
     newRating: opponentRatings.newRating,
     ratingChange: gameEnded ? opponentRatings.ratingChange : undefined,
     avatar: (
-      <PlayerAvatar
-        username={opponentUsername}
-        avatarUrl={opponent.avatarUrl}
-        isOpponent
-        size="sm"
-      />
+      <PlayerPopover player={opponent} {...playerCard}>
+        <PlayerAvatar
+          username={opponentUsername}
+          avatarUrl={opponent.avatarUrl}
+          isOpponent
+          size="sm"
+        />
+      </PlayerPopover>
     ),
   };
   const playerRow = {
@@ -105,7 +115,11 @@ const CurrentGameBoard = () => {
     startingRating: playerRatings.startingRating,
     newRating: playerRatings.newRating,
     ratingChange: gameEnded ? playerRatings.ratingChange : undefined,
-    avatar: <PlayerAvatar username={username} avatarUrl={image} size="sm" />,
+    avatar: (
+      <PlayerPopover player={player} {...playerCard}>
+        <PlayerAvatar username={username} avatarUrl={image} size="sm" />
+      </PlayerPopover>
+    ),
   };
   const opponentClock = (
     <div className="flex shrink-0 items-center gap-1">
