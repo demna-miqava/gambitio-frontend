@@ -7,6 +7,7 @@ import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 import { OpeningName } from "@/features/openings";
+import { EvaluationBar, useAnalysis } from "@/features/engine-analysis";
 import { describeMove } from "@/features/game/utils/describeMove";
 import type { StudyClientMessage, StudyRoomSnapshot } from "../types";
 import { useStudyBoard } from "../hooks/useStudyBoard";
@@ -17,6 +18,7 @@ import { StudyPeople } from "./StudyPeople";
 import { StudyMovesList } from "./StudyMovesList";
 import { StudyControls } from "./StudyControls";
 import { StudyComment } from "./StudyComment";
+import { StudyEngine } from "./StudyEngine";
 
 interface StudyRoomViewProps {
   snapshot: StudyRoomSnapshot;
@@ -50,6 +52,12 @@ export const StudyRoomView = ({
     send,
     resetKey: boardResetKey,
   });
+  const { engineEnabled } = useAnalysis();
+  // An engine line's first move, played in the room like a move on the board
+  const playEngineMove = useCallback(
+    (uci: string) => send({ type: "move", nodeId: node.id, uci }),
+    [send, node.id]
+  );
   const lineFens = [rootOf(state).fen, ...pathTo(state, node.id).map((id) => nodeOf(state, id)!.fen)];
 
   const copyPgn = useCallback(() => {
@@ -70,17 +78,23 @@ export const StudyRoomView = ({
     .join(". ");
 
   const board = (
-    <BoardLayout boardRef={boardRef} boardLabel={boardLabel}>
-      {pendingPromotion && (
-        <PromotionSelector
-          color={pendingPromotion.color}
-          square={pendingPromotion.to}
-          onSelect={selectPromotion}
-          onCancel={cancelPromotion}
-          boardOrientation={orientation}
-        />
-      )}
-    </BoardLayout>
+    <div className="flex w-full gap-3">
+      {/* The column is always there, so switching the engine doesn't move the board */}
+      <div className="game-layout-eval hidden w-7 self-stretch lg:block">
+        {engineEnabled && <EvaluationBar bottom={orientation} />}
+      </div>
+      <BoardLayout boardRef={boardRef} boardLabel={boardLabel}>
+        {pendingPromotion && (
+          <PromotionSelector
+            color={pendingPromotion.color}
+            square={pendingPromotion.to}
+            onSelect={selectPromotion}
+            onCancel={cancelPromotion}
+            boardOrientation={orientation}
+          />
+        )}
+      </BoardLayout>
+    </div>
   );
 
   const sidebar = (
@@ -113,6 +127,12 @@ export const StudyRoomView = ({
           members={members}
           present={present}
         />
+      </div>
+
+      {/* Phones: under the controls. Desktop: under the people (same order
+          as each; it follows both in the markup) */}
+      <div className="order-2 lg:shrink-0 lg:border-b lg:border-border lg:px-4 lg:py-2.5">
+        <StudyEngine fen={node.fen} onPlayMove={playEngineMove} />
       </div>
 
       <div className="order-3 flex flex-col rounded-xl bg-card lg:min-h-0 lg:flex-1 lg:rounded-none lg:bg-transparent">

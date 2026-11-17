@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { BookX } from "lucide-react";
 import { ChessBoardProvider } from "@/features/game/contexts/ChessBoardContext";
+import { EngineAnalysisProvider } from "@/features/engine-analysis";
 import { FullScreenLoader } from "@/components/FullScreenLoader";
 import { EmptyState } from "@/components/EmptyState";
 import { PageContainer } from "@/components/PageContainer";
@@ -52,16 +53,19 @@ const StudyRoomPage = ({ roomId }: { roomId: string | undefined }) => {
     // One board per room; the shared position is set by the room
     <ChessBoardProvider color="white" isArchiveMode key={id}>
       <h1 className="sr-only">Study room: {room.snapshot.room.name}</h1>
-      <StudyRoomView
-        snapshot={room.snapshot}
-        myId={myId}
-        connected={room.connected}
-        send={room.send}
-        goTo={room.goTo}
-        boardResetKey={room.boardResetKey}
-        activity={room.activity}
-        onExit={room.expectExit}
-      />
+      {/* Each person's own engine, off until they switch it on */}
+      <EngineAnalysisProvider>
+        <StudyRoomView
+          snapshot={room.snapshot}
+          myId={myId}
+          connected={room.connected}
+          send={room.send}
+          goTo={room.goTo}
+          boardResetKey={room.boardResetKey}
+          activity={room.activity}
+          onExit={room.expectExit}
+        />
+      </EngineAnalysisProvider>
     </ChessBoardProvider>
   );
 };
