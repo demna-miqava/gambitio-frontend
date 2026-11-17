@@ -57,6 +57,7 @@ Real-time online chess: play rated games against people or bots, review them wit
 - Full game history
 - Leaderboards per time control
 - Friends, online status and real-time notifications for challenges and friend requests
+- **Push notifications** for challenges, friend requests and game starts when the tab is in the background
 - Light and dark themes, responsive layout and keyboard-accessible controls
 
 ### Upcoming

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { preloadSignedInPages } from "@/routes/pages";
 import { StudyInviteToasts } from "@/features/study/components/StudyInviteToasts";
 import { FriendUpdates } from "@/features/friends/components/FriendUpdates";
+import { PushSync } from "@/features/push/PushSync";
 
 const MAIN_ID = "main-content";
 const SIDEBAR_WIDE_OPEN_KEY = "sidebarWideOpen";
@@ -83,6 +84,7 @@ export const AppLayout = () => {
             <AppSidebar />
             <StudyInviteToasts />
             <FriendUpdates />
+            <PushSync />
             <SidebarInset
               className={cn(
                 "md:[--app-top-bar-height:0px]",
