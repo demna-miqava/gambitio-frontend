@@ -108,6 +108,59 @@ describe("analysis tree", () => {
     expect(mainLine(Tree.pruneToGame(restored))).toEqual(["e4", "e5", "Nf3"]);
   });
 
+  test("restoring over a game keeps the promotion and marks game moves the same way", () => {
+    const game = parsePgn("1. e4 e5 2. Nf3").root;
+    const v = play(game, [game.children[0]!.id], "c5");
+    const saved = parsePgn(toPgn(Tree.promoteVariation(v.root, v.path))).root;
+    const restored = Tree.restoreOnGame(saved, game);
+    expect(mainLine(restored)).toEqual(["e4", "c5"]);
+    expect(mainLine(Tree.pruneToGame(restored))).toEqual(["e4", "e5", "Nf3"]);
+    expect(Tree.hasAnalysis(restored)).toBe(true);
+  });
+
+  test("an empty save doesn't hide the game's moves", () => {
+    const game = parsePgn("1. e4 e5 2. Nf3 Nc6").root;
+    const restored = Tree.restoreOnGame(parsePgn(toPgn(Tree.createRoot())).root, game);
+    expect(mainLine(restored)).toEqual(["e4", "e5", "Nf3", "Nc6"]);
+    expect(Tree.hasAnalysis(restored)).toBe(false);
+  });
+
+  test("a save that stops short of the game gets the later moves back", () => {
+    const early = parsePgn("1. e4 e5").root;
+    // Analysis on the early copy, away from where it stopped
+    const analysed = play(early, [early.children[0]!.id], "c5");
+    const saved = parsePgn(toPgn(analysed.root)).root;
+    const game = parsePgn("1. e4 e5 2. Nf3 Nc6").root;
+    const restored = Tree.restoreOnGame(saved, game);
+    expect(mainLine(restored)).toEqual(["e4", "e5", "Nf3", "Nc6"]);
+    expect(mainLine(Tree.pruneToGame(restored))).toEqual(["e4", "e5", "Nf3", "Nc6"]);
+    expect(restored.children[0]!.children.map((c) => [c.move!.san, c.isGameMove])).toEqual([
+      ["e5", true],
+      ["c5", false],
+    ]);
+  });
+
+  test("game moves deleted on purpose stay deleted", () => {
+    const game = parsePgn("1. e4 e5 2. Nf3").root;
+    // Promote 1... c5 over the game's 1... e5, then delete the e5 line
+    const v = play(game, [game.children[0]!.id], "c5");
+    const promoted = Tree.promoteVariation(v.root, v.path);
+    const e4 = promoted.children[0]!;
+    const e5 = e4.children.find((c) => c.move!.san === "e5")!;
+    const deleted = Tree.deleteNode(promoted, [e4.id, e5.id]);
+    const restored = Tree.restoreOnGame(parsePgn(toPgn(deleted)).root, game);
+    expect(mainLine(restored)).toEqual(["e4", "c5"]);
+    expect(restored.children[0]!.children).toHaveLength(1);
+    expect(mainLine(Tree.pruneToGame(restored))).toEqual(["e4"]);
+  });
+
+  test("with no game, every restored move is analysis", () => {
+    const saved = parsePgn("1. e4 e5").root;
+    const restored = Tree.restoreOnGame(saved, Tree.createRoot());
+    expect(mainLine(restored)).toEqual(["e4", "e5"]);
+    expect(mainLine(Tree.pruneToGame(restored))).toEqual([]);
+  });
+
   test("ply and move numbers follow the start position", () => {
     const blackToMove = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
     const root = Tree.createRoot(blackToMove);

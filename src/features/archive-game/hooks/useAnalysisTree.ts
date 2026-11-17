@@ -25,8 +25,9 @@ function loadInitialTree(pgn: string | undefined, storageKey: string | undefined
     if (restored.fen !== game.fen) return game;
     // A promoted variation may now be the saved main line, so "game move"
     // means "matches the real game", not "is on the saved main line".
-    // With no game (analysis board) every saved move is analysis.
-    return Tree.markGameMoves(restored, game);
+    // With no game (analysis board) every saved move is analysis. Game
+    // moves the save lacks are put back.
+    return Tree.restoreOnGame(restored, game);
   } catch {
     // Corrupt or outdated save: fall back to the game itself
     return game;
@@ -55,7 +56,10 @@ export const useAnalysisTree = ({ pgn, storageKey }: UseAnalysisTreeOptions = {}
     lastSaved.current = root;
     const key = STORAGE_PREFIX + storageKey;
     try {
-      if (Tree.hasAnalysis(root) || !pgn) localStorage.setItem(key, toPgn(root));
+      // Without a game (analysis board) every move is worth keeping; an
+      // empty board is not, and saved over a game it would hide its moves
+      const worthSaving = Tree.hasAnalysis(root) || (!pgn && root.children.length > 0);
+      if (worthSaving) localStorage.setItem(key, toPgn(root));
       else localStorage.removeItem(key);
     } catch {
       // Storage full or disabled: analysis just isn't saved

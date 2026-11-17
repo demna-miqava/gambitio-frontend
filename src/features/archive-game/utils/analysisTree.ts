@@ -202,6 +202,29 @@ export function markGameMoves(tree: AnalysisNode, game: AnalysisNode): AnalysisN
   };
 }
 
+/**
+ * Saved analysis laid over the game: game moves are marked as in
+ * markGameMoves, and where the save simply stops short of the game (it was
+ * made from an out-of-date copy with fewer moves, or none) the rest of the
+ * game is put back.
+ *
+ * Only where the save has nothing at all after a position: a game move
+ * that's missing next to other moves was deleted on purpose (after
+ * promoting a variation over it) and stays deleted.
+ */
+export function restoreOnGame(saved: AnalysisNode, game: AnalysisNode): AnalysisNode {
+  const gameNext = game.children[0];
+  const children =
+    gameNext && saved.children.length === 0
+      ? [markGameMoves(gameNext, gameNext)]
+      : saved.children.map((child) =>
+          gameNext && child.move?.uci === gameNext.move?.uci
+            ? restoreOnGame(child, gameNext)
+            : markAll(child, false)
+        );
+  return { ...saved, isGameMove: true, children };
+}
+
 function markAll(node: AnalysisNode, isGameMove: boolean): AnalysisNode {
   return { ...node, isGameMove, children: node.children.map((c) => markAll(c, isGameMove)) };
 }

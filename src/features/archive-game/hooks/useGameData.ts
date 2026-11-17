@@ -13,7 +13,12 @@ interface UseGameDataOptions {
   requireFinished?: boolean;
 }
 
-const refetchUnfinished = (query: Query<StoredGame>) => query.state.data?.status !== "finished";
+/**
+ * "always", not true: true only refetches a stale copy, and the copy the
+ * live page cached is still fresh when a short game ends.
+ */
+export const refetchUnfinished = (query: Query<StoredGame>) =>
+  query.state.data?.status === "finished" ? false : "always";
 
 export const useGameData = (gameId: string | undefined, { requireFinished = false }: UseGameDataOptions = {}) => {
   return useQuery<StoredGame>({
