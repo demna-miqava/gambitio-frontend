@@ -2,7 +2,7 @@ import {
   GameModeMoveControls,
   GameModeMovesList,
 } from "@/features/game/modes/GameModeContext";
-import { HandshakeIcon, Undo2 } from "lucide-react";
+import { HandshakeIcon, MessageCircleOff, Undo2 } from "lucide-react";
 import { OfferPrompt, OfferStatus } from "./OfferPrompt";
 import { useMatchmaking } from "@/features/matchmaking/hooks/useMatchmaking";
 import MatchActions from "./MatchActions";
@@ -23,7 +23,30 @@ import { useUser } from "@/hooks/useUser";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { FlipBoardButton } from "@/features/game/components/FlipBoardButton";
 import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TopBarSlot } from "@/context/GameShellContext";
+import { useIsMobile, useMediaQuery } from "@/hooks/use-mobile";
+import { useGameChat } from "@/features/game-chat/GameChatContext";
+import { ChatMuteButton, ChatPanel } from "@/features/game-chat/components/ChatPanel";
+import { ChatSheetButton, UnreadBadge } from "@/features/game-chat/components/ChatSheetButton";
+import { GameSettingsButton } from "@/features/game-tools/GameSettingsButton";
+import { FocusModeButton } from "@/features/game-tools/FocusModeButton";
+import { useFocusMode } from "@/features/game-tools/useFocusMode";
 
+type PanelView = "moves" | "chat";
+
+/**
+ * The live game's side panel: moves (or the chat, from 1024px, as a second
+ * tab), offers from the opponent, move navigation and the game actions.
+ *
+ * The game's tools (chat below 1024px, focus mode, settings) sit in the
+ * panel's heading from 768px and in the top bar on phones, where the panel
+ * is below the board.
+ *
+ * In focus mode only the offers and the game actions are left.
+ */
 export const MovesContainer = () => {
   const { game, gameEnded, isConnected } = useLiveGame();
   // One matchmaking connection and one rematch state for the whole page:
@@ -57,25 +80,103 @@ export const MovesContainer = () => {
   const { orientation, flipBoard } = useChessBoardContext();
   useFlipBoardKey(flipBoard);
 
+  const isMobile = useIsMobile();
+  // From here the panel is a card beside the board with room for the chat
+  const isLarge = useMediaQuery("(min-width: 1024px)");
+  const chat = useGameChat();
+  const focus = useFocusMode(!gameEnded);
+  const [view, setView] = useState<PanelView>("moves");
+  const hasTabs = isLarge && chat.available && !focus.active;
+  const showChat = hasTabs && view === "chat";
+  const chatOffByOpponent = chat.offReason === "off_by_opponent";
+
+  const tools = (
+    <div className="flex items-center gap-0.5">
+      {!isLarge && !focus.active && <ChatSheetButton />}
+      {focus.canToggle && <FocusModeButton active={focus.active} onToggle={focus.toggle} />}
+      <GameSettingsButton withFocusMode />
+    </div>
+  );
+
+  const moves = (
+    // Phones: moves strip sits right under the board
+    <div className="rounded-xl bg-card px-1 py-1.5 lg:rounded-none lg:bg-transparent lg:p-0">
+      <OpeningName fens={shownLine} className="px-1.5 pb-1 lg:px-0 lg:pb-2" />
+      <GameModeMovesList />
+    </div>
+  );
+
   return (
-    <div className="flex flex-col gap-3 lg:rounded-2xl lg:bg-card lg:p-4">
-      <div className="hidden items-center justify-between lg:flex">
-        <h2 className="text-base font-display text-foreground">Moves</h2>
-        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className="tabular-nums">
-            {formatTimeControl(game.time, game.increment)}
-          </span>
-          <span className="capitalize">· {game.type}</span>
-        </span>
+    <Tabs
+      value={showChat ? "chat" : "moves"}
+      onValueChange={(value) => setView(value as PanelView)}
+      className="gap-3 lg:rounded-2xl lg:bg-card lg:p-4"
+    >
+      {isMobile && <TopBarSlot>{tools}</TopBarSlot>}
+      <div className="hidden min-h-9 items-center justify-between gap-2 md:flex">
+        {focus.active ? (
+          <p className="text-sm text-muted-foreground">Focus mode</p>
+        ) : hasTabs ? (
+          <TabsList aria-label="Side panel" className="h-9 gap-4 border-0">
+            <TabsTrigger value="moves" className="flex-none font-display text-base font-normal">
+              Moves
+            </TabsTrigger>
+            <TabsTrigger
+              value="chat"
+              className="flex-none font-display text-base font-normal"
+              aria-label={
+                chatOffByOpponent
+                  ? "Chat: your opponent has it turned off"
+                  : chat.unread > 0
+                    ? `Chat, ${chat.unread} new`
+                    : undefined
+              }
+              title={chatOffByOpponent ? "Your opponent has chat turned off" : undefined}
+            >
+              Chat
+              {chatOffByOpponent && (
+                <MessageCircleOff
+                  className="size-3.5 text-muted-foreground"
+                  strokeWidth={1.75}
+                  aria-hidden="true"
+                />
+              )}
+              <UnreadBadge count={chat.unread} />
+            </TabsTrigger>
+          </TabsList>
+        ) : (
+          <h2 className="text-base font-display text-foreground">Moves</h2>
+        )}
+        <div className="flex min-w-0 items-center gap-1.5">
+          {showChat ? (
+            <ChatMuteButton />
+          ) : (
+            !focus.active && (
+              <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="tabular-nums">{formatTimeControl(game.time, game.increment)}</span>
+                <span className="truncate capitalize">· {game.type}</span>
+              </span>
+            )
+          )}
+          {!isMobile && tools}
+        </div>
       </div>
 
-      {series && <SeriesStrip series={series} seriesGame={seriesGame} viewerId={viewerId} />}
+      {!focus.active && series && (
+        <SeriesStrip series={series} seriesGame={seriesGame} viewerId={viewerId} />
+      )}
 
-      {/* Phones: moves strip sits right under the board */}
-      <div className="rounded-xl bg-card px-1 py-1.5 lg:rounded-none lg:bg-transparent lg:p-0">
-        <OpeningName fens={shownLine} className="px-1.5 pb-1 lg:px-0 lg:pb-2" />
-        <GameModeMovesList />
-      </div>
+      {focus.active ? null : hasTabs ? (
+        <>
+          <TabsContent value="moves">{moves}</TabsContent>
+          <TabsContent value="chat">
+            {/* As tall as the move list it replaces, so the panel doesn't jump */}
+            <ChatPanel className="h-[min(420px,calc(100svh-26rem))] min-h-56" />
+          </TabsContent>
+        </>
+      ) : (
+        moves
+      )}
 
       {showDrawOffer && (
         <OfferPrompt
@@ -102,13 +203,15 @@ export const MovesContainer = () => {
         </OfferStatus>
       )}
 
-      <div className="space-y-2 lg:border-t lg:border-border lg:pt-3">
-        <div className="flex gap-1.5">
-          <div className="min-w-0 flex-1">
-            <GameModeMoveControls />
+      <div className={cn("space-y-2", !focus.active && "lg:border-t lg:border-border lg:pt-3")}>
+        {!focus.active && (
+          <div className="flex gap-1.5">
+            <div className="min-w-0 flex-1">
+              <GameModeMoveControls />
+            </div>
+            <FlipBoardButton onFlip={flipBoard} orientation={orientation} />
           </div>
-          <FlipBoardButton onFlip={flipBoard} orientation={orientation} />
-        </div>
+        )}
         <TypeMoveInput />
         {gameEnded ? (
           <div className="space-y-3 pt-1">
@@ -161,6 +264,6 @@ export const MovesContainer = () => {
           rematchGameId={rematchGameId}
         />
       </GameResultDialog>
-    </div>
+    </Tabs>
   );
 };

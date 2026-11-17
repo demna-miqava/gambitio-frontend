@@ -143,6 +143,11 @@ export const InterfaceSettingsForm = () => (
         description="Display player ratings next to names while you play"
       />
       <SettingSwitch
+        name="focusModeEnabled"
+        label="Focus mode"
+        description="During a live game, show only the board, the clocks and the game actions. Press Z in a game to switch it."
+      />
+      <SettingSwitch
         name="pieceIconNotationEnabled"
         label="Show piece icons in move lists"
         description="Use piece symbols instead of letters (♘f3 instead of Nf3)"

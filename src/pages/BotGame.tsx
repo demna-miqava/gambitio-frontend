@@ -30,6 +30,9 @@ import { buildBotGamePgn } from "@/features/play-bots/utils/botGamePgn";
 import { cn } from "@/lib/utils";
 import { OpeningName } from "@/features/openings";
 import { positionsAlong } from "@/features/game/utils/material";
+import { GameSettingsButton } from "@/features/game-tools/GameSettingsButton";
+import { TopBarSlot } from "@/context/GameShellContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const RESULT_TITLES: Record<BotGameResult["outcome"], string> = {
   win: "You won",
@@ -44,6 +47,7 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
   const navigate = useNavigate();
   const { username, image } = useUser();
   const { settings } = useSettings();
+  const isMobile = useIsMobile();
   const {
     boardRef,
     history,
@@ -232,6 +236,8 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
             <MoveNavigationControls {...navigation} />
           </div>
           <FlipBoardButton onFlip={flip} orientation={orientation} />
+          {/* Phones have it in the top bar */}
+          {!isMobile && <GameSettingsButton />}
         </div>
         {!result ? (
           <div className="flex gap-2">
@@ -307,6 +313,11 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
       <p className="sr-only" aria-live="polite" aria-atomic="true">
         {announcement}
       </p>
+      {isMobile && (
+        <TopBarSlot>
+          <GameSettingsButton />
+        </TopBarSlot>
+      )}
       <GameLayout board={board} sidebar={sidebar} />
       <LeaveGameDialog
         blocker={blocker}

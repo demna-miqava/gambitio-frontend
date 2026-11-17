@@ -16,6 +16,7 @@ import { FullScreenLoader } from "@/components/FullScreenLoader";
 import { useUser } from "@/hooks/useUser";
 import { getArchiveGameRoute } from "@/constants/routes";
 import { isPlayerGame } from "@/utils/storedGame";
+import { GameChatProvider } from "@/features/game-chat/GameChatContext";
 
 /**
  * Live game page. Players, colors and time control come from the server, so
@@ -72,13 +73,15 @@ const CurrentGame = () => {
     <ChessBoardProvider color={color} key={gameId}>
       <GameNavigationProvider>
         <LiveGameProvider game={game}>
-          <GameModeProvider mode={GAME_MODES.LIVE}>
-            <LiveGameChrome />
-            <GameLayout
-              board={<CurrentGameBoard />}
-              sidebar={<MovesContainer />}
-            />
-          </GameModeProvider>
+          <GameChatProvider>
+            <GameModeProvider mode={GAME_MODES.LIVE}>
+              <LiveGameChrome />
+              <GameLayout
+                board={<CurrentGameBoard />}
+                sidebar={<MovesContainer />}
+              />
+            </GameModeProvider>
+          </GameChatProvider>
         </LiveGameProvider>
       </GameNavigationProvider>
     </ChessBoardProvider>

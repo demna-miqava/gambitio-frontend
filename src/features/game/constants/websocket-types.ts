@@ -23,6 +23,12 @@ export const enum GAME_MESSAGE_TYPES {
   CANCEL_REMATCH = "cancel_rematch",
   // Ask for the full state again (answered with initial_game_state)
   SYNC = "sync",
+  // A chat message. Goes both ways: { text } to the server, the stored
+  // message back to both players (never to spectators)
+  CHAT = "chat",
+  // (server -> the two players) How the chat stands now: a player changed
+  // who they chat with while the game was on
+  CHAT_STATUS = "chat_status",
   REMATCH_CANCELED = "rematch_canceled",
   MATCH_FOUND = "match_found",
 

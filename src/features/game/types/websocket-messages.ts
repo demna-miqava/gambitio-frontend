@@ -1,5 +1,6 @@
 import { GAME_MESSAGE_TYPES } from "../constants/websocket-types";
 import type { SeriesSummary } from "@/features/series/types";
+import type { ChatMessage, ChatState } from "@/features/game-chat/types";
 
 export type DrawOfferMessage = {
   type: GAME_MESSAGE_TYPES.DRAW_OFFER;
@@ -128,6 +129,8 @@ export type InitialGameStateMessage = {
     seriesGame?: number | null;
     /** People watching (not the players); only for games in progress */
     spectators?: number;
+    /** The players' chat; absent for spectators */
+    chat?: ChatState;
     result?: GameResult;
     reason?: GameEndReason;
     winnerId?: number | null;
@@ -170,7 +173,22 @@ export type SpectatorsMessage = {
 export type GameErrorMessage = {
   type: GAME_MESSAGE_TYPES.ERROR;
   /** `request`: the client message the error answers (its type, at least) */
-  data: { message: string; code?: string; request?: { type?: string } };
+  data: { message: string; code?: string; request?: { type?: string; text?: string } };
+};
+
+/** A chat message was stored; sent to both players, the writer included */
+export type ChatEventMessage = {
+  type: GAME_MESSAGE_TYPES.CHAT;
+  data: ChatMessage;
+};
+
+/**
+ * A player changed their chat setting during the game: whether this player
+ * can write now, why not, and the messages they may see.
+ */
+export type ChatStatusMessage = {
+  type: GAME_MESSAGE_TYPES.CHAT_STATUS;
+  data: ChatState;
 };
 
 export type GameWebSocketMessage =
@@ -188,4 +206,6 @@ export type GameWebSocketMessage =
   | CancelRematchMessage
   | SpectatorsMessage
   | TimeAddedMessage
+  | ChatEventMessage
+  | ChatStatusMessage
   | GameErrorMessage;

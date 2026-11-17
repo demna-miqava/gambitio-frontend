@@ -36,6 +36,9 @@ Real-time online chess: play rated games against people or bots, review them wit
 - **Series**: play a set of games against a friend with a running score
 - **Watch** live games of other players
 - Draw offers, resignation, rematches, premoves and sound effects
+- **Chat** with your opponent during a game (private to the two players)
+- **Focus mode**: just the board, the clocks and the game actions
+- Board and gameplay settings one tap away during a game
 
 ### Analyze
 
@@ -58,6 +61,7 @@ Real-time online chess: play rated games against people or bots, review them wit
 - Leaderboards per time control
 - Friends, online status and real-time notifications for challenges and friend requests
 - **Push notifications** for challenges, friend requests and game starts when the tab is in the background
+- Privacy settings: who can challenge you and who can chat with you
 - Light and dark themes, responsive layout and keyboard-accessible controls
 
 ### Upcoming

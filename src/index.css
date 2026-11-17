@@ -985,6 +985,12 @@
                              22.5rem from 1280px, 25rem from 1536px
    Decorative boards (data-decorative-board) only show side by side.
    Unlayered on purpose, so it wins over the utilities on the elements. */
+/* Focus mode: while a game is played with it on, the sidebar steps aside
+   (AppLayout sets the attribute). Phones have no sidebar on game pages. */
+[data-slot="sidebar-wrapper"][data-focus-mode] [data-slot="sidebar"] {
+  display: none;
+}
+
 .game-layout {
   --board-chrome: 0.5rem;
   --board-rows: 6rem;

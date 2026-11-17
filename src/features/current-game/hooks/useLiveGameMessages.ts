@@ -217,6 +217,8 @@ export const useLiveGameMessages = ({
   // rate limit has refilled; the error for a sync itself isn't answered.
   const handleError = useCallback(
     (data: GameErrorMessage) => {
+      // A refused chat message is reported in the chat itself (GameChatContext)
+      if (data.data.request?.type === GAME_MESSAGE_TYPES.CHAT) return;
       toast.error(gameErrorText(data.data), { id: "game_error" });
       if (!errorMayHaveDroppedMove(data.data) || errorSyncTimerRef.current) return;
       errorSyncTimerRef.current = setTimeout(() => {

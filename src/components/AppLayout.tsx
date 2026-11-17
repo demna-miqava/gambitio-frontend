@@ -17,6 +17,7 @@ import { preloadSignedInPages } from "@/routes/pages";
 import { StudyInviteToasts } from "@/features/study/components/StudyInviteToasts";
 import { FriendUpdates } from "@/features/friends/components/FriendUpdates";
 import { PushSync } from "@/features/push/PushSync";
+import { GameShellProvider, useGameShell } from "@/context/GameShellContext";
 
 const MAIN_ID = "main-content";
 const SIDEBAR_WIDE_OPEN_KEY = "sidebarWideOpen";
@@ -42,9 +43,19 @@ const skipToMain = (event: MouseEvent<HTMLAnchorElement>) => {
  *
  * `--app-top-bar-height` tells pages how much of the viewport the sticky top
  * bar takes (0px when there is none), e.g. for the board's height cap.
+ *
+ * A game played in focus mode hides the sidebar (see index.css,
+ * [data-focus-mode]); the phone top bar stays, with the way back out.
  */
-export const AppLayout = () => {
+export const AppLayout = () => (
+  <GameShellProvider>
+    <AppShell />
+  </GameShellProvider>
+);
+
+const AppShell = () => {
   const { pathname } = useLocation();
+  const { focusActive } = useGameShell();
   const onGamePage = isGameRoute(pathname);
   const isWide = useIsWideScreen();
 
@@ -70,6 +81,7 @@ export const AppLayout = () => {
     <SidebarProvider
       open={isWide ? wideOpen : railOpen}
       onOpenChange={isWide ? setWideOpen : setRailOpen}
+      data-focus-mode={focusActive || undefined}
     >
       <a
         href={`#${MAIN_ID}`}

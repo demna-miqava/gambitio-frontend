@@ -5,6 +5,7 @@ import { BrandLogo } from "@/components/Brand";
 import { UserAvatar } from "@/components/UserAvatar";
 import { ReturnToGameTopBarLink } from "@/components/active-game/ReturnToGame";
 import { useUser } from "@/hooks/useUser";
+import { useGameShell } from "@/context/GameShellContext";
 import { cn } from "@/lib/utils";
 
 const barClass =
@@ -16,15 +17,17 @@ const barClass =
  * Normal pages: the button that opens the sidebar sheet, the brand, a "Return
  * to game" link while a game is waiting, and a shortcut to the profile.
  *
- * Game pages (`compact`): a 2.5rem bar with just the brand, so the board gets
- * the room and there's no menu one tap away. Leaving through the brand link
- * is still guarded by the game page.
+ * Game pages (`compact`): a 2.5rem bar with the brand and, on the right, the
+ * game's own tools (chat, focus mode, settings; see TopBarSlot), so the board
+ * gets the room and there's no menu one tap away. Leaving through the brand
+ * link is still guarded by the game page.
  *
  * Heights match --app-top-bar-height set in AppLayout.
  */
 export const MobileTopBar = ({ compact = false }: { compact?: boolean }) => {
   const { isMobile } = useSidebar();
   const { id, image, username } = useUser();
+  const { setTopBarSlot } = useGameShell();
   if (!isMobile) return null;
 
   if (compact) {
@@ -38,6 +41,7 @@ export const MobileTopBar = ({ compact = false }: { compact?: boolean }) => {
         >
           <BrandLogo markClassName="size-6" textClassName="text-sm" />
         </Link>
+        <div ref={setTopBarSlot} className="ml-auto flex items-center" />
       </header>
     );
   }

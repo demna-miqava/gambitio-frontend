@@ -1,5 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import { useSettings } from "../SettingsContext";
 import type { Settings } from "../types";
 
@@ -12,19 +13,34 @@ type SettingSwitchProps = {
   name: BooleanSettingKey;
   label: string;
   description: string;
+  /**
+   * One line, for the settings shown during a game: the description is
+   * still there for screen readers, but not on screen.
+   */
+  compact?: boolean;
 };
 
 /** One on/off setting. Saved as soon as it's flipped (see useUpdateSettings). */
-export const SettingSwitch = ({ name, label, description }: SettingSwitchProps) => {
+export const SettingSwitch = ({ name, label, description, compact = false }: SettingSwitchProps) => {
   const { settings, updateSettings } = useSettings();
-  const id = `setting-${name}`;
+  // The compact list never shares a page with the full one, but keep ids apart anyway
+  const id = compact ? `quick-setting-${name}` : `setting-${name}`;
   const descriptionId = `${id}-description`;
 
   return (
-    <div className="flex items-center justify-between gap-6 border-b border-border py-4 first:pt-0 last:border-0 last:pb-0">
+    <div
+      className={cn(
+        "flex items-center justify-between",
+        compact
+          ? "min-h-10 gap-4"
+          : "gap-6 border-b border-border py-4 first:pt-0 last:border-0 last:pb-0"
+      )}
+    >
       <div className="space-y-0.5">
-        <Label htmlFor={id}>{label}</Label>
-        <p id={descriptionId} className="text-sm text-muted-foreground">
+        <Label htmlFor={id} className={cn(compact && "font-normal")}>
+          {label}
+        </Label>
+        <p id={descriptionId} className={compact ? "sr-only" : "text-sm text-muted-foreground"}>
           {description}
         </p>
       </div>

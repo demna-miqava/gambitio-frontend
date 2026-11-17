@@ -6,12 +6,11 @@ import {
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
-// Profile (avatar/bio) and Social (messages) are hidden until the backend
-// supports them; their forms are in ./sections.
-import { Bell, Gamepad2, LayoutDashboard, Palette, ShieldCheck } from "lucide-react";
+import { Bell, Gamepad2, LayoutDashboard, Lock, Palette, ShieldCheck } from "lucide-react";
 import { BoardSettingsForm } from "./sections/BoardSettingsForm";
 import { GameplaySettingsForm } from "./sections/GameplaySettingsForm";
 import { InterfaceSettingsForm } from "./sections/InterfaceSettingsForm";
+import { PrivacySettingsForm } from "./sections/PrivacySettingsForm";
 import { NotificationsSettingsForm } from "./sections/NotificationsSettingsForm";
 import { AccountSettingsForm } from "./sections/account/AccountSettingsForm";
 
@@ -36,6 +35,13 @@ const sections = [
     icon: LayoutDashboard,
     description: "Theme and what the app shows during games",
     component: InterfaceSettingsForm,
+  },
+  {
+    value: "privacy",
+    label: "Privacy",
+    icon: Lock,
+    description: "Who can challenge you and chat with you",
+    component: PrivacySettingsForm,
   },
   {
     value: "notifications",
