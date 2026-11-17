@@ -3,20 +3,18 @@ import { getFriendSuggestions } from "@/services/friends";
 import { useUser } from "@/hooks/useUser";
 import { QKEY_SUGGESTED_FRIENDS } from "@/constants/queryKeys";
 
+/** The API rejects shorter searches */
+export const MIN_PLAYER_SEARCH_LENGTH = 2;
+
+/** Players matching `searchQuery` who aren't the user's friends yet. */
 export const useSuggestedFriends = (searchQuery?: string) => {
   const { id: userId } = useUser();
-
-  const buildQuery = () => {
-    const params = new URLSearchParams();
-    if (userId) params.append("userId", userId.toString());
-    if (searchQuery) params.append("username", searchQuery);
-    return params.toString();
-  };
+  const search = searchQuery?.trim() ?? "";
 
   const query = useQuery({
-    queryKey: [QKEY_SUGGESTED_FRIENDS, userId, searchQuery],
-    queryFn: () => getFriendSuggestions(buildQuery()),
-    enabled: !!(userId && searchQuery),
+    queryKey: [QKEY_SUGGESTED_FRIENDS, userId, search],
+    queryFn: () => getFriendSuggestions(new URLSearchParams({ q: search }).toString()),
+    enabled: !!userId && search.length >= MIN_PLAYER_SEARCH_LENGTH,
   });
 
   return {

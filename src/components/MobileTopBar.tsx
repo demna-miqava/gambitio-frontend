@@ -4,6 +4,7 @@ import { ROUTES, getProfileRoute } from "@/constants/routes";
 import { BrandLogo } from "@/components/Brand";
 import { UserAvatar } from "@/components/UserAvatar";
 import { ReturnToGameTopBarLink } from "@/components/active-game/ReturnToGame";
+import { FriendsInbox } from "@/features/friends/components/FriendsInbox";
 import { useUser } from "@/hooks/useUser";
 import { useGameShell } from "@/context/GameShellContext";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,8 @@ const barClass =
  * Phones only (below 768px; from there the sidebar is always on screen).
  *
  * Normal pages: the button that opens the sidebar sheet, the brand, a "Return
- * to game" link while a game is waiting, and a shortcut to the profile.
+ * to game" link while a game is waiting, friends and challenges, and a
+ * shortcut to the profile.
  *
  * Game pages (`compact`): a 2.5rem bar with the brand and, on the right, the
  * game's own tools (chat, focus mode, settings; see TopBarSlot), so the board
@@ -62,6 +64,7 @@ export const MobileTopBar = ({ compact = false }: { compact?: boolean }) => {
       </Link>
       <div className="ml-auto flex items-center gap-1">
         <ReturnToGameTopBarLink />
+        <FriendsInbox className="size-11" />
         {id && (
           <Link
             to={getProfileRoute(id)}

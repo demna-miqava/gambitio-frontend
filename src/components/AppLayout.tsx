@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { Suspense, useEffect, useState, type MouseEvent } from "react";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "./sidebar/AppSidebar";
 import { SettingsProvider } from "@/features/settings/SettingsContext";
 import { ChallengesProvider } from "@/features/notifications/context/ChallengesContext";
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { preloadSignedInPages } from "@/routes/pages";
 import { StudyInviteToasts } from "@/features/study/components/StudyInviteToasts";
 import { FriendUpdates } from "@/features/friends/components/FriendUpdates";
+import { FriendsInbox } from "@/features/friends/components/FriendsInbox";
 import { PushSync } from "@/features/push/PushSync";
 import { GameShellProvider, useGameShell } from "@/context/GameShellContext";
 
@@ -41,12 +42,29 @@ const skipToMain = (event: MouseEvent<HTMLAnchorElement>) => {
  *   on the next navigation). No top bar.
  * - From 1280px: the full sidebar, which the user can collapse to the rail.
  *
- * `--app-top-bar-height` tells pages how much of the viewport the sticky top
- * bar takes (0px when there is none), e.g. for the board's height cap.
+ * Friends and challenges (FriendsInbox) sit in the top right corner: in the
+ * phone top bar, and from 768px in the corner of the page, which starts 3rem
+ * down to leave it room. Game pages have neither.
+ *
+ * `--app-top-bar-height` tells pages how much of the viewport is taken above
+ * their own padding, e.g. for the board's height cap: the sticky top bar on
+ * phones, and from 768px the extra room kept for the corner (0px on game
+ * pages).
  *
  * A game played in focus mode hides the sidebar (see index.css,
  * [data-focus-mode]); the phone top bar stays, with the way back out.
  */
+/** From 768px (phones have it in the top bar): the corner of the page. */
+const CornerInbox = () => {
+  const { isMobile } = useSidebar();
+  if (isMobile) return null;
+  return (
+    <div className="absolute top-1.5 right-3 z-20">
+      <FriendsInbox />
+    </div>
+  );
+};
+
 export const AppLayout = () => (
   <GameShellProvider>
     <AppShell />
@@ -99,20 +117,24 @@ const AppShell = () => {
             <PushSync />
             <SidebarInset
               className={cn(
-                "md:[--app-top-bar-height:0px]",
                 onGamePage
-                  ? "[--app-top-bar-height:2.5rem]"
-                  : "[--app-top-bar-height:3.5rem]"
+                  ? "[--app-top-bar-height:2.5rem] md:[--app-top-bar-height:0px]"
+                  : // From 768px: what md:pt-12 on <main> adds to its usual
+                    // top padding (1.25rem, 2rem from 1024px)
+                    "[--app-top-bar-height:3.5rem] md:[--app-top-bar-height:1.75rem] lg:[--app-top-bar-height:1rem]"
               )}
             >
               <MobileTopBar compact={onGamePage} />
+              {!onGamePage && <CornerInbox />}
               <main
                 id={MAIN_ID}
                 tabIndex={-1}
                 className={cn(
                   "mx-auto w-full max-w-[1440px] flex-1 px-4 py-5 outline-none sm:px-6 lg:px-8 lg:py-8",
-                  // Room for the bottom nav and the home indicator below it
-                  !onGamePage && "pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-8"
+                  // Room for the bottom nav and the home indicator below it,
+                  // and for the corner inbox above
+                  !onGamePage &&
+                    "pb-[calc(5rem+env(safe-area-inset-bottom))] md:pt-12 md:pb-8 lg:pt-12"
                 )}
               >
                 <ErrorBoundary scope="page" resetKey={pathname}>
