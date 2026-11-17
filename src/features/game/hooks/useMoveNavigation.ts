@@ -30,10 +30,10 @@ export const useMoveNavigation = (totalMoves: number) => {
   const goToNextMove = useCallback(() => {
     setViewingIndex((prev) => {
       const current = prev ?? totalMoves;
-      if (current > totalMoves) return null; // Already at the end
+      if (current >= totalMoves) return null; // Already at the end
       const next = current + 1;
       // If we've reached the current position, set to null
-      return next > totalMoves ? null : next;
+      return next >= totalMoves ? null : next;
     });
   }, [totalMoves]);
 
