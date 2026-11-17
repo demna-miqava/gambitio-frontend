@@ -131,7 +131,7 @@ export const PALETTES: Palette[] = [
       boardDark: "#9c9b94",
     },
     dark: {
-      background: "#11100f",
+      background: "#1c1a18",
       primary: "#e8e4dc",
       gold: "#deb95c",
       boardLight: "#d6d4cc",
