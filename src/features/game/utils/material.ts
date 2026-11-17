@@ -4,7 +4,7 @@ import type { PlayerColor } from "../types/game.types";
 
 export type MaterialPiece = "p" | "n" | "b" | "r" | "q";
 
-/** Smallest first, the order captured pieces are shown in */
+/** Smallest first, the order the material difference is shown in */
 export const MATERIAL_PIECES: readonly MaterialPiece[] = ["p", "n", "b", "r", "q"];
 
 export const PIECE_VALUES: Readonly<Record<MaterialPiece, number>> = {
@@ -15,17 +15,16 @@ export const PIECE_VALUES: Readonly<Record<MaterialPiece, number>> = {
   q: 9,
 };
 
-const START_COUNTS: Readonly<Record<MaterialPiece, number>> = {
-  p: 8,
-  n: 2,
-  b: 2,
-  r: 2,
-  q: 1,
-};
+const PIECE_SYMBOLS = new Set<string>(MATERIAL_PIECES);
 
 export interface SideMaterial {
-  /** Opponent pieces this side has taken, by type (types with none left out) */
-  captured: Partial<Record<MaterialPiece, number>>;
+  /**
+   * Pieces this side has more of on the board than the opponent, by type
+   * (types with none left out): what it has taken, net of what it lost, as
+   * on Lichess. A knight taken by each side cancels out, and a promoted
+   * piece counts as one more of its kind.
+   */
+  pieces: Partial<Record<MaterialPiece, number>>;
   /** Points this side is ahead on the board; 0 when level or behind */
   advantage: number;
 }
@@ -34,31 +33,22 @@ type Counts = Record<MaterialPiece, number>;
 
 const emptyCounts = (): Counts => ({ p: 0, n: 0, b: 0, r: 0, q: 0 });
 
-/**
- * Pieces of `counts`' side that are gone from the board. A promoted pawn
- * shows up as an extra piece above the starting count, so it's taken off the
- * missing pawns rather than counted as a capture.
- */
-const missingPieces = (counts: Counts): SideMaterial["captured"] => {
-  const missing: SideMaterial["captured"] = {};
-  let promoted = 0;
+/** Of each type, how many more `own` has than `other` (types with none left out). */
+const surplus = (own: Counts, other: Counts): SideMaterial["pieces"] => {
+  const more: SideMaterial["pieces"] = {};
   for (const piece of MATERIAL_PIECES) {
-    if (piece === "p") continue;
-    promoted += Math.max(0, counts[piece] - START_COUNTS[piece]);
-    const gone = START_COUNTS[piece] - counts[piece];
-    if (gone > 0) missing[piece] = gone;
+    const extra = own[piece] - other[piece];
+    if (extra > 0) more[piece] = extra;
   }
-  const pawnsGone = START_COUNTS.p - counts.p - promoted;
-  if (pawnsGone > 0) missing.p = pawnsGone;
-  return missing;
+  return more;
 };
 
 const points = (counts: Counts) =>
   MATERIAL_PIECES.reduce((sum, piece) => sum + counts[piece] * PIECE_VALUES[piece], 0);
 
 /**
- * What each side has captured and who is ahead in material, from a FEN.
- * Only the piece placement is read.
+ * The material difference between the two sides, from a FEN: the pieces
+ * each side is up and by how many points. Only the piece placement is read.
  */
 export function getMaterial(fen: string): Record<PlayerColor, SideMaterial> {
   const white = emptyCounts();
@@ -66,15 +56,15 @@ export function getMaterial(fen: string): Record<PlayerColor, SideMaterial> {
   const placement = fen.split(" ", 1)[0];
   for (const char of placement) {
     const lower = char.toLowerCase();
-    if (!(lower in START_COUNTS)) continue;
+    if (!PIECE_SYMBOLS.has(lower)) continue;
     const counts = char === lower ? black : white;
     counts[lower as MaterialPiece] += 1;
   }
 
   const diff = points(white) - points(black);
   return {
-    white: { captured: missingPieces(black), advantage: Math.max(0, diff) },
-    black: { captured: missingPieces(white), advantage: Math.max(0, -diff) },
+    white: { pieces: surplus(white, black), advantage: Math.max(0, diff) },
+    black: { pieces: surplus(black, white), advantage: Math.max(0, -diff) },
   };
 }
 

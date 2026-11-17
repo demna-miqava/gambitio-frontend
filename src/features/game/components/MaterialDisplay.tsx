@@ -15,32 +15,49 @@ const PIECE_IMAGES: Record<PlayerColor, Record<MaterialPiece, string>> = {
   black: { ...PIECE_SVGS.black, p: BlackPawn },
 };
 
-const describe = ({ captured, advantage }: SideMaterial) => {
-  const parts = MATERIAL_PIECES.filter((piece) => captured[piece]).map((piece) => {
-    const count = captured[piece]!;
+const describe = ({ pieces, advantage }: SideMaterial) => {
+  const parts = MATERIAL_PIECES.filter((piece) => pieces[piece]).map((piece) => {
+    const count = pieces[piece]!;
     return `${count} ${PIECE_NAMES[piece]}${count === 1 ? "" : "s"}`;
   });
-  const takes = parts.length ? `Captured ${parts.join(", ")}` : "";
-  const ahead = advantage > 0 ? `up ${advantage} point${advantage === 1 ? "" : "s"}` : "";
-  return [takes, ahead].filter(Boolean).join(", ");
+  const up = parts.length ? `Up ${parts.join(", ")}` : "";
+  const ahead = advantage > 0 ? `${advantage} point${advantage === 1 ? "" : "s"} ahead` : "";
+  return [up, ahead].filter(Boolean).join(", ");
 };
 
 interface MaterialDisplayProps {
   material: SideMaterial;
-  /** Colour of the pieces this side captured (the opponent's) */
+  /** Colour the pieces are drawn in: the opponent's, as this side took them */
   capturedColor: PlayerColor;
   className?: string;
 }
 
 /**
- * The opponent pieces a player has taken, smallest first with each kind
- * stacked, and "+N" when they're ahead in material.
+ * How far along the row the next piece starts, as a flex item that can
+ * shrink: pieces of one kind overlap by half, a new kind starts after a small
+ * gap. When the row is short of room (a phone, many captures) every step
+ * shrinks towards its minimum, so the pieces fan in closer instead of being
+ * cut off. The piece image itself keeps its size and spills over the next
+ * steps; later pieces are drawn on top. Past the minimums (a near-bare
+ * king facing a full army) the row is cut, never laid over the "+N".
+ */
+const STEP_SAME_KIND = "w-2.5 min-w-0.5";
+const STEP_NEW_KIND = "w-6 min-w-1.5";
+
+/**
+ * The material difference, Lichess style: the pieces a player is up (taken,
+ * net of what they lost), smallest first with each kind stacked, and "+N"
+ * when they're ahead in points. Trades cancel out, so the row stays short.
  */
 export const MaterialDisplay = memo(
   ({ material, capturedColor, className }: MaterialDisplayProps) => {
-    const { captured, advantage } = material;
+    const { pieces: counts, advantage } = material;
     const label = describe(material);
     if (!label) return null;
+
+    const pieces = MATERIAL_PIECES.flatMap((piece) =>
+      Array.from({ length: counts[piece] ?? 0 }, () => piece)
+    );
 
     return (
       <span
@@ -48,26 +65,33 @@ export const MaterialDisplay = memo(
         aria-label={label}
         className={cn("flex min-w-0 items-center gap-1 overflow-hidden rounded-md bg-(--board-light) px-1.5 py-0.5 ring-1 ring-(--board-frame)/15 ring-inset", className)}
       >
-        {MATERIAL_PIECES.map((piece) => {
-          const count = captured[piece];
-          if (!count) return null;
-          return (
-            <span key={piece} className="flex shrink-0 items-center" aria-hidden="true">
-              {Array.from({ length: count }, (_, i) => (
-                <img
+        {pieces.length > 0 && (
+          <span className="flex min-w-0 items-center overflow-hidden" aria-hidden="true">
+            {pieces.map((piece, i) => {
+              const next = pieces[i + 1];
+              return (
+                <span
                   key={i}
-                  src={PIECE_IMAGES[capturedColor][piece]}
-                  alt=""
-                  draggable={false}
                   className={cn(
-                    "size-5 select-none",
-                    i > 0 && "-ml-2.5"
+                    "flex",
+                    next === undefined
+                      ? "w-5 shrink-0"
+                      : next === piece
+                        ? STEP_SAME_KIND
+                        : STEP_NEW_KIND
                   )}
-                />
-              ))}
-            </span>
-          );
-        })}
+                >
+                  <img
+                    src={PIECE_IMAGES[capturedColor][piece]}
+                    alt=""
+                    draggable={false}
+                    className="size-5 max-w-none select-none"
+                  />
+                </span>
+              );
+            })}
+          </span>
+        )}
         {advantage > 0 && (
           <span
             className="shrink-0 text-xs font-semibold tabular-nums text-(--board-frame)"

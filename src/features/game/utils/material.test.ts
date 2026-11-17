@@ -11,35 +11,43 @@ const play = (...moves: string[]) => {
 describe("getMaterial", () => {
   it("is level with nothing captured at the start", () => {
     expect(getMaterial(DEFAULT_POSITION)).toEqual({
-      white: { captured: {}, advantage: 0 },
-      black: { captured: {}, advantage: 0 },
+      white: { pieces: {}, advantage: 0 },
+      black: { pieces: {}, advantage: 0 },
     });
   });
 
-  it("lists what each side took and who is ahead", () => {
+  it("shows the pieces each side is up and who is ahead", () => {
     // White wins a knight, black a pawn: white +2
     const chess = play("e4", "Nf6", "d3", "Nxe4", "dxe4");
     expect(getMaterial(chess.fen())).toEqual({
-      white: { captured: { n: 1 }, advantage: 2 },
-      black: { captured: { p: 1 }, advantage: 0 },
+      white: { pieces: { n: 1 }, advantage: 2 },
+      black: { pieces: { p: 1 }, advantage: 0 },
     });
   });
 
-  it("shows trades on both sides with no lead", () => {
+  it("cancels out trades", () => {
     const chess = play("e4", "d5", "exd5", "Qxd5");
     expect(getMaterial(chess.fen())).toEqual({
-      white: { captured: { p: 1 }, advantage: 0 },
-      black: { captured: { p: 1 }, advantage: 0 },
+      white: { pieces: {}, advantage: 0 },
+      black: { pieces: {}, advantage: 0 },
     });
   });
 
-  it("doesn't count a promoted pawn as captured", () => {
-    // White: K, 2 queens (one promoted), 7 pawns, nothing else lost besides
-    // the minor and major pieces missing below. Black: king only.
+  it("keeps only the difference when both sides took the same kind", () => {
+    // White has taken 3 pawns and a knight, black 1 pawn and a knight
+    const fen = "r1bqkbnr/ppppp3/8/8/8/8/PPPPPPP1/R1BQKBNR w KQkq - 0 1";
+    expect(getMaterial(fen)).toEqual({
+      white: { pieces: { p: 2 }, advantage: 2 },
+      black: { pieces: {}, advantage: 0 },
+    });
+  });
+
+  it("counts a promoted pawn as a piece of its new kind", () => {
+    // White: K, 2 queens (one promoted), 7 pawns and the rest. Black: king only.
     const fen = "Q3k3/8/8/8/8/8/PPPPPPP1/RNBQKBNR b KQ - 0 1";
     const { white, black } = getMaterial(fen);
-    expect(black.captured).toEqual({});
-    expect(white.captured).toEqual({ p: 8, n: 2, b: 2, r: 2, q: 1 });
+    expect(black.pieces).toEqual({});
+    expect(white.pieces).toEqual({ p: 7, n: 2, b: 2, r: 2, q: 2 });
     expect(white.advantage).toBe(7 + 6 + 6 + 10 + 18);
   });
 });
