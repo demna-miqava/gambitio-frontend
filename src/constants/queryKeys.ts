@@ -32,6 +32,8 @@ export const QKEY_TOURNAMENT = "tournament";
 export const QKEY_TOURNAMENT_STANDINGS = "tournament-standings";
 export const QKEY_LIVE_GAMES_FRIENDS = "live-games-friends";
 export const QKEY_LIVE_GAMES_TOP = "live-games-top";
+/** The signed-in user's friends who are online or playing */
+export const QKEY_FRIEND_STATUSES = "friend-statuses";
 export const QKEY_SERIES = "series";
 export const QKEY_USER_SERIES = "user-series";
 export const QKEY_HEAD_TO_HEAD = "head-to-head";

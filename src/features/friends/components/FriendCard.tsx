@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useAvatarSrc } from "@/hooks/useAvatarSrc";
-import type { Friend } from "@/types";
+import type { Friend, FriendStatus } from "@/types";
 import {
   Eye,
   MoreVertical,
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getGameRoute, getProfileRoute } from "@/constants/routes";
+import { AvatarWithPresence } from "../status/Presence";
 
 export type FriendCardMode = "manage" | "pick";
 
@@ -36,8 +37,12 @@ interface FriendCardProps<T extends Friend> {
    * row doesn't navigate and Challenge is always visible.
    */
   mode?: FriendCardMode;
-  /** The game this person is playing right now, if any: shows "Watch" */
-  liveGameId?: number | null;
+  /**
+   * Whether this friend is online or playing: a dot on the avatar, and
+   * "Watch" when playing (not when picking whom to challenge). Null or left
+   * out: offline, or not known (someone who isn't your friend).
+   */
+  presence?: FriendStatus | null;
 }
 
 export function FriendCard<T extends Friend>({
@@ -49,12 +54,14 @@ export function FriendCard<T extends Friend>({
   currentUserId,
   isOwnProfile = true,
   mode = "manage",
-  liveGameId,
+  presence,
 }: FriendCardProps<T>) {
   const [confirmRemove, setConfirmRemove] = useState(false);
   const avatarSrc = useAvatarSrc();
   const watchGameId =
-    liveGameId != null && friend.id !== currentUserId ? liveGameId : null;
+    mode === "manage" && presence?.gameId != null && friend.id !== currentUserId
+      ? presence.gameId
+      : null;
 
   const actions = [
     onChallenge && {
@@ -101,19 +108,14 @@ export function FriendCard<T extends Friend>({
 
   const identity = (
     <>
-      <UserAvatar
-        src={avatarSrc(friend.id, friend.avatarUrl)}
-        username={friend.username}
-        className="shrink-0"
-      />
+      <AvatarWithPresence presence={presence}>
+        <UserAvatar
+          src={avatarSrc(friend.id, friend.avatarUrl)}
+          username={friend.username}
+        />
+      </AvatarWithPresence>
       <div className="flex min-w-0 flex-col">
         <span className="truncate font-medium">{friend.username}</span>
-        {watchGameId !== null && mode === "manage" && (
-          <span className="flex items-center gap-1 text-xs font-medium text-rating-up">
-            <span className="size-1.5 rounded-full bg-rating-up" aria-hidden="true" />
-            Playing now
-          </span>
-        )}
         {secondaryText && (
           <span className="truncate text-xs text-muted-foreground">
             {secondaryText}

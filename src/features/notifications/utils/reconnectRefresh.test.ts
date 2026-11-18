@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   QKEY_ACTIVE_GAME,
   QKEY_CHALLENGES,
+  QKEY_FRIEND_STATUSES,
   QKEY_GAME_BY_ID,
   QKEY_PENDING_FRIEND_REQUESTS,
   QKEY_USER_FRIENDS,
@@ -12,6 +13,10 @@ describe("mayBeStaleAfterReconnect", () => {
   it("refreshes challenges and the active game", () => {
     expect(mayBeStaleAfterReconnect([QKEY_CHALLENGES], 7)).toBe(true);
     expect(mayBeStaleAfterReconnect([QKEY_ACTIVE_GAME], 7)).toBe(true);
+  });
+
+  it("refreshes which friends are online", () => {
+    expect(mayBeStaleAfterReconnect([QKEY_FRIEND_STATUSES], 7)).toBe(true);
   });
 
   it("refreshes only the signed-in player's own friend lists", () => {

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getFriendsLiveGames, getTopLiveGames } from "@/services/liveGames";
 import {
@@ -30,19 +29,3 @@ export const useTopLiveGames = () =>
     staleTime: 10_000,
     refetchInterval: LIVE_GAMES_POLL_MS,
   });
-
-/**
- * Friend id -> the game they're playing, for "Watch" buttons on friend cards
- * and profiles. Only friends of the signed-in user are known.
- */
-export const useFriendLiveGameIds = ({ enabled = true }: { enabled?: boolean } = {}) => {
-  const { data } = useFriendsLiveGames({ enabled });
-  return useMemo(() => {
-    const byPlayer = new Map<number, number>();
-    for (const game of data ?? []) {
-      byPlayer.set(game.whitePlayer.id, game.id);
-      byPlayer.set(game.blackPlayer.id, game.id);
-    }
-    return byPlayer;
-  }, [data]);
-};

@@ -10,6 +10,9 @@ import { SectionHeader } from "@/components/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAvatarSrc } from "@/hooks/useAvatarSrc";
 import { useUserProfile } from "@/features/profile/hooks/useUserProfile";
+import { useFriendStatuses } from "../../status/useFriendStatuses";
+import { AvatarWithPresence } from "../../status/Presence";
+import { presenceLabel } from "../../status/presenceLabel";
 
 const GRID_LIMIT = 20;
 /** Placeholder avatars when the friend count isn't known yet (one row) */
@@ -20,6 +23,8 @@ const FriendsGrid = () => {
   const userId = useProfileUserId();
   const { id: currentUserId } = useUser();
   const avatarSrc = useAvatarSrc();
+  // Your own friends (on someone else's profile, the ones you have in common)
+  const { byId: statuses } = useFriendStatuses();
   // The profile header already loaded the friend count: use it for the
   // heading and the number of placeholders, so the card keeps its size
   const { profile } = useUserProfile();
@@ -59,28 +64,37 @@ const FriendsGrid = () => {
         <p className="text-sm text-muted-foreground">No friends yet.</p>
       ) : (
         <div className="grid grid-cols-5 gap-2">
-          {friends.map((friend) => (
+          {friends.map((friend) => {
+            const presence = statuses.get(friend.id);
+            const label = presence
+              ? `${friend.username}, ${presenceLabel(presence).toLowerCase()}`
+              : friend.username;
+            return (
             <div key={friend.id} className="flex justify-center">
               {/* The popover shows the name, so no tooltip on top of it */}
               <FriendPopover
                 data={friend}
+                presence={presence}
                 canChallenge={userId === currentUserId && friend.id !== currentUserId}
               >
                 <button
                   type="button"
-                  aria-label={friend.username}
-                  title={friend.username}
+                  aria-label={label}
+                  title={label}
                   className="rounded-full transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                 >
-                  <UserAvatar
-                    src={avatarSrc(friend.id, friend.avatarUrl)}
-                    username={friend.username}
-                    className="size-10"
-                  />
+                  <AvatarWithPresence presence={presence}>
+                    <UserAvatar
+                      src={avatarSrc(friend.id, friend.avatarUrl)}
+                      username={friend.username}
+                      className="size-10"
+                    />
+                  </AvatarWithPresence>
                 </button>
               </FriendPopover>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </aside>

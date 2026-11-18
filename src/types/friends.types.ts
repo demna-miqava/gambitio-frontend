@@ -1,3 +1,5 @@
+import type { TimeControlType } from "./game.types";
+
 export interface Friend {
   id: number;
   username: string;
@@ -37,4 +39,16 @@ export interface FriendSuggestionActionHandlers
 export interface FriendsData {
   friends: Friend[];
   suggestions: Friend[];
+}
+
+/**
+ * A friend of the signed-in user who is online (has the site open, so they
+ * can be challenged) or playing (has a live game in progress). Friends who
+ * are neither aren't listed.
+ */
+export interface FriendStatus extends Friend {
+  status: "online" | "playing";
+  /** The game in progress, when playing */
+  gameId: number | null;
+  gameType: TimeControlType | null;
 }

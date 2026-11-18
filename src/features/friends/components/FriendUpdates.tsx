@@ -8,6 +8,7 @@ import { notificationMessages } from "@/services/websocketMessageDispatcher";
 import { NOTIFICATION_MESSAGE_TYPES } from "@/features/notifications/constants/websocket-types";
 import type { FriendsUpdatedNotification } from "@/features/notifications/types/websocket-messages";
 import {
+  QKEY_FRIEND_STATUSES,
   QKEY_LIVE_GAMES_FRIENDS,
   QKEY_PENDING_FRIEND_REQUESTS,
   QKEY_SUGGESTED_FRIENDS,
@@ -35,6 +36,8 @@ export const FriendUpdates = () => {
         // Friend counts on profile headers
         void queryClient.invalidateQueries({ queryKey: [QKEY_USER_PROFILE] });
         void queryClient.invalidateQueries({ queryKey: [QKEY_LIVE_GAMES_FRIENDS] });
+        // A new friend may be online right now; a removed one mustn't stay listed
+        void queryClient.invalidateQueries({ queryKey: [QKEY_FRIEND_STATUSES] });
       }
 
       const name = user.username ?? "Someone";

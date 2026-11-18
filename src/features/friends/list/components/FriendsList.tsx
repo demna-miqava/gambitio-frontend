@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { UsersRound } from "lucide-react";
 import { FriendCard, type FriendCardMode } from "../../components/FriendCard";
 import type { Friend, FriendActionHandlers } from "@/types";
-import { useFriendLiveGameIds } from "@/features/watch/hooks/useLiveGames";
+import { useFriendStatuses } from "../../status/useFriendStatuses";
 import { EmptyState } from "@/components/EmptyState";
 import { formatShortDate } from "@/lib/utils";
 
@@ -13,6 +13,8 @@ interface FriendsListProps extends FriendActionHandlers {
   currentUserId?: number;
   isOwnProfile?: boolean;
   mode?: FriendCardMode;
+  /** The line under each name; "Friends since …" by default */
+  secondaryTextFor?: (friend: Friend) => ReactNode;
 }
 
 export const FriendsList = ({
@@ -23,9 +25,11 @@ export const FriendsList = ({
   currentUserId,
   isOwnProfile,
   mode,
+  secondaryTextFor = (friend) => `Friends since ${formatShortDate(friend.friendsSince)}`,
 }: FriendsListProps) => {
-  // Friends playing right now get a "Watch" link (not when picking whom to challenge)
-  const liveGameIds = useFriendLiveGameIds({ enabled: mode !== "pick" });
+  // Known for the signed-in user's own friends only; on someone else's
+  // profile that's the friends you have in common
+  const { byId: statuses } = useFriendStatuses();
 
   if (items.length === 0 && emptyMessage) {
     return typeof emptyMessage === "string" ? (
@@ -46,8 +50,8 @@ export const FriendsList = ({
             currentUserId={currentUserId}
             isOwnProfile={isOwnProfile}
             mode={mode}
-            liveGameId={mode === "pick" ? null : liveGameIds.get(friend.id)}
-            secondaryText={`Friends since ${formatShortDate(friend.friendsSince)}`}
+            presence={statuses.get(friend.id)}
+            secondaryText={secondaryTextFor(friend)}
           />
         </li>
       ))}

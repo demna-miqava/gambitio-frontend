@@ -6,7 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useProfileUserId } from "@/hooks/useProfileUserId";
 import { useUser } from "@/hooks/useUser";
 import { useAvatarSrc } from "@/hooks/useAvatarSrc";
-import { useFriendLiveGameIds } from "@/features/watch/hooks/useLiveGames";
+import { useFriendStatuses } from "@/features/friends/status/useFriendStatuses";
+import { AvatarWithPresence } from "@/features/friends/status/Presence";
 
 /** Avatar, name and join date, with the actions for this player beside them. */
 const ProfileHeader = () => {
@@ -16,7 +17,8 @@ const ProfileHeader = () => {
   const isOwnProfile = profileUserId === currentUserId;
   const avatarSrc = useAvatarSrc();
   // Known only for the signed-in user's friends
-  const liveGameId = useFriendLiveGameIds({ enabled: !isOwnProfile }).get(profileUserId);
+  const presence = useFriendStatuses({ enabled: !isOwnProfile }).byId.get(profileUserId);
+  const liveGameId = presence?.gameId ?? undefined;
 
   // Same boxes as the loaded header (avatar, name and meta lines, the action
   // row that wraps below on phones), so nothing moves when it loads
@@ -46,13 +48,18 @@ const ProfileHeader = () => {
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <div className="flex min-w-0 items-center gap-4 sm:gap-6">
-        <UserAvatar
-          // Your own profile shows the same image as the sidebar
-          src={avatarSrc(profile.id, profile.avatarUrl)}
-          username={profile.username}
-          className="size-20 shrink-0 rounded-2xl ring-1 ring-border sm:size-28"
-          fallbackClassName="text-2xl"
-        />
+        <AvatarWithPresence
+          presence={isOwnProfile ? null : presence}
+          dotClassName="-right-1 -bottom-1 size-4 ring-[3px] ring-background sm:size-5"
+        >
+          <UserAvatar
+            // Your own profile shows the same image as the sidebar
+            src={avatarSrc(profile.id, profile.avatarUrl)}
+            username={profile.username}
+            className="size-20 rounded-2xl ring-1 ring-border sm:size-28"
+            fallbackClassName="text-2xl"
+          />
+        </AvatarWithPresence>
         <InfoSection
           username={profile.username}
           joinedAt={profile.createdAt || ""}

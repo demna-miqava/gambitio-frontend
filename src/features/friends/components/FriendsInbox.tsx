@@ -24,6 +24,7 @@ import {
   MIN_PLAYER_SEARCH_LENGTH,
   useSuggestedFriends,
 } from "../suggestions/hooks/useSuggestedFriends";
+import { OnlineNow } from "../status/OnlineNow";
 
 const SectionTitle = ({ children, count }: { children: ReactNode; count?: number }) => (
   <h3 className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
@@ -156,7 +157,8 @@ const AddFriend = ({
 
 /**
  * Friends and challenges, from one icon in the top corner: add a friend by
- * username, and answer the challenges and friend requests waiting on you.
+ * username, see which friends are online or playing (OnlineNow), and answer
+ * the challenges and friend requests waiting on you.
  * The badge counts those. Rendered by the phone top bar and, from 768px, in
  * the corner of the page (AppLayout); not on game pages.
  */
@@ -214,6 +216,8 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
         className="max-h-[min(36rem,calc(100svh-5rem))] w-[min(23rem,calc(100vw-1rem))] divide-y divide-border overflow-y-auto rounded-xl p-0"
       >
         <AddFriend sent={sentRequests} received={receivedRequests} onAccept={answer("accept")} />
+
+        <OnlineNow enabled={open} onNavigate={() => setOpen(false)} />
 
         {challenges.length > 0 && (
           <section className="space-y-3 p-4" aria-labelledby="inbox-challenges">

@@ -27,6 +27,7 @@ export type {
   FriendActionHandlers,
   FriendSuggestionActionHandlers,
   FriendsData,
+  FriendStatus,
 } from "./friends.types";
 
 // UI types
