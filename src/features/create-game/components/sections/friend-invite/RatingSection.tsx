@@ -13,13 +13,13 @@ interface RatingSectionProps {
 }
 
 /**
- * Rated or unrated, with what that means. Nothing with time odds (their
- * section says they're unrated); with an opening outside a mirror match the
- * choice is locked on Unrated, and the line under it says why.
+ * Rated or unrated, with what that means. With time odds, or an opening
+ * outside a mirror match, the choice is locked on Unrated and the line
+ * under it says why: both are set under "More options", which may be
+ * folded away, so this is where the form says the game is unrated.
  */
 export const RatingSection = ({ plan, rating, onRatingChange }: RatingSectionProps) => {
-  if (plan.forcedUnrated === "odds") return null;
-  const locked = plan.forcedUnrated === "opening";
+  const locked = plan.forcedUnrated !== null;
   const hint = ratingHint(plan);
   return (
     <section className="space-y-2">

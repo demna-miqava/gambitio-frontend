@@ -14,6 +14,7 @@ import type { BestOf } from "@/features/notifications/types/websocket-messages";
 import { OpeningPicker } from "./OpeningPicker";
 import { isMirrorMatch, timedMatchLabel } from "@/features/series/utils/seriesFormat";
 import {
+  extraOptionsSummary,
   planChallenge,
   type MatchFormat,
   type Rating,
@@ -23,6 +24,7 @@ import {
 import { TimeOddsSection } from "./friend-invite/TimeOddsSection";
 import { MatchFormatSection } from "./friend-invite/MatchFormatSection";
 import { RatingSection } from "./friend-invite/RatingSection";
+import { MoreOptionsSection } from "./friend-invite/MoreOptionsSection";
 
 /** The length a timed match starts at: the usual speed-event format */
 const DEFAULT_MATCH_MINUTES = 15;
@@ -54,6 +56,8 @@ export const FriendInviteOptions = () => {
   const [pickedClock, setPickedClock] = useState<number | null>(null);
   // The custom time picker, shown in the form so the friend stays selected
   const [isCustomOpen, setIsCustomOpen] = useState(false);
+  // Time odds, the match format and the starting position, folded away until asked for
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const {
     selectedFriend,
     isSelectedFriendLoading,
@@ -139,38 +143,6 @@ export const FriendInviteOptions = () => {
             )}
           </div>
 
-          <TimeOddsSection
-            plan={plan}
-            odds={odds}
-            onOddsChange={setOdds}
-            onClockChange={setPickedClock}
-            friendName={selectedFriend.username}
-          />
-
-          <MatchFormatSection
-            plan={plan}
-            format={format}
-            onFormatChange={setFormat}
-            seriesLength={seriesLength}
-            onSeriesLengthChange={setSeriesLength}
-            onMatchMinutesChange={setPickedMinutes}
-            time={timeControl.time}
-            increment={timeControl.increment}
-          />
-
-          <OpeningPicker
-            value={startingOpening?.id ?? null}
-            onChange={setStartingOpening}
-            hint={
-              isMirrorMatch(bestOf) && !startingOpening
-                ? "Pick an opening to play it from both sides."
-                : startingOpening && isMatch
-                  ? "Every game starts from this position."
-                  : undefined
-            }
-          />
-
-          {/* After the format and opening, which decide whether the choice applies */}
           <RatingSection plan={plan} rating={rating} onRatingChange={setRating} />
 
           <section className="space-y-2">
@@ -187,6 +159,48 @@ export const FriendInviteOptions = () => {
               options={COLOR_CHOICES}
             />
           </section>
+
+          {/*
+            Last, as the options most challenges leave alone. Kept open while
+            the timed match doesn't fit, since that is what disables Send and
+            the reason is shown inside
+          */}
+          <MoreOptionsSection
+            open={isMoreOpen || !plan.fitsMatch}
+            onOpenChange={setIsMoreOpen}
+            summary={extraOptionsSummary(plan, startingOpening?.name ?? null)}
+          >
+            <TimeOddsSection
+              plan={plan}
+              odds={odds}
+              onOddsChange={setOdds}
+              onClockChange={setPickedClock}
+              friendName={selectedFriend.username}
+            />
+
+            <MatchFormatSection
+              plan={plan}
+              format={format}
+              onFormatChange={setFormat}
+              seriesLength={seriesLength}
+              onSeriesLengthChange={setSeriesLength}
+              onMatchMinutesChange={setPickedMinutes}
+              time={timeControl.time}
+              increment={timeControl.increment}
+            />
+
+            <OpeningPicker
+              value={startingOpening?.id ?? null}
+              onChange={setStartingOpening}
+              hint={
+                isMirrorMatch(bestOf) && !startingOpening
+                  ? "Pick an opening to play it from both sides."
+                  : startingOpening && isMatch
+                    ? "Every game starts from this position."
+                    : undefined
+              }
+            />
+          </MoreOptionsSection>
 
           <Button
             size="xl"

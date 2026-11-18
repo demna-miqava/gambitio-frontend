@@ -2,6 +2,7 @@ import type { PlayerColorOption } from "@/types/game.types";
 import type { BestOf } from "@/features/notifications/types/websocket-messages";
 import type { SendChallengeData } from "@/features/notifications/hooks/useManageChallenge";
 import { gameFitsMatch, MIRROR_MATCH_BEST_OF } from "@/features/series/utils/seriesFormat";
+import { formatTimeOdds } from "@/utils/timeControl";
 import { defaultShorterClock, shorterClocks } from "../constants/timeControls";
 
 /** One game, a mirror match, a best-of series, or a timed match */
@@ -121,6 +122,22 @@ export const planChallenge = (form: ChallengeForm): ChallengePlan => {
   };
 };
 
+/**
+ * The choices under "More options" that aren't the defaults, in the order
+ * the form shows them: time odds, the match format, the starting position.
+ * The folded section shows them, so a mirror match or an opening set there
+ * is never out of sight. Empty for a plain single game.
+ */
+export const extraOptionsSummary = (plan: ChallengePlan, openingName: string | null): string[] => {
+  const parts: string[] = [];
+  if (plan.hasOdds) parts.push(formatTimeOdds(plan.ownTime, plan.friendTime));
+  if (plan.matchMinutes !== null) parts.push(`${plan.matchMinutes}-minute match`);
+  else if (plan.bestOf === MIRROR_MATCH_BEST_OF) parts.push("Mirror match");
+  else if (plan.bestOf > 1) parts.push(`Best of ${plan.bestOf}`);
+  if (openingName) parts.push(openingName);
+  return parts;
+};
+
 /** Under the format choice: how the chosen one is played and scored */
 export const formatHint = (bestOf: BestOf, matchMinutes: number | null): string | null => {
   if (matchMinutes !== null) {
@@ -143,6 +160,7 @@ export const ratingHint = (plan: Pick<ChallengePlan, "bestOf" | "matchMinutes" |
   if (plan.forcedUnrated === "opening") {
     return "Games from a chosen opening are unrated, except mirror matches: you could have prepared it.";
   }
+  if (plan.forcedUnrated === "odds") return "Games with time odds are unrated.";
   if (plan.rated) return null;
   const scope =
     plan.matchMinutes !== null || plan.bestOf === MIRROR_MATCH_BEST_OF

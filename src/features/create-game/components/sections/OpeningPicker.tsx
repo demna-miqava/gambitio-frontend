@@ -43,19 +43,20 @@ export const OpeningPicker = ({ value, onChange, hint }: OpeningPickerProps) => 
 
   return (
     <section className="space-y-2">
-      <div className="flex items-center justify-between gap-3">
-        <Label htmlFor="starting-position" className="min-w-0 shrink-0 font-normal text-muted-foreground">
+      {/* The label above the picker: beside it, a narrow form cuts the opening's name short */}
+      <div className="space-y-2">
+        <Label htmlFor="starting-position" className="font-normal text-muted-foreground">
           Starting position
         </Label>
         {isPending ? (
-          <Skeleton className="h-11 w-52" />
+          <Skeleton className="h-11 w-full" />
         ) : (
           <Select
             value={selected?.id ?? STANDARD}
             onValueChange={(id) => onChange(openings?.find((opening) => opening.id === id) ?? null)}
             disabled={isError}
           >
-            <SelectTrigger id="starting-position" className="h-11 w-52 min-w-0">
+            <SelectTrigger id="starting-position" className="h-11 w-full min-w-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="max-h-80">

@@ -65,7 +65,7 @@ export const TimeOddsSection = ({
           </div>
           <p className="text-xs text-muted-foreground">
             You start with {formatClock(plan.ownTime)}, {friendName} with {formatClock(plan.friendTime)}
-            {plan.isMatch ? ", in every game" : ""}. Games with time odds are unrated.
+            {plan.isMatch ? ", in every game" : ""}.
           </p>
         </>
       )}

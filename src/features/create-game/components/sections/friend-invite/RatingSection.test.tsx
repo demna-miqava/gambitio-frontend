@@ -45,7 +45,9 @@ describe("RatingSection", () => {
     expect(markup).not.toContain("chosen opening");
   });
 
-  it("leaves it to the time odds section with time odds", () => {
-    expect(render({ odds: "me" })).toBe("");
+  it("locks a game with time odds on Unrated and says why", () => {
+    const markup = render({ odds: "me" });
+    expect(markup).toContain("data-disabled");
+    expect(markup).toContain("Games with time odds are unrated.");
   });
 });

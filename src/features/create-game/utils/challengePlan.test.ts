@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planChallenge, ratingHint, type ChallengeForm } from "./challengePlan";
+import { extraOptionsSummary, planChallenge, ratingHint, type ChallengeForm } from "./challengePlan";
 
 const form = (overrides: Partial<ChallengeForm> = {}): ChallengeForm => ({
   friendId: 12,
@@ -104,5 +104,39 @@ describe("ratingHint", () => {
 
   it("says why a challenge from an opening is unrated", () => {
     expect(hint({ openingId: "sicilian" })).toMatch(/chosen opening are unrated/);
+  });
+
+  it("says why a challenge with time odds is unrated", () => {
+    expect(hint({ odds: "them" })).toBe("Games with time odds are unrated.");
+  });
+});
+
+describe("extraOptionsSummary", () => {
+  it("is empty for a plain single game, whatever the rating and colour", () => {
+    expect(extraOptionsSummary(planChallenge(form()), null)).toEqual([]);
+    expect(extraOptionsSummary(planChallenge(form({ rating: "unrated", color: "black" })), null)).toEqual([]);
+  });
+
+  it("names the format, in each of its forms", () => {
+    expect(extraOptionsSummary(planChallenge(form({ format: "mirror" })), null)).toEqual(["Mirror match"]);
+    expect(extraOptionsSummary(planChallenge(form({ format: "series", seriesLength: "5" })), null)).toEqual(["Best of 5"]);
+    expect(extraOptionsSummary(planChallenge(form({ format: "timed", matchMinutes: 30 })), null)).toEqual([
+      "30-minute match",
+    ]);
+  });
+
+  it("lists time odds, the format and the opening in the form's order", () => {
+    const plan = planChallenge(form({ time: 300, odds: "me", format: "mirror", openingId: "queens-gambit" }));
+    expect(plan.hasOdds).toBe(true);
+    const summary = extraOptionsSummary(plan, "Queen's Gambit");
+    expect(summary).toHaveLength(3);
+    expect(summary[0]).toContain(" vs ");
+    expect(summary.slice(1)).toEqual(["Mirror match", "Queen's Gambit"]);
+  });
+
+  it("leaves time odds out when the time control has no shorter clock", () => {
+    const plan = planChallenge(form({ time: 15, odds: "them" }));
+    expect(plan.hasOdds).toBe(false);
+    expect(extraOptionsSummary(plan, null)).toEqual([]);
   });
 });
