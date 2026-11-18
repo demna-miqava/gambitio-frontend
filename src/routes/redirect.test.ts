@@ -19,6 +19,15 @@ describe("getSafeRedirect", () => {
     expect(getSafeRedirect("game/12")).toBe("/home");
   });
 
+  it("refuses backslashes and control characters anywhere", () => {
+    expect(getSafeRedirect("/\\/evil.com")).toBe("/home");
+    expect(getSafeRedirect("/game\\..\\..\\x")).toBe("/home");
+    expect(getSafeRedirect("/\t/evil.com")).toBe("/home");
+    expect(getSafeRedirect("/\n/evil.com")).toBe("/home");
+    expect(getSafeRedirect("/game/1\u0000")).toBe("/home");
+    expect(getSafeRedirect("/game/1\u007f")).toBe("/home");
+  });
+
   it("never sends the user back to an auth page", () => {
     expect(getSafeRedirect("/signin")).toBe("/home");
     expect(getSafeRedirect("/signup?x=1")).toBe("/home");

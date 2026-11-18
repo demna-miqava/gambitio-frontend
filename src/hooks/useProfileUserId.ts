@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useUser } from "./useUser";
+import { parsePositiveId } from "@/utils/ids";
 
 /**
  * Lightweight hook to get the userId for the current profile page.
@@ -17,7 +18,4 @@ export const useProfileUserId = () => {
 };
 
 /** A positive integer id, or 0 (which disables every profile query). */
-export const parseProfileId = (raw: string): number => {
-  const id = Number(raw);
-  return Number.isInteger(id) && id > 0 ? id : 0;
-};
+export const parseProfileId = (raw: string): number => parsePositiveId(raw) ?? 0;

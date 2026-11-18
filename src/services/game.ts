@@ -11,8 +11,11 @@ export const getUserGames = async ({
   return getUserGamesAPI(userId, query);
 };
 
-/** Any stored game, including bot games (see isPlayerGame) */
-export const getGameById = async (gameId: string): Promise<StoredGame> => {
+/**
+ * Any stored game, including bot games (see isPlayerGame). A number, not
+ * route text: parse params with parsePositiveId (@/utils/ids) first.
+ */
+export const getGameById = async (gameId: number): Promise<StoredGame> => {
   return apiRequest<StoredGame>("get", `/games/${gameId}`);
 };
 

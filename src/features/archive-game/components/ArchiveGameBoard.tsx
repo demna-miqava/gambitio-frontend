@@ -5,6 +5,7 @@ import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext
 import { AnalysisPromotion } from "./AnalysisPromotion";
 import { BotAvatar } from "@/features/play-bots/components/BotAvatar";
 import { useArchiveGame } from "../contexts/ArchiveGameContext";
+import { useUser } from "@/hooks/useUser";
 import { boardLabel } from "../utils/announce";
 
 interface ArchivePlayer {
@@ -15,13 +16,21 @@ interface ArchivePlayer {
   avatarUrl?: string | null;
 }
 
-/** The avatar, opening the player's card when they have an account. */
-const Avatar = ({ player }: { player: ArchivePlayer }) => {
+/**
+ * The avatar, opening the player's card when they have an account.
+ * `gameId`: this game, when the viewer played in it (sent with a report).
+ */
+const Avatar = ({ player, gameId }: { player: ArchivePlayer; gameId?: number }) => {
   const avatar = (
     <PlayerAvatar username={player.username} avatarUrl={player.avatarUrl} size="sm" />
   );
   return player.id != null ? (
-    <PlayerPopover player={{ ...player, id: player.id }}>{avatar}</PlayerPopover>
+    <PlayerPopover
+      player={{ ...player, id: player.id }}
+      {...(gameId !== undefined && { gameId })}
+    >
+      {avatar}
+    </PlayerPopover>
   ) : (
     avatar
   );
@@ -34,13 +43,22 @@ interface ArchiveGameBoardProps {
   timeControl?: number;
   /** The computer's side in a bot game (gets a bot avatar) */
   botSide?: "white" | "black";
+  /** The stored game's id (not for imported games) */
+  gameId?: number;
 }
 
 const ArchiveGameBoard = ({
   whitePlayer,
   blackPlayer,
   botSide,
+  gameId,
 }: ArchiveGameBoardProps) => {
+  // A report can carry the game only when the viewer played in it
+  const { id: viewerId } = useUser();
+  const ownGameId =
+    viewerId != null && (whitePlayer.id === viewerId || blackPlayer.id === viewerId)
+      ? gameId
+      : undefined;
   // Rows follow the board when it's flipped
   const { boardRef, orientation } = useChessBoardContext();
   const { currentNode } = useArchiveGame();
@@ -60,7 +78,7 @@ const ArchiveGameBoard = ({
         avatar: botSide === topSide ? (
           <BotAvatar rating={topPlayer.rating} className="size-8 rounded-lg" />
         ) : (
-          <Avatar player={topPlayer} />
+          <Avatar player={topPlayer} gameId={ownGameId} />
         ),
       }}
       bottomPlayer={{
@@ -69,7 +87,7 @@ const ArchiveGameBoard = ({
         avatar: botSide === orientation ? (
           <BotAvatar rating={bottomPlayer.rating} className="size-8 rounded-lg" />
         ) : (
-          <Avatar player={bottomPlayer} />
+          <Avatar player={bottomPlayer} gameId={ownGameId} />
         ),
       }}
     >

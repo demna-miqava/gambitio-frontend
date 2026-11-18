@@ -1,4 +1,6 @@
 import { lazy, type ComponentType } from "react";
+import { matchPath } from "react-router-dom";
+import { ROUTES } from "@/constants/routes";
 
 type PageModule = { default: ComponentType };
 
@@ -50,50 +52,47 @@ export const SignUp = page(() => import("@/pages/SignUp"));
 export const IntroPage = page(() => import("@/pages/IntroPage"));
 export const ProfileSetup = page(() => import("@/pages/ProfileSetup"));
 
-/** Main destinations first, so they're ready soonest */
-const SIGNED_IN_PAGES = [
+/**
+ * The pages most visits go to, main destinations first: fetched in the
+ * background after startup so these links open at once. The rest load when
+ * opened (React Router keeps the old page on screen meanwhile).
+ */
+const IDLE_PRELOAD_PAGES = [
   Home,
   Play,
+  CurrentGame,
+  ArchiveGame,
   PuzzlesLanding,
   Profile,
   ProfileOverview,
-  Settings,
-  Watch,
-  Leaderboard,
-  AnalysisBoard,
-  PlayBots,
-  CurrentGame,
-  PuzzleModePage,
-  ProfileGames,
-  ProfileStats,
-  ProfileFriends,
-  BotGame,
-  ArchiveGame,
-  ImportGame,
-  Repertoire,
-  StudyRooms,
-  StudyRoom,
-  EndgameLab,
-  EndgameExercise,
-  Series,
 ];
 
+type NetworkInformation = { saveData?: boolean; effectiveType?: string };
+
+/** Data saver on, or a 2G/3G connection: don't spend the user's data ahead of time. */
+export const isConstrainedConnection = (
+  connection: NetworkInformation | undefined = (navigator as { connection?: NetworkInformation })
+    .connection
+) =>
+  !!connection &&
+  (connection.saveData === true || /^(slow-2g|2g|3g)$/.test(connection.effectiveType ?? ""));
+
 /**
- * Fetch every signed-in page once the browser is idle after startup, so
- * following a link renders at once instead of waiting on its chunk (React
- * Router keeps the old page on screen until the new one's code arrives,
- * which reads as a frozen click).
+ * Fetch the most visited signed-in pages once the browser is idle after
+ * startup, so following those links renders at once instead of waiting on
+ * the chunk (React Router keeps the old page on screen until the new one's
+ * code arrives, which reads as a frozen click). Skipped on slow or
+ * data-saving connections.
  *
  * Runs only right after the app loads: the chunks it asks for are the ones
  * this build just shipped, so it can't hit stale chunks after a deploy
  * (which would trigger reloadOnStaleChunks mid-session).
  */
 export const preloadSignedInPages = () => {
-  const connection = (navigator as { connection?: { saveData?: boolean } }).connection;
-  if (connection?.saveData) return () => {};
+  if (isConstrainedConnection()) return () => {};
 
   const run = () => {
-    for (const p of SIGNED_IN_PAGES) {
+    for (const p of IDLE_PRELOAD_PAGES) {
       // A failed preload is retried by the page's own render
       p.preload().catch(() => {});
     }
@@ -106,4 +105,51 @@ export const preloadSignedInPages = () => {
   }
   const id = setTimeout(run, 1500);
   return () => clearTimeout(id);
+};
+
+type Page = { preload: () => Promise<PageModule> };
+
+/** Each route's page(s), as AppRoutes renders them (Profile wraps its tabs). */
+const ROUTE_PAGES: [pattern: string, pages: Page[]][] = [
+  [ROUTES.LANDING, [IntroPage]],
+  [ROUTES.AUTH.SIGN_IN, [SignIn]],
+  [ROUTES.AUTH.SIGN_UP, [SignUp]],
+  [ROUTES.AUTH.PROFILE_SETUP, [ProfileSetup]],
+  [ROUTES.HOME, [Home]],
+  [ROUTES.PROFILE.ROOT, [Profile, ProfileOverview]],
+  [`${ROUTES.PROFILE.ROOT}/${ROUTES.PROFILE.GAMES}`, [Profile, ProfileGames]],
+  [`${ROUTES.PROFILE.ROOT}/${ROUTES.PROFILE.STATS}`, [Profile, ProfileStats]],
+  [`${ROUTES.PROFILE.ROOT}/${ROUTES.PROFILE.FRIENDS}`, [Profile, ProfileFriends]],
+  [ROUTES.PLAY, [Play]],
+  [ROUTES.PLAY_BOTS, [PlayBots]],
+  [ROUTES.BOT_GAME, [BotGame]],
+  [ROUTES.GAME, [CurrentGame]],
+  [ROUTES.ARCHIVE_GAME, [ArchiveGame]],
+  [ROUTES.WATCH, [Watch]],
+  [ROUTES.SETTINGS, [Settings]],
+  [ROUTES.PUZZLES, [PuzzlesLanding]],
+  [ROUTES.PUZZLE_MODE, [PuzzleModePage]],
+  [ROUTES.LEADERBOARD, [Leaderboard]],
+  [ROUTES.SERIES, [Series]],
+  [ROUTES.REPERTOIRE, [Repertoire]],
+  [ROUTES.STUDY, [StudyRooms]],
+  [ROUTES.STUDY_ROOM, [StudyRoom]],
+  [ROUTES.ENDGAMES, [EndgameLab]],
+  [ROUTES.ENDGAME_EXERCISE, [EndgameExercise]],
+  [ROUTES.TOOLS.IMPORT_GAME, [ImportGame]],
+  [ROUTES.TOOLS.ANALYSIS_BOARD, [AnalysisBoard]],
+];
+
+/** The pages AppRoutes renders for `pathname`; empty when none matches. */
+export const pagesForPath = (pathname: string): Page[] =>
+  ROUTE_PAGES.find(([pattern]) => matchPath(pattern, pathname))?.[1] ?? [];
+
+/**
+ * Start downloading the page for the URL the app opens on, before the first
+ * render: otherwise its chunk only starts once AuthGuard has waited for
+ * Clerk and the profile status, a needless round trip on every cold load.
+ * Same request as the page's own render (see page()), so nothing loads twice.
+ */
+export const preloadPageFor = (pathname: string) => {
+  for (const p of pagesForPath(pathname)) p.preload().catch(() => {});
 };

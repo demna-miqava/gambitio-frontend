@@ -1,0 +1,26 @@
+# Response headers for the static site (Cloudflare Workers Static Assets reads
+# this file from the assets directory, i.e. dist/). They apply to files and to
+# the index.html served for app routes; not to /api, which the Worker answers.
+# Every matching rule adds its headers, in file order (a header set twice is
+# joined with ", ", so each header below is set by one rule only). Limits: 100
+# rules, 2,000 characters per line.
+# https://developers.cloudflare.com/workers/static-assets/headers/
+
+/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://clerk.gambitio.demnamikava.dev https://challenges.cloudflare.com https://*.protect.clerk.com; worker-src 'self' blob:; connect-src 'self' wss://gambitio.demnamikava.dev https://clerk.gambitio.demnamikava.dev https://*.protect.clerk.com:* https://tablebase.lichess.ovh; img-src 'self' data: blob: https://img.clerk.com; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src https://challenges.cloudflare.com https://*.protect.clerk.com; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), bluetooth=(), browsing-topics=(), camera=(), clipboard-read=(), clipboard-write=(self), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), microphone=(), midi=(), payment=(), publickey-credentials-create=(self), publickey-credentials-get=(self), screen-wake-lock=(), serial=(), usb=(), web-share=(self), xr-spatial-tracking=()
+  Strict-Transport-Security: max-age=31536000
+
+# Fingerprinted by Vite (the name changes with the content): keep for a year.
+# Everything else (/, /index.html, /sw.js, /theme-init.js, icons) keeps
+# Cloudflare's default, public, max-age=0, must-revalidate.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Stockfish: the commit hash in the name changes with the build
+/stockfish-*
+  Cache-Control: public, max-age=31536000, immutable

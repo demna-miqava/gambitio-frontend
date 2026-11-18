@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Crown } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { getProfileRoute } from "@/constants/routes";
-import { formatTimeControl } from "@/utils/timeControl";
+import { formatTimeControl, formatTimeOdds, timeOdds } from "@/utils/timeControl";
 import { cn } from "@/lib/utils";
 import type { SeriesPlayer, SeriesSummary } from "../types";
 import {
@@ -50,6 +50,8 @@ export const SeriesScoreboard = ({
 }) => {
   const [left, right] = playersFor(series, viewerId);
   const status = seriesStatusLabel(series, viewerId);
+  // Time odds: each player's clock, in the order they are shown
+  const odds = timeOdds(left.time, right.time);
 
   return (
     <section
@@ -59,7 +61,17 @@ export const SeriesScoreboard = ({
       <p className="mb-4 flex flex-wrap items-center justify-center gap-x-2 text-sm text-muted-foreground">
         <span>{bestOfLabel(series.bestOf)}</span>
         <span aria-hidden="true">·</span>
-        <span className="tabular-nums">{formatTimeControl(series.time, series.increment)}</span>
+        <span className="tabular-nums">
+          {odds
+            ? formatTimeOdds(odds[0], odds[1], series.increment)
+            : formatTimeControl(series.time, series.increment)}
+        </span>
+        {odds && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>Unrated</span>
+          </>
+        )}
       </p>
       <div className="flex items-center gap-2 sm:gap-4">
         <PlayerSide player={left} isWinner={series.winnerId === left.id} align="start" />

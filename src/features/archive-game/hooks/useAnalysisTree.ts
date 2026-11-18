@@ -3,8 +3,14 @@ import type { Move } from "chess.js";
 import type { AnalysisNode, NodePath } from "../types/analysis.types";
 import * as Tree from "../utils/analysisTree";
 import { parsePgn, toPgn } from "../utils/pgn";
+import { userStore } from "@/utils/userStorage";
 
-const STORAGE_PREFIX = "gambitio:analysis:";
+/**
+ * Saved analyses, per signed-in account (cleared on sign-out), the 50 most
+ * recently edited kept. Entries from before they were per account (under
+ * "gambitio:analysis:", whoever wrote them) are dropped.
+ */
+const analyses = userStore("analysis", { legacyPrefix: "gambitio:analysis:" });
 
 function parseOrEmpty(pgn: string | undefined) {
   if (!pgn) return Tree.createRoot();
@@ -19,7 +25,7 @@ function loadInitialTree(pgn: string | undefined, storageKey: string | undefined
   const game = parseOrEmpty(pgn);
   if (!storageKey) return game;
   try {
-    const saved = localStorage.getItem(STORAGE_PREFIX + storageKey);
+    const saved = analyses.get(storageKey);
     if (!saved) return game;
     const restored = parsePgn(saved).root;
     if (restored.fen !== game.fen) return game;
@@ -54,16 +60,12 @@ export const useAnalysisTree = ({ pgn, storageKey }: UseAnalysisTreeOptions = {}
   useEffect(() => {
     if (!storageKey || lastSaved.current === root) return;
     lastSaved.current = root;
-    const key = STORAGE_PREFIX + storageKey;
-    try {
-      // Without a game (analysis board) every move is worth keeping; an
-      // empty board is not, and saved over a game it would hide its moves
-      const worthSaving = Tree.hasAnalysis(root) || (!pgn && root.children.length > 0);
-      if (worthSaving) localStorage.setItem(key, toPgn(root));
-      else localStorage.removeItem(key);
-    } catch {
-      // Storage full or disabled: analysis just isn't saved
-    }
+    // Without a game (analysis board) every move is worth keeping; an
+    // empty board is not, and saved over a game it would hide its moves.
+    // (Storage full or disabled: analysis just isn't saved.)
+    const worthSaving = Tree.hasAnalysis(root) || (!pgn && root.children.length > 0);
+    if (worthSaving) analyses.set(storageKey, toPgn(root));
+    else analyses.remove(storageKey);
   }, [root, storageKey, pgn]);
 
   const nodes = useMemo(() => Tree.nodesAlong(root, path), [root, path]);

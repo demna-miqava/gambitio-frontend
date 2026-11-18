@@ -48,3 +48,19 @@ export const PLAY_TIME_CONTROLS = [
 /** Choices offered by the custom time control picker */
 export const CUSTOM_MINUTES = [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 45, 60, 90];
 export const CUSTOM_INCREMENTS = [0, 1, 2, 3, 5, 10, 15, 20, 30, 60];
+
+/**
+ * Clocks (seconds) the player with less time can be given in a game with
+ * time odds. Only the ones shorter than the other player's clock are offered.
+ */
+export const ODDS_CLOCKS = [15, 30, 45, 60, 120, 180, 300, 600, 900, 1200];
+
+/** The shorter clocks on offer against `time`, longest first. */
+export const shorterClocks = (time: number): number[] =>
+  ODDS_CLOCKS.filter((clock) => clock < time).reverse();
+
+/** The shorter clock picked by default: about half of `time`. */
+export const defaultShorterClock = (time: number): number | null => {
+  const options = shorterClocks(time);
+  return options.find((clock) => clock <= time / 2) ?? options[options.length - 1] ?? null;
+};

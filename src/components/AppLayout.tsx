@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { preloadSignedInPages } from "@/routes/pages";
 import { StudyInviteToasts } from "@/features/study/components/StudyInviteToasts";
 import { FriendUpdates } from "@/features/friends/components/FriendUpdates";
+import { BlockUpdates } from "@/features/moderation/components/BlockUpdates";
 import { FriendsInbox } from "@/features/friends/components/FriendsInbox";
 import { PushSync } from "@/features/push/PushSync";
 import { GameShellProvider, useGameShell } from "@/context/GameShellContext";
@@ -114,6 +115,7 @@ const AppShell = () => {
             <AppSidebar />
             <StudyInviteToasts />
             <FriendUpdates />
+            <BlockUpdates />
             <PushSync />
             <SidebarInset
               className={cn(

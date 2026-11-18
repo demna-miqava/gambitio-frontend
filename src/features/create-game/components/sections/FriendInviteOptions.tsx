@@ -6,7 +6,16 @@ import { useGameSetup } from "../../GameSetupContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
 import type { PlayerColorOption } from "@/types/game.types";
-import { formatTimeControl } from "@/utils/timeControl";
+import { formatClock, formatTimeControl, formatTimeOdds } from "@/utils/timeControl";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { defaultShorterClock, shorterClocks } from "../../constants/timeControls";
 import { OutgoingChallengeCard } from "../OutgoingChallengeCard";
 import { SegmentedRadioGroup, type SegmentedOption } from "@/components/SegmentedRadioGroup";
 import type { BestOf } from "@/features/notifications/types/websocket-messages";
@@ -19,6 +28,15 @@ const FORMAT_CHOICES: SegmentedOption<MatchFormat>[] = [
   { value: "5", label: "Best of 5" },
 ];
 
+/** Who starts with less time: nobody, the sender, or the friend */
+type TimeOdds = "even" | "me" | "them";
+
+const ODDS_CHOICES: SegmentedOption<TimeOdds>[] = [
+  { value: "even", label: "Even" },
+  { value: "me", label: "Less for me" },
+  { value: "them", label: "Less for them" },
+];
+
 const COLOR_CHOICES: SegmentedOption<PlayerColorOption>[] = [
   { value: "white", label: "White" },
   { value: "random", label: "Random" },
@@ -29,6 +47,9 @@ export const FriendInviteOptions = () => {
   const [colorChoice, setColorChoice] = useState<PlayerColorOption>("random");
   const [format, setFormat] = useState<MatchFormat>("1");
   const bestOf = Number(format) as BestOf;
+  const [odds, setOdds] = useState<TimeOdds>("even");
+  // The shorter clock the player picked; dropped when it no longer fits the time control
+  const [pickedClock, setPickedClock] = useState<number | null>(null);
   const { selectedFriend, isSelectedFriendLoading, timeControl, goBack } =
     useGameSetup();
   const { sendChallenge, outgoingChallenge } = useChallenges();
@@ -57,6 +78,16 @@ export const FriendInviteOptions = () => {
   }
 
   const rating = selectedFriend[`${timeControl.format}Rating`];
+  // Time odds: one player keeps the time control's clock, the other gets a
+  // shorter one. No shorter clock exists below the shortest time control
+  const clockChoices = shorterClocks(timeControl.time);
+  const shorterClock =
+    pickedClock !== null && clockChoices.includes(pickedClock)
+      ? pickedClock
+      : defaultShorterClock(timeControl.time);
+  const hasOdds = odds !== "even" && shorterClock !== null;
+  const ownTime = hasOdds && odds === "me" ? shorterClock : timeControl.time;
+  const friendTime = hasOdds && odds === "them" ? shorterClock : timeControl.time;
   const isWaitingForThisFriend = outgoingChallenge?.challengedId === selectedFriend.id;
 
   return (
@@ -82,6 +113,51 @@ export const FriendInviteOptions = () => {
       ) : (
         <>
           <TimeControlsSection showCustom={false} />
+
+          {clockChoices.length > 0 && (
+            <section className="space-y-3">
+              <div className="space-y-2">
+                <p aria-hidden="true" className="text-sm text-muted-foreground">
+                  Time odds
+                </p>
+                <SegmentedRadioGroup
+                  label="Time odds"
+                  value={odds}
+                  onValueChange={setOdds}
+                  options={ODDS_CHOICES}
+                />
+              </div>
+              {hasOdds && (
+                <>
+                  <div className="flex items-center justify-between gap-3">
+                    <Label htmlFor="odds-clock" className="min-w-0 truncate">
+                      {odds === "me" ? "My clock" : `${selectedFriend.username}'s clock`}
+                    </Label>
+                    <Select
+                      value={String(shorterClock)}
+                      onValueChange={(v) => setPickedClock(Number(v))}
+                    >
+                      <SelectTrigger id="odds-clock" className="h-11 w-32 shrink-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clockChoices.map((clock) => (
+                          <SelectItem key={clock} value={String(clock)}>
+                            {formatClock(clock)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    You start with {formatClock(ownTime)}, {selectedFriend.username} with{" "}
+                    {formatClock(friendTime)}
+                    {bestOf > 1 ? ", in every game" : ""}. Games with time odds are unrated.
+                  </p>
+                </>
+              )}
+            </section>
+          )}
 
           <section className="space-y-2">
             <p
@@ -127,8 +203,9 @@ export const FriendInviteOptions = () => {
                 {
                   challengedId: selectedFriend.id,
                   color: colorChoice,
-                  time: timeControl.time,
+                  time: ownTime,
                   increment: timeControl.increment,
+                  ...(hasOdds && { opponentTime: friendTime }),
                   bestOf,
                 },
                 { username: selectedFriend.username }
@@ -137,7 +214,9 @@ export const FriendInviteOptions = () => {
           >
             Send{" "}
             <span className="tabular-nums">
-              {formatTimeControl(timeControl.time, timeControl.increment)}
+              {hasOdds
+                ? formatTimeOdds(ownTime, friendTime)
+                : formatTimeControl(timeControl.time, timeControl.increment)}
             </span>{" "}
             {bestOf > 1 ? `best-of-${bestOf} challenge` : "challenge"}
           </Button>

@@ -15,7 +15,8 @@ interface UseBoardMoveHandlerOptions {
   chessRef: React.RefObject<Chess>;
   cgRef: React.RefObject<Api | null>;
   movableColor: PlayerColor | "both";
-  setTurn: (turn: PlayerColor) => void;
+  /** Records the position; gets the move played, so it needn't replay the game */
+  setTurn: (turn: PlayerColor, appended?: Move) => void;
   playSoundForMove?: (move: Move, isCheckmate: boolean) => void;
 }
 
@@ -56,7 +57,7 @@ export const useBoardMoveHandler = ({
           lastMove: lastMove ?? [move.from, move.to],
           playPremove,
         });
-        setTurn(turn);
+        setTurn(turn, move);
 
         if (playSoundForMove) {
           playSoundForMove(move, isCheckmate);

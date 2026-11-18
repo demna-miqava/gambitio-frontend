@@ -1,7 +1,7 @@
 import { createContext, useContext, type ReactNode, useMemo } from "react";
 import type { PlayerColor } from "../types/game.types";
 import { useChessBoard } from "../hooks/useChessBoard";
-import type { Chess } from "chess.js";
+import type { Chess, Move } from "chess.js";
 import type { Api } from "@lichess-org/chessground/api";
 
 interface ChessBoardContextValue {
@@ -9,9 +9,21 @@ interface ChessBoardContextValue {
   chessRef: React.RefObject<Chess>;
   cgRef: React.RefObject<Api | null>;
   turn: PlayerColor | undefined;
-  /** Call after changing chessRef: records the side to move and move count */
-  setTurn: (turn: PlayerColor) => void;
-  /** Half-moves played, as of the last setTurn (re-renders on resyncs) */
+  /**
+   * Call after changing chessRef: records the side to move and the moves.
+   * Pass the move just played (chess.move()'s result) to add it without
+   * replaying the game. Returns the moves.
+   */
+  setTurn: (turn: PlayerColor, appended?: Move) => Move[];
+  /**
+   * The game's moves (verbose), as of the last setTurn: read once per change
+   * and shared, since chess.history() replays the whole game. A new array
+   * whenever the line changes (re-renders on resyncs).
+   */
+  moves: Move[];
+  /** The moves now, for callbacks and effects (no replay unless the game changed) */
+  getMoves: () => Move[];
+  /** Half-moves played, as of the last setTurn (moves.length) */
   ply: number;
   /** The player's side (whose pieces move in a game) */
   color: PlayerColor;
@@ -53,6 +65,8 @@ export const ChessBoardProvider = ({
     cgRef: chessBoard.cgRef,
     turn: chessBoard.turn,
     setTurn: chessBoard.setTurn,
+    moves: chessBoard.moves,
+    getMoves: chessBoard.getMoves,
     ply: chessBoard.ply,
     color,
     orientation: chessBoard.orientation,
@@ -68,6 +82,8 @@ export const ChessBoardProvider = ({
     chessBoard.cgRef,
     chessBoard.turn,
     chessBoard.setTurn,
+    chessBoard.moves,
+    chessBoard.getMoves,
     chessBoard.ply,
     color,
     chessBoard.orientation,

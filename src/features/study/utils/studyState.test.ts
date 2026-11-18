@@ -9,6 +9,7 @@ import {
   sameShapes,
   toAnalysisTree,
   toStudyPgn,
+  toBoardShapes,
   toStudyShapes,
 } from "./studyState";
 import { parseStartInput } from "./startInput";
@@ -166,6 +167,47 @@ describe("shapes", () => {
     ]);
     expect(sameShapes(shapes, [...shapes].reverse())).toBe(true);
     expect(sameShapes(shapes, shapes.slice(1))).toBe(false);
+  });
+});
+
+describe("toBoardShapes", () => {
+  it("passes only checked squares and room brushes to the board", () => {
+    expect(
+      toBoardShapes([
+        { orig: "e2", dest: "e4", brush: "green" },
+        { orig: "d4", brush: "red" },
+        { orig: "d4", dest: "d4", brush: "blue" },
+        {
+          orig: "a1",
+          brush: "yellow",
+          customSvg: { html: "<img src=x onerror=alert(1)>" },
+          label: { text: "<b>hi</b>" },
+          modifiers: { lineWidth: 99 },
+        },
+      ])
+    ).toEqual([
+      { orig: "e2", dest: "e4", brush: "green" },
+      { orig: "d4", brush: "red" },
+      { orig: "d4", brush: "blue" },
+      { orig: "a1", brush: "yellow" },
+    ]);
+  });
+
+  it("drops shapes with bad squares or brushes, and anything that isn't a list", () => {
+    expect(
+      toBoardShapes([
+        { orig: "i9", brush: "green" },
+        { orig: "e2", dest: "e9", brush: "green" },
+        { orig: "e2", dest: 5, brush: "green" },
+        { orig: "e2", brush: "paleBlue" },
+        { orig: "e2" },
+        { orig: "<svg>", brush: "red" },
+        null,
+        "e2e4",
+      ])
+    ).toEqual([]);
+    expect(toBoardShapes(undefined)).toEqual([]);
+    expect(toBoardShapes({ orig: "e2", brush: "green" })).toEqual([]);
   });
 });
 

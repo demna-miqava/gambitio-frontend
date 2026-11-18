@@ -3,6 +3,30 @@ import { getPushKey, removePushSubscription, savePushSubscription } from "@/serv
 const SERVICE_WORKER_URL = "/sw.js";
 
 /**
+ * Set while the server has this browser's subscription under the signed-in
+ * account, so a session that ends without "Sign out" (it expired, or the
+ * user signed out in another tab) knows there's something to undo.
+ */
+const ATTACHED_KEY = "gambitio:push-attached";
+
+const setAttached = (attached: boolean) => {
+  try {
+    if (attached) localStorage.setItem(ATTACHED_KEY, "1");
+    else localStorage.removeItem(ATTACHED_KEY);
+  } catch {
+    // Storage disabled: releasePushAfterSessionEnd just has nothing to go on
+  }
+};
+
+const isAttached = () => {
+  try {
+    return localStorage.getItem(ATTACHED_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Why notifications can't be turned on here, or null if they can.
  * - "unsupported": the browser has no push
  * - "needs-install": iPhone and iPad only allow push for a site added to the Home Screen
@@ -75,6 +99,7 @@ export async function enablePush(): Promise<void> {
     applicationServerKey: applicationServerKey(publicKey),
   });
   await savePushSubscription(subscription.toJSON());
+  setAttached(true);
 }
 
 function sameKey(subscription: PushSubscription, publicKey: string): boolean {
@@ -88,19 +113,57 @@ function sameKey(subscription: PushSubscription, publicKey: string): boolean {
 /** Turns notifications off for this browser, here and on the server. */
 export async function disablePush(): Promise<void> {
   const subscription = await currentSubscription();
-  if (!subscription) return;
+  if (!subscription) return setAttached(false);
   await removePushSubscription(subscription.endpoint).catch(() => {});
   await subscription.unsubscribe();
+  setAttached(false);
 }
 
 /**
  * Signing out: the server stops sending this browser the account's
  * notifications. The browser keeps its subscription, so the next sign-in
- * here picks it up again (syncPushSubscription).
+ * here picks it up again (syncPushSubscription). Needs the session (the
+ * server only removes a subscription for its own account). Never throws;
+ * true when nothing is left attached.
  */
-export async function detachPushFromAccount(): Promise<void> {
+export async function detachPushFromAccount(): Promise<boolean> {
   const subscription = await currentSubscription().catch(() => null);
-  if (subscription) await removePushSubscription(subscription.endpoint).catch(() => {});
+  if (!subscription) {
+    setAttached(false);
+    return true;
+  }
+  const detached = await removePushSubscription(subscription.endpoint).then(
+    () => true,
+    () => false
+  );
+  if (detached) setAttached(false);
+  return detached;
+}
+
+/** The account was deleted: the server dropped its subscriptions itself. */
+export function forgetPushAttachment(): void {
+  setAttached(false);
+}
+
+/**
+ * The session ended without "Sign out" here (it expired, or the user signed
+ * out in another tab or while the app was closed): the server would keep
+ * sending this browser the account's notifications. It can't be told any
+ * more (POST /push/unsubscribe needs the account's session), so the
+ * browser's subscription is cancelled instead: the push service then refuses
+ * further messages, and the server drops the subscription the next time it
+ * tries one. Notifications have to be turned on again after signing back in.
+ * Never throws.
+ */
+export async function releasePushAfterSessionEnd(): Promise<void> {
+  if (!isAttached()) return;
+  try {
+    const subscription = await currentSubscription();
+    if (subscription) await subscription.unsubscribe();
+    setAttached(false);
+  } catch {
+    // Nothing more to do here; the next sign-in syncs the state again
+  }
 }
 
 /**
@@ -110,5 +173,7 @@ export async function detachPushFromAccount(): Promise<void> {
 export async function syncPushSubscription(): Promise<void> {
   if (pushBlocker() || Notification.permission !== "granted") return;
   const subscription = await currentSubscription();
-  if (subscription) await savePushSubscription(subscription.toJSON());
+  if (!subscription) return;
+  await savePushSubscription(subscription.toJSON());
+  setAttached(true);
 }

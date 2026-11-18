@@ -271,6 +271,29 @@ export function toStudyShapes(shapes: BoardShape[]): StudyShape[] {
   );
 }
 
+const SQUARE = /^[a-h][1-8]$/;
+
+/**
+ * The room's shapes as chessground draws them: only an origin, an optional
+ * destination and one of the room's brushes, each checked, so nothing else
+ * the server sent (e.g. customSvg or label, which chessground renders as
+ * HTML) ever reaches the board.
+ */
+export function toBoardShapes(shapes: unknown): { orig: Square; dest?: Square; brush: StudyBrush }[] {
+  if (!Array.isArray(shapes)) return [];
+  return shapes.flatMap((shape: unknown) => {
+    if (typeof shape !== "object" || shape === null) return [];
+    const { orig, dest, brush } = shape as Record<string, unknown>;
+    if (typeof orig !== "string" || !SQUARE.test(orig)) return [];
+    if (typeof brush !== "string" || !isStudyBrush(brush)) return [];
+    // No dest, or dest on orig, is a circle; a dest that isn't a square drops the shape
+    const circle = dest === undefined || dest === null || dest === orig;
+    const arrow = !circle && typeof dest === "string" && SQUARE.test(dest);
+    if (!circle && !arrow) return [];
+    return [{ orig: orig as Square, ...(arrow ? { dest: dest as Square } : {}), brush }];
+  });
+}
+
 /** Same shapes, compared by squares and colour, in any order. */
 export function sameShapes(a: StudyShape[], b: StudyShape[]): boolean {
   if (a.length !== b.length) return false;

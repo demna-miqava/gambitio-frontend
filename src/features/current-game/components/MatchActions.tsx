@@ -11,6 +11,8 @@ interface MatchActionsProps {
   onOfferDraw: () => void;
   /** Our draw offer is waiting for an answer */
   drawOfferSent: boolean;
+  /** False after the opponent declined our offer, until we move again */
+  canOfferDraw: boolean;
   onRequestTakeback: () => void;
   /** Our takeback request is waiting for an answer */
   takebackRequested: boolean;
@@ -30,6 +32,7 @@ const MatchActions = ({
   onResign,
   onOfferDraw,
   drawOfferSent,
+  canOfferDraw,
   onRequestTakeback,
   takebackRequested,
   canRequestTakeback,
@@ -65,7 +68,7 @@ const MatchActions = ({
         variant="draw"
         onClick={onOfferDraw}
         label={drawOfferSent ? "Draw offered…" : "Offer draw"}
-        disabled={disabled || drawOfferSent}
+        disabled={disabled || drawOfferSent || !canOfferDraw}
         confirmTitle={
           confirmDrawResignationEnabled ? "Offer your opponent a draw?" : undefined
         }

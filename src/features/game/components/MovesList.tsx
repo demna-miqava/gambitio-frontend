@@ -7,19 +7,20 @@ import { renderMoveNotation } from "@/features/game/utils/notationUtils";
 import { groupMovesIntoPairs } from "@/features/game/utils/moveListUtils";
 import { cn } from "@/lib/utils";
 import { scrollIntoContainer } from "@/utils/scrollIntoContainer";
+import { useMediaQuery } from "@/hooks/use-mobile";
+
+/** Tailwind's lg breakpoint, where the strip gives way to the score sheet */
+const SHEET_QUERY = "(min-width: 64rem)";
 
 /**
  * Move list for a game played on a ChessBoardProvider + GameNavigationProvider
  * (live game, and any page that uses the same providers).
  */
 export const MovesList = () => {
-  const { chessRef } = useChessBoardContext();
+  // The board's shared move list: a new array whenever the line changes,
+  // including server resyncs that replace moves without changing the count
+  const { moves } = useChessBoardContext();
   const { currentIndex, goToMove } = useGameNavigation();
-
-  // The chess instance lives in a ref, so read it on every render (re-renders
-  // come from turn changes in the board context). Memoizing on the move count
-  // missed server resyncs that replaced moves without changing the count.
-  const moves = chessRef.current?.history({ verbose: true }) || [];
   return (
     <MovesListView moves={moves} activeIndex={currentIndex - 1} onSelect={goToMove} />
   );
@@ -36,6 +37,8 @@ interface MovesListViewProps {
 /**
  * Phones get a single scrolling strip under the board; larger screens get a
  * two-column score sheet. Tapping a move shows the position after it.
+ * Only the one for the screen is rendered (read before the first paint), so
+ * long games don't keep two copies of the list in the page.
  */
 export const MovesListView = ({ moves, activeIndex, onSelect }: MovesListViewProps) => {
   const { settings } = useSettings();
@@ -43,6 +46,7 @@ export const MovesListView = ({ moves, activeIndex, onSelect }: MovesListViewPro
   const sheetRef = useRef<HTMLDivElement>(null);
   const movePairs = groupMovesIntoPairs(moves);
   const showIcons = settings?.pieceIconNotationEnabled ?? false;
+  const showSheet = useMediaQuery(SHEET_QUERY);
 
   // Keep the newest / selected move in view
   useEffect(() => {
@@ -55,7 +59,7 @@ export const MovesListView = ({ moves, activeIndex, onSelect }: MovesListViewPro
       const top = sheetActive.offsetTop - sheet.clientHeight / 2;
       sheet.scrollTo({ top: Math.max(0, top) });
     }
-  }, [activeIndex, moves.length]);
+  }, [activeIndex, moves.length, showSheet]);
 
   if (moves.length === 0) {
     return (
@@ -92,52 +96,50 @@ export const MovesListView = ({ moves, activeIndex, onSelect }: MovesListViewPro
     );
   };
 
-  return (
-    <>
-      {/* Phones: horizontal strip */}
-      <ol
-        ref={stripRef}
-        className="scrollbar-none flex items-center gap-0.5 overflow-x-auto whitespace-nowrap lg:hidden"
-        aria-label="Moves"
-      >
-        {moves.map((move, index) => (
-          <li key={index} className="flex items-center">
-            {index % 2 === 0 && (
+  return showSheet ? (
+    // Desktop: score sheet
+    <div
+      ref={sheetRef}
+      className="relative hidden max-h-[min(420px,calc(100svh-26rem))] min-h-40 overflow-y-auto lg:block"
+    >
+      <ol className="grid grid-cols-[2.5rem_1fr_1fr] gap-y-0.5 text-sm" aria-label="Moves">
+        {movePairs.map((pair) => {
+          const whiteIndex = (pair.moveNumber - 1) * 2;
+          return (
+            <li key={pair.moveNumber} className="contents">
               <span
-                className="pl-1.5 text-xs tabular-nums text-muted-foreground"
+                className="flex items-center text-xs tabular-nums text-muted-foreground"
                 aria-hidden="true"
               >
-                {index / 2 + 1}.
+                {pair.moveNumber}.
               </span>
-            )}
-            {renderMove(move, index)}
-          </li>
-        ))}
+              {renderMove(pair.white, whiteIndex)}
+              {renderMove(pair.black, whiteIndex + 1)}
+            </li>
+          );
+        })}
       </ol>
-
-      {/* Desktop: score sheet */}
-      <div
-        ref={sheetRef}
-        className="relative hidden max-h-[min(420px,calc(100svh-26rem))] min-h-40 overflow-y-auto lg:block"
-      >
-        <ol className="grid grid-cols-[2.5rem_1fr_1fr] gap-y-0.5 text-sm" aria-label="Moves">
-          {movePairs.map((pair) => {
-            const whiteIndex = (pair.moveNumber - 1) * 2;
-            return (
-              <li key={pair.moveNumber} className="contents">
-                <span
-                  className="flex items-center text-xs tabular-nums text-muted-foreground"
-                  aria-hidden="true"
-                >
-                  {pair.moveNumber}.
-                </span>
-                {renderMove(pair.white, whiteIndex)}
-                {renderMove(pair.black, whiteIndex + 1)}
-              </li>
-            );
-          })}
-        </ol>
-      </div>
-    </>
+    </div>
+  ) : (
+    // Phones: horizontal strip
+    <ol
+      ref={stripRef}
+      className="scrollbar-none flex items-center gap-0.5 overflow-x-auto whitespace-nowrap lg:hidden"
+      aria-label="Moves"
+    >
+      {moves.map((move, index) => (
+        <li key={index} className="flex items-center">
+          {index % 2 === 0 && (
+            <span
+              className="pl-1.5 text-xs tabular-nums text-muted-foreground"
+              aria-hidden="true"
+            >
+              {index / 2 + 1}.
+            </span>
+          )}
+          {renderMove(move, index)}
+        </li>
+      ))}
+    </ol>
   );
 };

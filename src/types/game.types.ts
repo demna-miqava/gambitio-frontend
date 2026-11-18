@@ -20,6 +20,14 @@ export type Game = {
   numMoves: number;
   time: number;
   increment: number;
+  /**
+   * Each side's starting clock in seconds when they differ (time odds);
+   * `time` is then the longer one. Null or missing for an even game.
+   */
+  whiteTime?: number | null;
+  blackTime?: number | null;
+  /** False for games that don't change ratings (time odds) */
+  rated?: boolean;
   type: TimeControlType;
   status: GameStatus;
   result: GameResult | null;
@@ -45,7 +53,7 @@ export type StoredGame = Omit<Game, "time" | "type" | "whitePlayer" | "blackPlay
   /** Null for bot games, which are untimed */
   time: number | null;
   type: TimeControlType | null;
-  /** False for bot games: they don't change ratings */
+  /** False for bot games and games with time odds: they don't change ratings */
   rated: boolean;
   /** The computer opponent (play-bots BOTS id) in a bot game */
   botId: string | null;

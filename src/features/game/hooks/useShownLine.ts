@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useChessBoardContext } from "../contexts/ChessBoardContext";
 import { useGameNavigation } from "../contexts/GameNavigationContext";
 import { positionsAlong } from "../utils/material";
@@ -6,11 +7,12 @@ import { positionsAlong } from "../utils/material";
  * Positions from the start to the one on the board, for a page on
  * ChessBoardProvider + GameNavigationProvider (follows move navigation).
  *
- * Read on every render, like MovesList: the game lives in a ref, and a server
- * resync can replace moves without changing their count.
+ * Built from the board's shared move list, which is a new array whenever the
+ * line changes (a server resync can replace moves without changing their
+ * count), so memoizing on it is safe.
  */
 export const useShownLine = (): string[] => {
-  const { chessRef } = useChessBoardContext();
+  const { moves } = useChessBoardContext();
   const { currentIndex } = useGameNavigation();
-  return positionsAlong(chessRef.current?.history({ verbose: true }) ?? [], currentIndex);
+  return useMemo(() => positionsAlong(moves, currentIndex), [moves, currentIndex]);
 };

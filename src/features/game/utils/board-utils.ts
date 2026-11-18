@@ -30,13 +30,6 @@ export const getTurnColor = (chess: Chess): PlayerColor => {
   return chess.turn() === "w" ? "white" : "black";
 };
 
-/** From/to squares of the last move played, for the board's highlight. */
-export const getLastMove = (chess: Chess): [Key, Key] | undefined => {
-  const history = chess.history({ verbose: true });
-  const last = history[history.length - 1];
-  return last ? [last.from, last.to] : undefined;
-};
-
 export interface SyncBoardOptions {
   cg: Api;
   chess: Chess;

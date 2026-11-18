@@ -14,7 +14,7 @@ import { useDrawOffer } from "../hooks/useDrawOffer";
 import { useTakeback } from "../hooks/useTakeback";
 import { useGameActions } from "../hooks/useGameActions";
 import { useRematch } from "../hooks/useRematch";
-import { formatTimeControl } from "@/utils/timeControl";
+import { formatGameTime, hasTimeOdds } from "@/utils/timeControl";
 import { OpeningName } from "@/features/openings";
 import { useShownLine } from "@/features/game/hooks/useShownLine";
 import { useLiveSeries } from "@/features/series/hooks/useLiveSeries";
@@ -67,6 +67,7 @@ export const MovesContainer = () => {
   const {
     showDrawOffer,
     drawOfferSent,
+    canOfferDraw,
     showOpponentDeclined,
     offerDraw,
     acceptDraw,
@@ -153,8 +154,10 @@ export const MovesContainer = () => {
           ) : (
             !focus.active && (
               <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="tabular-nums">{formatTimeControl(game.time, game.increment)}</span>
-                <span className="truncate capitalize">· {game.type}</span>
+                <span className="tabular-nums">{formatGameTime(game)}</span>
+                <span className="truncate capitalize">
+                  · {hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
+                </span>
               </span>
             )
           )}
@@ -241,6 +244,7 @@ export const MovesContainer = () => {
             onResign={onResign}
             onOfferDraw={offerDraw}
             drawOfferSent={drawOfferSent}
+            canOfferDraw={canOfferDraw}
             onRequestTakeback={takeback.requestTakeback}
             takebackRequested={takeback.takebackRequested}
             canRequestTakeback={takeback.canRequestTakeback}

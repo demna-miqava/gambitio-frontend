@@ -1,5 +1,13 @@
+import { userStore } from "@/utils/userStorage";
 import { REVIEW_STORAGE_PREFIX } from "../constants";
 import type { PositionEval } from "../types";
+
+/**
+ * Saved reviews, per signed-in account (cleared on sign-out) and capped to
+ * the most recent ones. They used to live under REVIEW_STORAGE_PREFIX for
+ * everyone alike; those are dropped (a review is cheap to run again).
+ */
+const reviews = userStore("review:v1", { legacyPrefix: REVIEW_STORAGE_PREFIX });
 
 function isPositionEval(value: unknown): value is PositionEval {
   if (typeof value !== "object" || value === null) return false;
@@ -26,17 +34,11 @@ export function parseStoredEvals(raw: string | null, positionCount: number): Pos
 }
 
 export function loadStoredEvals(key: string, positionCount: number): PositionEval[] | null {
-  try {
-    return parseStoredEvals(localStorage.getItem(REVIEW_STORAGE_PREFIX + key), positionCount);
-  } catch {
-    return null; // storage disabled
-  }
+  // Storage disabled reads as nothing saved
+  return parseStoredEvals(reviews.get(key), positionCount);
 }
 
 export function saveStoredEvals(key: string, evals: PositionEval[]): void {
-  try {
-    localStorage.setItem(REVIEW_STORAGE_PREFIX + key, JSON.stringify(evals));
-  } catch {
-    // Storage full or disabled: the review is still cached for this session
-  }
+  // Storage full or disabled: the review is still cached for this session
+  reviews.set(key, JSON.stringify(evals));
 }

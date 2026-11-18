@@ -17,12 +17,15 @@ export interface SeriesPlayer {
   avatarUrl: string | null;
   /** Points; a draw is half a point */
   score: number;
+  /** Their starting clock in seconds when the series has time odds; null otherwise */
+  time?: number | null;
 }
 
 export interface SeriesSummary {
   id: number;
   createdAt: string;
   bestOf: number;
+  /** The longer clock when the series has time odds (see SeriesPlayer.time) */
   time: number;
   increment: number;
   status: SeriesStatus;

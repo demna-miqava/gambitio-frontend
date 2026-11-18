@@ -6,6 +6,7 @@ import { useAuthenticatedWebSocket, useSocketReauth } from "@/hooks/useAuthentic
 import { parseWebSocketMessage } from "../utils/websocket-helpers";
 import { gameMessages } from "@/services/websocketMessageDispatcher";
 import { RECONNECT_OPTIONS } from "@/constants/websocket";
+import { parsePositiveId } from "@/utils/ids";
 import type { GameWebSocketMessage } from "../types/websocket-messages";
 
 /**
@@ -31,7 +32,9 @@ export const useGameWebSocket = () => {
   const [hasConnected, setHasConnected] = useState(false);
   const [gaveUp, setGaveUp] = useState(false);
 
-  const baseUrl = gameId ? `${BOARD_CONFIG.WEBSOCKET_BASE_URL}/game/${gameId}` : null;
+  // Only a plain numeric id goes in the socket path (params are decoded)
+  const validId = parsePositiveId(gameId);
+  const baseUrl = validId !== null ? `${BOARD_CONFIG.WEBSOCKET_BASE_URL}/game/${validId}` : null;
   const { getUrl, protocols } = useAuthenticatedWebSocket(baseUrl, true);
 
   const { sendMessage, readyState, getWebSocket } = useWebSocket(getUrl, {

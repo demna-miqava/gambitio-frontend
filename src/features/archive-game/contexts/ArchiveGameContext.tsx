@@ -24,6 +24,7 @@ import * as Tree from "../utils/analysisTree";
 import { planTypedMove } from "../utils/typedMove";
 import { positionAnnouncement } from "../utils/announce";
 import { toPgn } from "../utils/pgn";
+import { downloadBlob } from "@/features/share-gif/utils/deliver";
 import type { AnalysisNode, NodePath } from "../types/analysis.types";
 
 interface PendingPromotion {
@@ -274,12 +275,11 @@ export const ArchiveGameProvider = ({
   const downloadPgn = useCallback(() => {
     const { White, Black } = headersRef.current ?? {};
     const name = White && Black ? `${White}-vs-${Black}` : "analysis";
-    const url = URL.createObjectURL(new Blob([toPgn(root, headersRef.current)], { type: "application/x-chess-pgn" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${name.replace(/[^\w.-]+/g, "_")}.pgn`;
-    link.click();
-    URL.revokeObjectURL(url);
+    // Keeps the blob URL alive until the download has started
+    downloadBlob(
+      new Blob([toPgn(root, headersRef.current)], { type: "application/x-chess-pgn" }),
+      `${name.replace(/[^\w.-]+/g, "_")}.pgn`
+    );
   }, [root]);
 
   useArrowKeyNavigation({

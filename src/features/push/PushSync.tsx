@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { isGameRoute } from "@/config/shell";
 import { useUser } from "@/hooks/useUser";
+import { getSafeRedirect } from "@/routes/redirect";
 import { syncPushSubscription } from "./pushClient";
 
 type NotificationClick = { type: "gambitio:notification-click"; url: string; tag: string };
@@ -33,8 +34,9 @@ export const PushSync = () => {
     const onMessage = (event: MessageEvent) => {
       if (!isNotificationClick(event.data)) return;
       const { url, tag } = event.data;
-      // A path of ours only (the service worker checks too)
-      if (!/^\/(?!\/)/.test(url) || url === pathname) return;
+      // A path of ours only (the service worker checks too): anything
+      // getSafeRedirect would change or refuse is ignored
+      if (getSafeRedirect(url) !== url || url === pathname) return;
       // A challenge is already on screen as a toast, wherever the user is
       if (tag.startsWith("challenge-")) return;
       // Never pull a player out of a game, except into the game the notification is about

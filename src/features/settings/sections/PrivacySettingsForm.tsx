@@ -1,6 +1,7 @@
 import { SettingRadioGroup } from "../components/SettingRadioGroup";
 import { useSettings } from "../SettingsContext";
 import type { AllowedFrom } from "../types";
+import { BlockedPlayers } from "@/features/moderation/components/BlockedPlayers";
 
 const OPTIONS: { value: AllowedFrom; label: string }[] = [
   { value: "everyone", label: "Anyone" },
@@ -8,7 +9,7 @@ const OPTIONS: { value: AllowedFrom; label: string }[] = [
   { value: "nobody", label: "No one" },
 ];
 
-/** Who can reach the player: challenges to a game, and chat during one. */
+/** Who can reach the player: challenges to a game, chat during one, and who they've blocked. */
 export const PrivacySettingsForm = () => {
   const { settings, updateSettings } = useSettings();
 
@@ -36,6 +37,7 @@ export const PrivacySettingsForm = () => {
           updateSettings.mutate({ gameChatAllowedFrom: value as AllowedFrom })
         }
       />
+      <BlockedPlayers />
     </div>
   );
 };

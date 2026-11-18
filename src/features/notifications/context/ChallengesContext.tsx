@@ -5,11 +5,12 @@ import {
   type SendChallengeData,
 } from "../hooks/useManageChallenge";
 import { useChallengeMessageHandlers } from "../hooks/useChallengeMessageHandlers";
-import type { OutgoingChallenge } from "../types/websocket-messages";
+import type { ChallengeRef, OutgoingChallenge } from "../types/websocket-messages";
 import { useSeriesUpdates } from "@/features/series/hooks/useSeries";
 
 type ChallengesContextType = {
-  handleAcceptChallenge: (challengerId: number) => void;
+  /** Accepts the challenge as shown (its version: changed terms are refused) */
+  handleAcceptChallenge: (challenge: ChallengeRef) => void;
   handleDeclineChallenge: (challengerId: number) => void;
   /**
    * Challenge a friend; a challenge already waiting on someone else is

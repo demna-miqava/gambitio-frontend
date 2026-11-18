@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatClock, formatTime } from "./time-formatter";
+import { formatClock, formatTime, sameClockDisplay } from "./time-formatter";
 
 describe("formatTime", () => {
   it("formats minutes and seconds", () => {
@@ -43,5 +43,30 @@ describe("formatClock", () => {
     expect(formatClock(9_999)).toBe("9.99");
     expect(formatClock(1_230)).toBe("1.23");
     expect(formatClock(0)).toBe("0.00");
+  });
+});
+
+describe("sameClockDisplay", () => {
+  const LOW = 20_000;
+
+  it("skips ticks within the same second", () => {
+    expect(sameClockDisplay(185_900, 185_000, LOW)).toBe(true);
+    expect(sameClockDisplay(185_000, 184_999, LOW)).toBe(false);
+  });
+
+  it("shows every tick once hundredths are on", () => {
+    expect(sameClockDisplay(9_900, 9_800, LOW)).toBe(false);
+    expect(sameClockDisplay(9_905, 9_900, LOW)).toBe(true);
+  });
+
+  it("re-renders when the clock turns low, even on the same text", () => {
+    // Both "0:20", either side of a 20 s threshold
+    expect(sameClockDisplay(20_500, 20_000, LOW)).toBe(false);
+  });
+
+  it("re-renders when the time runs out", () => {
+    // Both "0.00"
+    expect(sameClockDisplay(5, 0, LOW)).toBe(false);
+    expect(sameClockDisplay(0, 0, LOW)).toBe(true);
   });
 });

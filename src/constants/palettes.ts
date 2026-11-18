@@ -38,7 +38,7 @@ export type Palette = {
 export const DEFAULT_PALETTE: PaletteId = "emerald";
 
 // The device's copy of the account setting (colorPalette); the same key the
-// pre-paint script in index.html reads
+// pre-paint script (public/theme-init.js) reads
 export const PALETTE_STORAGE_KEY = "palette";
 
 export const PALETTES: Palette[] = [

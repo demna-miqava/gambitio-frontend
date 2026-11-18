@@ -1,4 +1,5 @@
 import { ROUTES } from "@/constants/routes";
+import { parsePositiveId } from "@/utils/ids";
 
 export type GameSection =
   | "new"
@@ -18,10 +19,7 @@ export type PlaySetupState = {
 
 const URL_SECTIONS: GameSection[] = ["new", "friends", "custom"];
 
-const parseId = (raw: string | null): number | null => {
-  const id = Number(raw);
-  return raw && Number.isInteger(id) && id > 0 ? id : null;
-};
+const parseId = parsePositiveId;
 
 /**
  * The query string for a setup step: "" for the default section,

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, type ReactNode } from "r
 import { useChessBoardContext } from "./ChessBoardContext";
 import { Chess } from "chess.js";
 import { calculateLegalMoves } from "../utils/board-utils";
+import { fenAfter } from "../utils/moveHistory";
 import { useMoveNavigation } from "../hooks/useMoveNavigation";
 
 interface GameNavigationContextValue {
@@ -29,10 +30,10 @@ interface GameNavigationProviderProps {
 export const GameNavigationProvider = ({
   children,
 }: GameNavigationProviderProps) => {
-  // `ply` is in the deps so this re-renders whenever moves are loaded
-  const { chessRef, cgRef, color, isArchiveMode, inputLocked, ply } =
+  // `moves` is state, so this re-renders whenever moves are loaded
+  const { chessRef, cgRef, color, isArchiveMode, inputLocked, moves, getMoves } =
     useChessBoardContext();
-  const totalMoves = chessRef.current?.history().length ?? ply;
+  const totalMoves = moves.length;
 
   const {
     goToFirstMove,
@@ -51,16 +52,11 @@ export const GameNavigationProvider = ({
   useEffect(() => {
     if (!chessRef.current || !cgRef.current) return;
 
-    const history = chessRef.current.history({ verbose: true });
+    const history = getMoves();
 
     if (isViewingHistory) {
-      // Viewing a historical position
-      const tempChess = new Chess();
-
-      // Replay moves up to currentIndex
-      for (let i = 0; i < currentIndex; i++) {
-        tempChess.move(history[i].san);
-      }
+      // Viewing a historical position: the one after currentIndex moves
+      const tempChess = new Chess(fenAfter(history, currentIndex));
       const shownMove = history[currentIndex - 1];
 
       // Update the board to show this historical position
@@ -99,6 +95,7 @@ export const GameNavigationProvider = ({
     viewingIndex,
     chessRef,
     cgRef,
+    getMoves,
     isViewingHistory,
     currentIndex,
     color,

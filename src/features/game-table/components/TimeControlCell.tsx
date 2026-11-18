@@ -1,21 +1,39 @@
-import { formatTimeControl } from "@/utils/timeControl";
+import { formatTimeControl, formatTimeOdds, timeOdds } from "@/utils/timeControl";
 
 interface TimeControlCellProps {
   /** Null for bot games, which are untimed */
   type: string | null;
   time: number | null;
   increment: number | null;
+  /** Each side's starting clock when they differ (time odds) */
+  whiteTime?: number | null;
+  blackTime?: number | null;
 }
 
 export const TimeControlCell = ({
   type,
   time,
   increment,
+  whiteTime,
+  blackTime,
 }: TimeControlCellProps) => {
   // Bot games have no clock and don't count for rating
   if (type === null || time === null) {
     return (
       <span className="text-xs text-muted-foreground">Unrated</span>
+    );
+  }
+
+  // Time odds: white's clock, then black's. These games are unrated too
+  const odds = timeOdds(whiteTime, blackTime);
+  if (odds) {
+    return (
+      <span className="whitespace-nowrap text-xs text-muted-foreground">
+        <span className="tabular-nums text-foreground">
+          {formatTimeOdds(odds[0], odds[1], increment)}
+        </span>{" "}
+        Unrated
+      </span>
     );
   }
 

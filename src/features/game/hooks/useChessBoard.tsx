@@ -1,9 +1,10 @@
 import type { Api } from "@lichess-org/chessground/api";
-import { Chess } from "chess.js";
+import { Chess, DEFAULT_POSITION, type Move } from "chess.js";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PlayerColor } from "../types/game.types";
 import { Chessground } from "@lichess-org/chessground";
 import { calculateLegalMoves } from "../utils/board-utils";
+import { currentHistory, nextHistory, type MoveHistory } from "../utils/moveHistory";
 import { BOARD_CONFIG } from "../constants/board-config";
 import { useSettings } from "@/features/settings/SettingsContext";
 import { useChessSound } from "../contexts/ChessSoundContext";
@@ -16,13 +17,20 @@ interface UseChessBoardOptions {
   viewOnly?: boolean;
 }
 
+// A new Chess() is at the start, with no moves
+const START_HISTORY: MoveHistory = { fen: DEFAULT_POSITION, moves: [] };
+
 export const useChessBoard = ({ color, viewOnly = false }: UseChessBoardOptions) => {
   const [turn, setTurnState] = useState<PlayerColor | undefined>();
-  // Half-moves in chessRef as of the last setTurn. The chess instance is a
-  // ref, so without this a resync that loads moves but leaves the side to
-  // move unchanged (e.g. 1.e4 e5, white again) re-rendered nothing and the
-  // move navigation kept a stale move count.
-  const [ply, setPly] = useState(0);
+  const chessRef = useRef(new Chess());
+  // The moves in chessRef as of the last setTurn, read once per change
+  // (chess.history() replays the game) and shared by everything that shows
+  // them. State, since the chess instance is a ref: a resync that replaces
+  // moves without changing their count (or the side to move) still gives a
+  // new array and re-renders. The ref is for callbacks between renders.
+  const historyRef = useRef<MoveHistory>(START_HISTORY);
+  const [moves, setMoves] = useState<Move[]>(START_HISTORY.moves);
+  const ply = moves.length;
   // See setInputLocked below. The ref is for callbacks that run between renders
   // (socket messages), the state for rendering.
   const inputLockedRef = useRef(false);
@@ -30,13 +38,28 @@ export const useChessBoard = ({ color, viewOnly = false }: UseChessBoardOptions)
   const { settings } = useSettings();
   const { playGenericSound } = useChessSound();
   const boardRef = useRef<HTMLDivElement>(null);
-  const chessRef = useRef(new Chess());
   const cgRef = useRef<Api | null>(null);
 
-  /** Call after changing chessRef: records the side to move and move count */
-  const setTurn = useCallback((next: PlayerColor) => {
+  /**
+   * Call after changing chessRef: records the side to move and the moves.
+   * Pass the move just played (chess.move()'s result) to add it without
+   * replaying the game. Returns the moves.
+   */
+  const setTurn = useCallback((next: PlayerColor, appended?: Move) => {
+    const history = nextHistory(chessRef.current, historyRef.current, appended);
+    historyRef.current = history;
     setTurnState(next);
-    setPly(chessRef.current.history().length);
+    setMoves(history.moves);
+    return history.moves;
+  }, []);
+
+  /**
+   * The moves in chessRef now, for callbacks and effects: those of the last
+   * setTurn, or a fresh read if the game moved on without one.
+   */
+  const getMoves = useCallback(() => {
+    historyRef.current = currentHistory(chessRef.current, historyRef.current);
+    return historyRef.current.moves;
   }, []);
 
   const pendingDestroyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -145,6 +168,8 @@ export const useChessBoard = ({ color, viewOnly = false }: UseChessBoardOptions)
     cgRef,
     turn,
     setTurn,
+    moves,
+    getMoves,
     ply,
     inputLocked,
     inputLockedRef,

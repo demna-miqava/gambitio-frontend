@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  Ban,
   Check,
   ChevronDown,
   Clock,
@@ -27,6 +28,8 @@ import { useRemoveFriend } from "@/features/friends/hooks/useRemoveFriend";
 import { useSendFriendRequest } from "@/features/friends/suggestions/hooks/useSendFriendRequest";
 import { useFriendRequestAction } from "@/features/friends/requests/hooks/useFriendRequestAction";
 import { useFriendship } from "../hooks/useFriendship";
+import { useIsBlocked, useUnblockUser } from "@/features/moderation/hooks/useBlocks";
+import { PlayerModeration } from "@/features/moderation/components/PlayerModeration";
 
 interface ProfileActionsProps {
   profile: UserProfile;
@@ -37,7 +40,8 @@ interface ProfileActionsProps {
 /**
  * What you can do from someone's profile, depending on how you know them:
  * Settings on your own; Add friend, the pending request, or Challenge (with
- * Remove behind the "Friends" menu) on anyone else's.
+ * Remove behind the "Friends" menu) on anyone else's, each with a "more"
+ * menu to block or report them. A player you've blocked shows Unblock instead.
  */
 export const ProfileActions = ({ profile, liveGameId }: ProfileActionsProps) => {
   const status = useFriendship(profile);
@@ -46,6 +50,8 @@ export const ProfileActions = ({ profile, liveGameId }: ProfileActionsProps) => 
   const requestAction = useFriendRequestAction();
   const removeFriend = useRemoveFriend();
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const isBlocked = useIsBlocked(profile.id);
+  const unblock = useUnblockUser();
 
   if (status.kind === "loading") {
     return <Skeleton className="h-10 w-full rounded-md sm:w-40" />;
@@ -58,6 +64,24 @@ export const ProfileActions = ({ profile, liveGameId }: ProfileActionsProps) => 
           <Settings aria-hidden="true" /> Settings
         </Link>
       </Button>
+    );
+  }
+
+  const more = <PlayerModeration player={profile} size="md" />;
+
+  if (isBlocked) {
+    return (
+      <>
+        <Button
+          variant="outline"
+          size="md"
+          disabled={unblock.isPending}
+          onClick={() => unblock.mutate(profile)}
+        >
+          <Ban aria-hidden="true" /> Unblock
+        </Button>
+        {more}
+      </>
     );
   }
 
@@ -114,6 +138,7 @@ export const ProfileActions = ({ profile, liveGameId }: ProfileActionsProps) => 
             removeFriend.mutate(profile.id, { onSuccess: () => setConfirmRemove(false) })
           }
         />
+        {more}
       </>
     );
   }
@@ -137,6 +162,7 @@ export const ProfileActions = ({ profile, liveGameId }: ProfileActionsProps) => 
         >
           <X aria-hidden="true" /> Decline
         </Button>
+        {more}
       </>
     );
   }
@@ -144,32 +170,38 @@ export const ProfileActions = ({ profile, liveGameId }: ProfileActionsProps) => 
   if (status.kind === "request-sent") {
     const requestId = String(status.request.id);
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="md">
-            <Clock aria-hidden="true" /> Request sent
-            <ChevronDown className="text-muted-foreground" aria-hidden="true" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            disabled={requestAction.isPending}
-            onSelect={() => requestAction.mutate({ requestId, action: "cancel" })}
-          >
-            <X aria-hidden="true" /> Cancel request
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="md">
+              <Clock aria-hidden="true" /> Request sent
+              <ChevronDown className="text-muted-foreground" aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              disabled={requestAction.isPending}
+              onSelect={() => requestAction.mutate({ requestId, action: "cancel" })}
+            >
+              <X aria-hidden="true" /> Cancel request
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {more}
+      </>
     );
   }
 
   return (
-    <Button
-      size="md"
-      disabled={sendRequest.isPending}
-      onClick={() => sendRequest.mutate(profile.id)}
-    >
-      <UserRoundPlus aria-hidden="true" /> Add friend
-    </Button>
+    <>
+      <Button
+        size="md"
+        disabled={sendRequest.isPending}
+        onClick={() => sendRequest.mutate(profile.id)}
+      >
+        <UserRoundPlus aria-hidden="true" /> Add friend
+      </Button>
+      {more}
+    </>
   );
 };

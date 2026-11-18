@@ -24,6 +24,8 @@ interface EngineAnalysisPanelProps {
   hideDesktopHeader?: boolean;
   /** id of the lines' container (for aria-controls) */
   id?: string;
+  /** Stop searching for now (a game review is using its own engine) */
+  paused?: boolean;
 }
 
 export const EngineAnalysisPanel = ({
@@ -35,10 +37,12 @@ export const EngineAnalysisPanel = ({
   desktopToggle,
   hideDesktopHeader = false,
   id,
+  paused = false,
 }: EngineAnalysisPanelProps) => {
   const { lines, depth, isReady, isAnalyzing, analysisFen } = useEngineAnalysis({
     numLines,
     ...(fen && { fen }),
+    paused,
   });
   // Scores from the side at the bottom of the board, like the evaluation bar
   const { orientation } = useChessBoardContext();
@@ -60,12 +64,20 @@ export const EngineAnalysisPanel = ({
     </div>
   );
 
+  // Paused on another position: its lines would be for the wrong one
+  const pausedHere = paused && (displayData.lines.length === 0 || (fen !== undefined && displayData.fen !== fen));
   const rows =
-    !isReady || displayData.lines.length === 0
+    !isReady || displayData.lines.length === 0 || pausedHere
       ? [
           placeholder(
             0,
-            !isReady ? "Loading engine…" : isAnalyzing ? "Analyzing…" : "No moves to analyze"
+            !isReady
+              ? "Loading engine…"
+              : pausedHere
+                ? "Paused while the review runs"
+                : isAnalyzing
+                  ? "Analyzing…"
+                  : "No moves to analyze"
           ),
           ...Array.from({ length: numLines - 1 }, (_, i) => placeholder(i + 1)),
         ]

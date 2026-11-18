@@ -37,13 +37,15 @@ describe("chat helpers", () => {
   });
 
   it("shows the chat to the opponent of a player who turned it off, not to that player", () => {
-    const off = (reason: "off_by_you" | "off_by_opponent" | "closed") => ({ enabled: false, reason });
+    const off = (reason: "off_by_you" | "off_by_opponent" | "blocked" | "closed") => ({ enabled: false, reason });
     expect(isChatShown(null, 0, false)).toBe(false); // a spectator
     expect(isChatShown({ enabled: true, reason: null }, 0, false)).toBe(true);
     // The opponent is told; the one who blocked chat has none, even with history
     expect(isChatShown(off("off_by_opponent"), 0, false)).toBe(true);
     expect(isChatShown(off("off_by_you"), 0, false)).toBe(false);
     expect(isChatShown(off("off_by_you"), 3, true)).toBe(false);
+    // A player who blocked their opponent sees why there is no chat
+    expect(isChatShown(off("blocked"), 0, false)).toBe(true);
     // Closed after the game: only with something to read, or if it was open just now
     expect(isChatShown(off("closed"), 0, false)).toBe(false);
     expect(isChatShown(off("closed"), 2, false)).toBe(true);

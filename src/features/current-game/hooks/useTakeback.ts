@@ -35,7 +35,7 @@ const NOT_CONNECTED = "Not connected. Try again when you're back online.";
 export const useTakeback = () => {
   const { id } = useUser();
   const { gameEnded, sendMessage } = useLiveGame();
-  const { chessRef, color, ply } = useChessBoardContext();
+  const { getMoves, color, ply } = useChessBoardContext();
   const [state, dispatch] = useReducer(takebackReducer, INITIAL_TAKEBACK_STATE);
   // For the takeback handler: whether this player was the one who asked
   const sentRef = useRef(false);
@@ -44,7 +44,7 @@ export const useTakeback = () => {
     sentRef.current = sent;
   }, [sent]);
 
-  const currentPly = useCallback(() => chessRef.current.history().length, [chessRef]);
+  const currentPly = useCallback(() => getMoves().length, [getMoves]);
 
   const respond = useCallback(
     (accepted: boolean) => {

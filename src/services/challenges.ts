@@ -9,6 +9,9 @@ export type SentChallenge = {
   username: string | null;
   time: number;
   increment: number;
+  /** Time odds: your clock and the challenged player's; null for an even game */
+  ownTime?: number | null;
+  opponentTime?: number | null;
   color: PlayerColorOption;
   /** 3 or 5 for a series */
   bestOf?: BestOf;

@@ -17,6 +17,7 @@ import { useUser } from "@/hooks/useUser";
 import { getArchiveGameRoute } from "@/constants/routes";
 import { isPlayerGame } from "@/utils/storedGame";
 import { GameChatProvider } from "@/features/game-chat/GameChatContext";
+import { parsePositiveId } from "@/utils/ids";
 
 /**
  * Live game page. Players, colors and time control come from the server, so
@@ -26,7 +27,9 @@ import { GameChatProvider } from "@/features/game-chat/GameChatContext";
  */
 const CurrentGame = () => {
   const { gameId } = useParams();
-  const { data: game, isPending, error, refetch } = useGameData(gameId);
+  // Only a plain numeric id reaches the API (React Router decodes "%2F")
+  const validId = parsePositiveId(gameId);
+  const { data: game, isPending, error, refetch } = useGameData(validId);
   const { id: currentUserId } = useUser();
   // The game id last seen in progress. A spectator stays on the page when
   // the game ends (even if a refetch now says "finished") to see the result.
@@ -35,6 +38,7 @@ const CurrentGame = () => {
     setSeenLive(gameId);
   }
 
+  if (validId === null) return <GameLoadError error={null} onRetry={() => refetch()} />;
   // Without the user's id a player would look like a spectator
   if (isPending || currentUserId === undefined) {
     return <FullScreenLoader height="h-[60vh] w-full" />;

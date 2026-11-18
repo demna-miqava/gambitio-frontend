@@ -6,6 +6,7 @@ import type {
   RematchRequestMessage,
   RematchResponseMessage,
   CancelRematchMessage,
+  GameErrorMessage,
   InitialGameStateMessage,
 } from "@/features/game/types/websocket-messages";
 import type { MatchFoundMessage } from "@/features/matchmaking/types/websocket-messages";
@@ -35,11 +36,15 @@ export const useRematch = ({
   const [rematchRequested, setRematchRequested] = useState(false);
   const [rematchOffered, setRematchOffered] = useState(false);
   const [rematchDeclined, setRematchDeclined] = useState(false);
+  // The server takes one rematch request per player per game
+  // (REMATCH_ALREADY_REQUESTED), so a cancelled one can't be sent again
+  const [rematchUsed, setRematchUsed] = useState(false);
 
   // Restore a pending rematch offer after a reload or reconnect
   const handleInitialState = useCallback(
     ({ data }: InitialGameStateMessage) => {
       setRematchRequested(data.rematchRequestedBy === currentUserId);
+      if (data.rematchRequestedBy === currentUserId) setRematchUsed(true);
       setRematchOffered(
         data.rematchRequestedBy !== null && data.rematchRequestedBy !== currentUserId
       );
@@ -67,6 +72,12 @@ export const useRematch = ({
     },
     [announce, opponent.username]
   );
+
+  const handleError = useCallback(({ data }: GameErrorMessage) => {
+    if (data.code !== "REMATCH_ALREADY_REQUESTED") return;
+    setRematchRequested(false);
+    setRematchUsed(true);
+  }, []);
 
   const handleMatchFound = useCallback(
     (data: MatchFoundMessage) => {
@@ -96,6 +107,7 @@ export const useRematch = ({
     GAME_MESSAGE_TYPES.INITIAL_GAME_STATE,
     handleInitialState
   );
+  useMessageDispatcher<GameErrorMessage>(gameMessages, GAME_MESSAGE_TYPES.ERROR, handleError);
   useMessageDispatcher<MatchFoundMessage>(
     gameMessages,
     GAME_MESSAGE_TYPES.MATCH_FOUND,
@@ -115,6 +127,7 @@ export const useRematch = ({
   const requestRematch = useCallback(() => {
     if (!send({ type: GAME_MESSAGE_TYPES.REMATCH_REQUEST })) return;
     setRematchRequested(true);
+    setRematchUsed(true);
     setRematchDeclined(false);
   }, [send]);
 
@@ -138,6 +151,7 @@ export const useRematch = ({
     rematchRequested,
     rematchOffered,
     rematchDeclined,
+    rematchUsed,
     requestRematch,
     acceptRematch,
     declineRematch,

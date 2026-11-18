@@ -11,6 +11,13 @@ interface UseEngineAnalysisOptions {
   depth?: number;
   moveTime?: number;
   debounceMs?: number;
+  /**
+   * Hold off: no new searches, and the running one is stopped (it reports
+   * what it has). For a game review, which runs its own Stockfish: two
+   * engines at once would fight over the CPU. Analysis resumes on the board's
+   * position when this goes back to false.
+   */
+  paused?: boolean;
 }
 
 export function useEngineAnalysis({
@@ -19,6 +26,7 @@ export function useEngineAnalysis({
   depth = ANALYSIS_DEFAULTS.depth,
   moveTime = ANALYSIS_DEFAULTS.moveTime,
   debounceMs = ANALYSIS_DEFAULTS.debounceMs,
+  paused = false,
 }: UseEngineAnalysisOptions = {}) {
   const { chessRef } = useChessBoardContext();
   const { analysis, setAnalysis } = useAnalysis();
@@ -81,8 +89,19 @@ export function useEngineAnalysis({
   const FEN = fen ?? chessRef.current?.fen();
   useEffect(() => {
     if (!isReady || !FEN) return;
+    if (paused) {
+      // A search waiting for its debounce never starts
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+        requestIdRef.current += 1;
+        setAnalysis({ isAnalyzing: false });
+      }
+      stop();
+      return;
+    }
     debouncedAnalyze(FEN);
-  }, [isReady, FEN, debouncedAnalyze]);
+  }, [isReady, FEN, paused, debouncedAnalyze, stop, setAnalysis]);
 
   useEffect(() => {
     return () => {

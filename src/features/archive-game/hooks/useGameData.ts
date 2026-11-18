@@ -20,11 +20,15 @@ interface UseGameDataOptions {
 export const refetchUnfinished = (query: Query<StoredGame>) =>
   query.state.data?.status === "finished" ? false : "always";
 
-export const useGameData = (gameId: string | undefined, { requireFinished = false }: UseGameDataOptions = {}) => {
+/**
+ * @param gameId - Parsed with parsePositiveId; null (an invalid id) fetches nothing
+ */
+export const useGameData = (gameId: number | null, { requireFinished = false }: UseGameDataOptions = {}) => {
   return useQuery<StoredGame>({
-    queryKey: [QKEY_GAME_BY_ID, gameId],
+    // The id as text, as useSaveBotGame caches it
+    queryKey: [QKEY_GAME_BY_ID, gameId === null ? null : String(gameId)],
     queryFn: () => getGameById(gameId!),
-    enabled: !!gameId,
+    enabled: gameId !== null,
     retry: false,
     // Default (stale after staleTime) unless asked for a finished game
     refetchOnMount: requireFinished ? refetchUnfinished : true,

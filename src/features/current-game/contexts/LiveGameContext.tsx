@@ -25,7 +25,8 @@ import { useSettings } from "@/features/settings/SettingsContext";
 import type { Game, GamePlayerInfo } from "@/types";
 import type { Key } from "@lichess-org/chessground/types";
 import type { Square, PieceSymbol } from "chess.js";
-import { getLastMove, syncBoard } from "@/features/game/utils/board-utils";
+import { getTurnColor, syncBoard } from "@/features/game/utils/board-utils";
+import { lastMoveSquares } from "@/features/game/utils/moveHistory";
 import { useLiveGameMessages } from "../hooks/useLiveGameMessages";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
 import { isPromotionMove } from "@/features/game/utils/promotionUtils";
@@ -94,7 +95,7 @@ export const LiveGameProvider = ({
   spectating = false,
   children,
 }: LiveGameProviderProps) => {
-  const { chessRef, cgRef, setTurn, color, inputLockedRef, setInputLocked } =
+  const { chessRef, cgRef, setTurn, getMoves, color, inputLockedRef, setInputLocked } =
     useChessBoardContext();
   const { goToLastMove } = useGameNavigation();
   const {
@@ -184,16 +185,20 @@ export const LiveGameProvider = ({
       // A pawn dropped on the last rank waiting for its promotion piece is
       // only on the board, not in the game: put the board back
       if (cg && chess) {
-        syncBoard({ cg, chess, movableColor: undefined, lastMove: getLastMove(chess) });
+        syncBoard({
+          cg,
+          chess,
+          movableColor: undefined,
+          lastMove: lastMoveSquares(getMoves()),
+        });
       }
       return;
     }
     if (!cg || !chess) return;
-    setTurn(
-      syncBoard({ cg, chess, movableColor: color, lastMove: getLastMove(chess) })
-    );
+    const moves = setTurn(getTurnColor(chess));
+    syncBoard({ cg, chess, movableColor: color, lastMove: lastMoveSquares(moves) });
     goToLastMove();
-  }, [locked, setInputLocked, cgRef, chessRef, color, setTurn, goToLastMove]);
+  }, [locked, setInputLocked, cgRef, chessRef, color, setTurn, getMoves, goToLastMove]);
 
   const { applyMove } = useBoardMoveHandler({
     chessRef,
@@ -209,15 +214,15 @@ export const LiveGameProvider = ({
       const cg = cgRef.current;
       const chess = chessRef.current;
       if (!cg || !chess) return;
-      setTurn(
-        syncBoard({
-          cg,
-          chess,
-          movableColor: inputLockedRef.current ? undefined : color,
-          lastMove: getLastMove(chess),
-          playPremove,
-        })
-      );
+      // Recorded first: the board's last-move highlight comes from the moves
+      const moves = setTurn(getTurnColor(chess));
+      syncBoard({
+        cg,
+        chess,
+        movableColor: inputLockedRef.current ? undefined : color,
+        lastMove: lastMoveSquares(moves),
+        playPremove,
+      });
     },
     [cgRef, chessRef, color, inputLockedRef, setTurn]
   );
@@ -233,7 +238,7 @@ export const LiveGameProvider = ({
       }
       // The position the move is made in: the server plays it only there
       // (a takeback accepted while the move is on its way changes it)
-      const ply = chessRef.current.history().length;
+      const ply = getMoves().length;
       const result = applyMove({
         from: fromSquare,
         to: toSquare,
@@ -268,7 +273,7 @@ export const LiveGameProvider = ({
       }
       return result.move;
     },
-    [applyMove, sendMessage, inputLockedRef, resyncBoard, chessRef]
+    [applyMove, sendMessage, inputLockedRef, resyncBoard, chessRef, getMoves]
   );
 
   // Handle promotion piece selection

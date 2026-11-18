@@ -16,9 +16,27 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-/** A path inside the app. Anything else (another site, a scheme) becomes the home page. */
+/**
+ * A path inside the app. Anything else (another site, a scheme) becomes the
+ * home page. Browsers read "\" as "/", so "/\example.org" would open that
+ * other site: backslashes and control characters are refused, and the
+ * result must resolve to this origin.
+ *
+ * Same rules as getSafeRedirect in src/routes/redirect.ts, which the app
+ * applies again before following the click (PushSync): keep the two in step.
+ * This file is served from public/ as is, not bundled, so it can't import it.
+ * Tested in src/features/push/sw.test.ts.
+ */
 function appPath(value) {
-  return typeof value === "string" && /^\/(?!\/)/.test(value) ? value : "/home";
+  if (typeof value !== "string" || !value.startsWith("/")) return "/home";
+  if (/[\\\u0000-\u001f\u007f]/.test(value) || value.startsWith("//")) return "/home";
+  try {
+    const url = new URL(value, self.location.origin);
+    if (url.origin !== self.location.origin) return "/home";
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return "/home";
+  }
 }
 
 // Safari takes notification permission away from a site whose pushes show

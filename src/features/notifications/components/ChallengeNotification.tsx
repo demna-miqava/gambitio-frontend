@@ -2,14 +2,17 @@ import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
-import { formatTimeControl } from "@/utils/timeControl";
 import { challengeToastId } from "../hooks/useManageChallenge";
-import type { Challenge } from "../types/websocket-messages";
-import { describeChallengeColor, describeMatchFormat } from "../utils/challengeLabels";
+import type { Challenge, ChallengeRef } from "../types/websocket-messages";
+import {
+  describeChallengeColor,
+  describeChallengeTime,
+  describeMatchFormat,
+} from "../utils/challengeLabels";
 
 type ChallengeNotificationProps = {
   challenge: Challenge;
-  onAccept: (challengerId: number) => void;
+  onAccept: (challenge: ChallengeRef) => void;
   onDecline: (challengerId: number) => void;
 };
 
@@ -18,8 +21,7 @@ const ChallengeNotification = ({
   onAccept,
   onDecline,
 }: ChallengeNotificationProps) => {
-  const { challengerId, username, avatarUrl, time, increment, color, rating, bestOf, seriesGame } =
-    challenge;
+  const { challengerId, username, avatarUrl, color, rating, bestOf, seriesGame } = challenge;
   const format = describeMatchFormat(bestOf, seriesGame);
 
   return (
@@ -46,7 +48,7 @@ const ChallengeNotification = ({
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {format && <span className="font-medium text-foreground">{format} · </span>}
-            <span className="tabular-nums">{formatTimeControl(time, increment)}</span>
+            <span className="tabular-nums">{describeChallengeTime(challenge, username)}</span>
             {" · "}
             {format && !seriesGame ? `${describeChallengeColor(color)} first` : describeChallengeColor(color)}
           </p>
@@ -60,7 +62,7 @@ const ChallengeNotification = ({
           <X aria-hidden="true" />
           Decline
         </Button>
-        <Button size="md" onClick={() => onAccept(challengerId)}>
+        <Button size="md" onClick={() => onAccept(challenge)}>
           <Check aria-hidden="true" />
           Accept
         </Button>

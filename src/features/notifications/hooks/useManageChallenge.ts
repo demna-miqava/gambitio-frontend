@@ -6,6 +6,7 @@ import type {
   DeclineChallengeMessage,
   SendChallengeMessage,
   Challenge,
+  ChallengeRef,
   OutgoingChallenge,
 } from "../types/websocket-messages";
 import { NOTIFICATION_MESSAGE_TYPES } from "../constants/websocket-types";
@@ -14,6 +15,7 @@ import { QKEY_CHALLENGES } from "@/constants/queryKeys";
 import type { SendMessage } from "react-use-websocket";
 import { getSentChallenge } from "@/services/challenges";
 import type { ReadyState } from "react-use-websocket";
+import { timeOdds } from "@/utils/timeControl";
 
 /** Same as the server's CHALLENGE_TTL_MS: unanswered challenges expire */
 export const CHALLENGE_TTL_MS = 10 * 60_000;
@@ -23,6 +25,15 @@ export const challengeToastId = (challengerId: number) =>
   `challenge:${challengerId}`;
 
 export type SendChallengeData = SendChallengeMessage["data"];
+
+/**
+ * Accepting names the version of the challenge the player saw, so the server
+ * refuses it (CHALLENGE_CHANGED) if the challenger changed the terms since.
+ */
+export const acceptChallengeMessage = ({ challengerId, version }: ChallengeRef): AcceptChallengeMessage => ({
+  type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_ACCEPTED,
+  data: { challengerId, ...(typeof version === "number" ? { version } : {}) },
+});
 
 /**
  * Sends challenge actions over the notification socket and keeps track of
@@ -65,6 +76,8 @@ export const useManageChallenge = (
           color: sent.color,
           time: sent.time,
           increment: sent.increment,
+          ownTime: sent.ownTime ?? null,
+          opponentTime: sent.opponentTime ?? null,
           bestOf: sent.bestOf,
           ...(sent.seriesId ? { seriesId: sent.seriesId } : {}),
           ...(sent.seriesGame ? { seriesGame: sent.seriesGame } : {}),
@@ -148,8 +161,13 @@ export const useManageChallenge = (
       if (previous) cancelChallenge();
 
       send({ type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_SENT, data });
+      const odds = timeOdds(data.time, data.opponentTime);
       setOutgoingChallenge({
         ...data,
+        // As the server stores it: the longer clock, and both when they differ
+        time: odds ? Math.max(...odds) : data.time,
+        ownTime: odds?.[0] ?? null,
+        opponentTime: odds?.[1] ?? null,
         username: target.username,
         ...(target.seriesGame ? { seriesGame: target.seriesGame } : {}),
         sentAt: Date.now(),
@@ -169,16 +187,13 @@ export const useManageChallenge = (
   );
 
   const handleAccept = useCallback(
-    (challengerId: number) => {
+    ({ challengerId, version }: ChallengeRef) => {
       if (!checkConnection()) return;
       // Only this challenge: if accepting fails (e.g. the challenger started
       // another game) the others are still valid. When the game does start,
       // match_created clears them all, as the server does.
       removeChallenge(challengerId);
-      send({
-        type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_ACCEPTED,
-        data: { challengerId },
-      });
+      send(acceptChallengeMessage({ challengerId, version }));
     },
     [checkConnection, removeChallenge, send]
   );

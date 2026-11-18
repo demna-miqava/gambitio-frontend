@@ -32,12 +32,14 @@ Real-time online chess: play rated games against people or bots, review them wit
 
 - **Real-time multiplayer** over WebSockets, with the server validating every move and running the clocks
 - **Quick pairing** for bullet, blitz and rapid, or a custom game and direct challenges to friends
-- **Bots** from 300 to 2400 rating, for unrated practice
+- **Bots** from 300 to 2400 rating, for unrated practice, with an instant undo
 - **Series**: play a set of games against a friend with a running score
 - **Watch** live games of other players
-- Draw offers, resignation, rematches, premoves and sound effects
+- Draw offers, takeback requests, resignation, rematches, premoves and sound effects
+- **Player cards**: tap an opponent's avatar for their ratings, your head-to-head record and Add friend
+- Material difference beside each clock, and the time an opponent gives you shown under yours
 - **Chat** with your opponent during a game (private to the two players)
-- **Focus mode**: just the board, the clocks and the game actions
+- **Focus mode** (press Z): just the board, the clocks and the game actions
 - Board and gameplay settings one tap away during a game
 
 ### Analyze
@@ -46,7 +48,8 @@ Real-time online chess: play rated games against people or bots, review them wit
 - **Analysis board** with Stockfish running in a web worker, an evaluation bar and multiple engine lines
 - **Opening names** for every game
 - **Import a game** from a PGN to analyze games played elsewhere
-- **Study rooms**: a shared analysis board where friends add variations and comments together in real time
+- **Share a game as a GIF**, rendered in your browser with your board and pieces
+- **Study rooms**: a shared analysis board where friends add variations and comments together in real time, each with their own optional engine
 
 ### Train
 
@@ -60,9 +63,11 @@ Real-time online chess: play rated games against people or bots, review them wit
 - Full game history
 - Leaderboards per time control
 - Friends, online status and real-time notifications for challenges and friend requests
+- **Inbox** in the top corner: add a friend by username and answer waiting challenges and friend requests
 - **Push notifications** for challenges, friend requests and game starts when the tab is in the background
 - Privacy settings: who can challenge you and who can chat with you
-- Light and dark themes, responsive layout and keyboard-accessible controls
+- **Nine colour palettes** (Emerald, Club green, Midnight, Walnut, Ink, Fjord, Plum, Tide and Olive), each with a light and a dark side
+- Merida pieces, a responsive layout and keyboard-accessible controls
 
 ### Upcoming
 

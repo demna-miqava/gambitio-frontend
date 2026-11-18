@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { useAvatarSrc } from "@/hooks/useAvatarSrc";
 import { getGameRoute } from "@/constants/routes";
-import { formatTimeControl } from "@/utils/timeControl";
+import { formatGameTime, hasTimeOdds } from "@/utils/timeControl";
 import { cn } from "@/lib/utils";
 import { fullMoves } from "@/utils/moves";
 import type { LiveGameSummary, LivePlayer } from "@/types/liveGames.types";
@@ -69,8 +69,10 @@ export const LiveGameCard = ({ game, currentUserId }: LiveGameCardProps) => {
         <PlayerLine player={game.blackPlayer} side="black" />
         <PlayerLine player={game.whitePlayer} side="white" />
         <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
-          <span className="tabular-nums">{formatTimeControl(game.time, game.increment)}</span>
-          <span className="capitalize">{game.type}</span>
+          <span className="tabular-nums">{formatGameTime(game)}</span>
+          <span className="capitalize">
+            {hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
+          </span>
           <span aria-hidden="true">·</span>
           <span>
             {moves === 0 ? "Not started" : `Move ${moves}`}

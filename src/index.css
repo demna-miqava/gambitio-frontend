@@ -381,7 +381,7 @@
  * Colour palettes (Settings → Interface). :root/.dark above are the default,
  * "emerald". Each other palette overrides the colours that carry its
  * character, in light and dark, keyed on <html data-palette="…">, which
- * ThemeContext sets (and the pre-paint script in index.html, so there's no
+ * ThemeContext sets (and the pre-paint script public/theme-init.js, so there's no
  * flash). Semantic colours (wins, losses, time controls) stay the same in
  * every palette. Swatches and browser-chrome colours in
  * src/constants/palettes.ts mirror these values.

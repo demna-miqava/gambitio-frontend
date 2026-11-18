@@ -14,6 +14,9 @@ export type LiveGameSummary = {
   startedAt: string;
   time: number;
   increment: number;
+  /** Each side's starting clock when they differ (time odds); null otherwise */
+  whiteTime?: number | null;
+  blackTime?: number | null;
   type: TimeControlType;
   numMoves: number;
   fen: string | null;

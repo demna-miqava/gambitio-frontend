@@ -1,4 +1,5 @@
 import type { PlayerColorOption } from "@/types/game.types";
+import { formatClock, formatTimeControl, timeOdds } from "@/utils/timeControl";
 
 /**
  * "Best of 3" for a series challenge, "Game 2 of 3" for one that continues
@@ -19,4 +20,22 @@ export const describeChallengeColor = (color: PlayerColorOption): string => {
     default:
       return "Random colors";
   }
+};
+
+/**
+ * The clocks of a challenge, from the side of the player reading it: "5+0",
+ * or with time odds "Time odds: you 5 min, alice 1 min" (plus the increment).
+ * `opponent` is the other player's name.
+ */
+export const describeChallengeTime = (
+  challenge: { time: number; increment: number; ownTime?: number | null; opponentTime?: number | null },
+  opponent: string
+): string => {
+  const { time, increment } = challenge;
+  const odds = timeOdds(challenge.ownTime, challenge.opponentTime);
+  if (!odds) return formatTimeControl(time, increment);
+  return (
+    `Time odds: you ${formatClock(odds[0])}, ${opponent} ${formatClock(odds[1])}` +
+    (increment ? `, +${increment} sec` : "")
+  );
 };

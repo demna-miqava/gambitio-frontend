@@ -19,6 +19,7 @@ import { SeriesScoreboard } from "@/features/series/components/SeriesScoreboard"
 import { SeriesGamesList } from "@/features/series/components/SeriesGamesList";
 import { useResignSeries, useSeries } from "@/features/series/hooks/useSeries";
 import { bestOfLabel, nextGameLabel } from "@/features/series/utils/seriesFormat";
+import { parsePositiveId } from "@/utils/ids";
 
 const SeriesSkeleton = () => (
   <div className="space-y-6" role="status" aria-label="Loading series">
@@ -30,8 +31,9 @@ const SeriesSkeleton = () => (
 /** A friend series: the score, its games, and what happens next. */
 const Series = () => {
   const params = useParams();
-  const seriesId = Number(params.seriesId);
-  const validId = Number.isSafeInteger(seriesId) && seriesId > 0;
+  const parsedId = parsePositiveId(params.seriesId);
+  const seriesId = parsedId ?? 0;
+  const validId = parsedId !== null;
   const { id: viewerId } = useUser();
   const { data, isPending, error, refetch } = useSeries(validId ? seriesId : null);
   const resign = useResignSeries(seriesId);
@@ -71,11 +73,14 @@ const Series = () => {
   // server fills in from the series (clock, length, colours)
   const continueSeries = () => {
     if (!series?.next || !opponent) return;
+    const me = series.playerOne.id === viewerId ? series.playerOne : series.playerTwo;
     sendChallenge(
       {
         challengedId: opponent.id,
         color: series.next.whiteId === viewerId ? "white" : "black",
-        time: series.time,
+        // With time odds, each player's own clock (the server uses the series' anyway)
+        time: me.time ?? series.time,
+        ...(opponent.time != null && { opponentTime: opponent.time }),
         increment: series.increment,
         bestOf: series.bestOf as BestOf,
         seriesId: series.id,

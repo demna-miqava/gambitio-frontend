@@ -63,7 +63,13 @@ export const GameList = ({ games, userId, isLoading, rows, emptyState }: GameLis
                 )}
               </p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <TimeControlCell type={game.type} time={game.time} increment={game.increment} />
+                <TimeControlCell
+                  type={game.type}
+                  time={game.time}
+                  increment={game.increment}
+                  whiteTime={game.whiteTime}
+                  blackTime={game.blackTime}
+                />
                 <span aria-hidden="true">·</span>
                 <span className="tabular-nums">{fullMoves(game.numMoves ?? 0)} moves</span>
                 <span aria-hidden="true">·</span>

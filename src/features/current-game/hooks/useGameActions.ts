@@ -40,7 +40,7 @@ export const RESULT_DIALOG_DELAY_MS = 1000;
  */
 export const useGameActions = () => {
   const { sendMessage } = useLiveGame();
-  const { chessRef } = useChessBoardContext();
+  const { ply } = useChessBoardContext();
   const { playGenericSound } = useChessSound();
   const { id: currentUserId } = useUser();
 
@@ -55,7 +55,7 @@ export const useGameActions = () => {
   );
 
   // The server allows aborting until both players have made a move
-  const hasMoves = (chessRef.current?.history().length || 0) >= 2;
+  const hasMoves = ply >= 2;
 
   const handleGameEnded = useCallback(
     (data: GameEndedMessage) => {

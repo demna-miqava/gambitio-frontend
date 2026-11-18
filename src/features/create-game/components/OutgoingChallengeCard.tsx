@@ -1,9 +1,9 @@
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
-import { formatTimeControl } from "@/utils/timeControl";
 import {
   describeChallengeColor,
+  describeChallengeTime,
   describeMatchFormat,
 } from "@/features/notifications/utils/challengeLabels";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 export const OutgoingChallengeCard = ({ className }: { className?: string }) => {
   const { outgoingChallenge, cancelChallenge } = useChallenges();
   if (!outgoingChallenge) return null;
-  const { username, time, increment, color, bestOf, seriesGame } = outgoingChallenge;
+  const { username, color, bestOf, seriesGame } = outgoingChallenge;
   const format = describeMatchFormat(bestOf, seriesGame);
 
   return (
@@ -32,7 +32,7 @@ export const OutgoingChallengeCard = ({ className }: { className?: string }) => 
         <p className="truncate font-medium">Waiting for {username}…</p>
         <p className="text-sm text-muted-foreground">
           {format && `${format} · `}
-          <span className="tabular-nums">{formatTimeControl(time, increment)}</span>
+          <span className="tabular-nums">{describeChallengeTime(outgoingChallenge, username)}</span>
           {" · "}
           {describeChallengeColor(color)}
         </p>

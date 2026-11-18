@@ -36,3 +36,14 @@ export const formatTime = (ms: number, showCentiseconds = false): string => {
 /** A running game clock: centiseconds only in the last 10 seconds. */
 export const formatClock = (ms: number): string =>
   formatTime(ms, ms < CENTISECONDS_BELOW_MS);
+
+/**
+ * Whether two clock values look the same: the same text, both on the same
+ * side of the low-time line, and neither or both run out. A running clock
+ * only needs to re-render when this is false (once a second, ten times a
+ * second while it shows hundredths).
+ */
+export const sameClockDisplay = (a: number, b: number, lowTimeMs: number): boolean =>
+  formatClock(a) === formatClock(b) &&
+  a <= lowTimeMs === b <= lowTimeMs &&
+  (a === 0) === (b === 0);

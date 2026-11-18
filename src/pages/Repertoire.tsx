@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom";
+import { parsePositiveId } from "@/utils/ids";
 import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,8 +21,7 @@ const Repertoire = () => {
   const [params, setParams] = useSearchParams();
   const view = parseView(params.get("view"));
   const color = parseColor(params.get("color"));
-  const lineParam = Number(params.get("line"));
-  const startLineId = Number.isInteger(lineParam) && lineParam > 0 ? lineParam : null;
+  const startLineId = parsePositiveId(params.get("line"));
   const { data: lines, isPending, isError, refetch, isFetching } = useRepertoire();
   useDocumentTitle(TITLES[view]);
 

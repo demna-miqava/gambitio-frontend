@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import "./assets/fonts/fonts.css";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App.tsx";
@@ -11,8 +12,11 @@ import { ClerkProviderWithRoutes } from "./components/ClerkProviderWithRoutes";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeColorMeta } from "./components/ThemeColorMeta";
 import { reloadOnStaleChunks } from "./utils/reloadOnStaleChunks";
+import { preloadPageFor } from "./routes/pages";
 
 reloadOnStaleChunks();
+// The page's code downloads while Clerk and the profile status load
+preloadPageFor(window.location.pathname);
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -9,11 +9,13 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { useUser } from "@/hooks/useUser";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn, formatShortDate } from "@/lib/utils";
-import { formatTimeControl } from "@/utils/timeControl";
 import { getProfileFriendsRoute, getProfileRoute } from "@/constants/routes";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
 import { useIncomingChallenges } from "@/features/notifications/hooks/useIncomingChallenges";
-import { describeChallengeColor } from "@/features/notifications/utils/challengeLabels";
+import {
+  describeChallengeColor,
+  describeChallengeTime,
+} from "@/features/notifications/utils/challengeLabels";
 import type { FriendRequest } from "../types";
 import { usePendingFriendRequests } from "../requests/hooks/usePendingFriendRequests";
 import { useFriendRequestAction } from "../requests/hooks/useFriendRequestAction";
@@ -225,7 +227,7 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
                   userId={challenge.challengerId}
                   username={challenge.username}
                   avatarUrl={challenge.avatarUrl}
-                  detail={`${formatTimeControl(challenge.time, challenge.increment)} · ${describeChallengeColor(challenge.color)}`}
+                  detail={`${describeChallengeTime(challenge, challenge.username)} · ${describeChallengeColor(challenge.color)}`}
                 >
                   <Button
                     size="icon"
@@ -237,7 +239,7 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => handleAcceptChallenge(challenge.challengerId)}
+                    onClick={() => handleAcceptChallenge(challenge)}
                     aria-label={`Accept ${challenge.username}'s challenge`}
                   >
                     Accept

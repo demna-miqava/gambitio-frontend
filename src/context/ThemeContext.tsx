@@ -34,7 +34,7 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-// Same key and values the pre-paint script in index.html reads
+// Same key and values the pre-paint script (public/theme-init.js) reads
 const THEME_STORAGE_KEY = "theme";
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 

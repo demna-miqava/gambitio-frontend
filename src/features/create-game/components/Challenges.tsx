@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
 import { useIncomingChallenges } from "@/features/notifications/hooks/useIncomingChallenges";
-import { describeChallengeColor } from "@/features/notifications/utils/challengeLabels";
+import {
+  describeChallengeColor,
+  describeChallengeTime,
+} from "@/features/notifications/utils/challengeLabels";
 import { UserAvatar } from "@/components/UserAvatar";
-import { formatTimeControl } from "@/utils/timeControl";
 import { formatDistance } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -73,7 +75,7 @@ export const Challenges = ({ className }: ChallengesProps) => {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   <span className="tabular-nums">
-                    {formatTimeControl(challenge.time, challenge.increment)}
+                    {describeChallengeTime(challenge, challenge.username)}
                   </span>
                   {" · "}
                   {describeChallengeColor(challenge.color)}
@@ -93,7 +95,7 @@ export const Challenges = ({ className }: ChallengesProps) => {
                 Decline
               </Button>
               <Button size="md"
-                onClick={() => handleAcceptChallenge(challenge.challengerId)}
+                onClick={() => handleAcceptChallenge(challenge)}
                 aria-label={`Accept ${challenge.username}'s challenge`}
               >
                 Accept

@@ -15,7 +15,7 @@ import {
 } from "@/features/game/modes/GameModeContext";
 import type { PlayerColor } from "@/features/game/types/game.types";
 import { ROUTES, getGameReviewRoute } from "@/constants/routes";
-import { formatTimeControl } from "@/utils/timeControl";
+import { formatGameTime, hasTimeOdds } from "@/utils/timeControl";
 import { useLiveGame } from "../contexts/LiveGameContext";
 import { useSpectatorState, type SpectatorFinish } from "../hooks/useSpectatorState";
 import { ConnectionBanner } from "./ConnectionBanner";
@@ -174,9 +174,11 @@ const SpectatorPanel = ({
           )}
           <span className="flex items-center gap-1.5">
             <span className="tabular-nums">
-              {formatTimeControl(game.time, game.increment)}
+              {formatGameTime(game)}
             </span>
-            <span className="capitalize">· {game.type}</span>
+            <span className="capitalize">
+              · {hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
+            </span>
           </span>
         </span>
       </div>

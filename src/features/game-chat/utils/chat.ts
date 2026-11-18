@@ -29,7 +29,8 @@ export const countUnread = (
 /**
  * Whether the page shows a chat at all.
  * - Turned off by the player's own setting: no. They asked not to have one.
- * - Turned off by the opponent: yes, so the player can see that it is off.
+ * - Turned off by the opponent, or by the player blocking them: yes, so the
+ *   player can see that it is off, and why.
  * - Closed after the game: only if there is something to read, or the chat
  *   was open during this visit (it shouldn't vanish while being looked at).
  */
@@ -41,13 +42,14 @@ export const isChatShown = (
   if (!status) return false;
   if (status.enabled) return true;
   if (status.reason === "off_by_you") return false;
-  if (status.reason === "off_by_opponent") return true;
+  if (status.reason === "off_by_opponent" || status.reason === "blocked") return true;
   return messageCount > 0 || wasOpen;
 };
 
 export const OFF_REASON_TEXT: Record<ChatOffReason, string> = {
   off_by_you: "Chat is turned off in your settings.",
   off_by_opponent: "Your opponent has chat turned off.",
+  blocked: "You've blocked this player, so there's no chat.",
   closed: "This chat has closed.",
 };
 

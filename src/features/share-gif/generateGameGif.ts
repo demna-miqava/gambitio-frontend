@@ -3,13 +3,18 @@
  * ShareGifContext), so the encoder and the piece images stay out of the main
  * bundle.
  */
-import { GIFEncoder, applyPalette, quantize } from "gifenc";
 import pieceSetCss from "@/assets/pieces/chessground.merida.css?raw";
 import { capFrames, gameFrames } from "./utils/frames";
 import { MAX_GIF_FRAMES, frameDelays } from "./utils/schedule";
 import { GIF_HEIGHT, GIF_WIDTH, SQUARE_SIZE, drawFrame, type GifScene, type GifTheme } from "./utils/draw";
 import { PIECE_KEYS, parsePieceSet, type PieceKey } from "./utils/pieceSet";
-import { concatPixels, maskUnchanged, paletteSampleIndices, yieldToBrowser } from "./utils/encode";
+import { concatPixels, paletteSampleIndices } from "./utils/encode";
+import {
+  EncoderWorkerError,
+  createWorkerBackend,
+  type EncoderPort,
+  type GifEncoderBackend,
+} from "./utils/gifEncoderClient";
 import { readGifTheme } from "./utils/theme";
 import type { GifOrientation } from "./utils/gameInfo";
 
@@ -77,6 +82,44 @@ const throwIfAborted = (signal?: AbortSignal) => {
   if (signal?.aborted) throw new DOMException("GIF generation was cancelled", "AbortError");
 };
 
+/**
+ * The encoder worker, or null where workers aren't available. Written out in
+ * full so Vite bundles the worker.
+ */
+function startEncoderWorker(): EncoderPort | null {
+  if (typeof Worker === "undefined") return null;
+  try {
+    return new Worker(new URL("./utils/gifEncoder.worker.ts", import.meta.url), {
+      type: "module",
+    }) as unknown as EncoderPort;
+  } catch {
+    return null;
+  }
+}
+
+/** Encodes in the worker; on the page if it can't start or breaks down. */
+async function encodeFrames(encode: (backend: GifEncoderBackend) => Promise<Blob>): Promise<Blob> {
+  const port = startEncoderWorker();
+  if (port) {
+    const backend = createWorkerBackend(port);
+    try {
+      return await encode(backend);
+    } catch (error) {
+      if (!(error instanceof EncoderWorkerError)) throw error;
+      // e.g. a browser without module workers: start over on the page
+    } finally {
+      backend.close();
+    }
+  }
+  const { createInlineBackend } = await import("./utils/gifEncoder");
+  const backend = createInlineBackend();
+  try {
+    return await encode(backend);
+  } finally {
+    backend.close();
+  }
+}
+
 export async function generateGameGif(
   input: GameGifInput,
   { onProgress, signal }: GenerateOptions = {}
@@ -104,36 +147,23 @@ export async function generateGameGif(
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("Canvas is not available");
 
+  // Drawing needs the canvas, so it stays on the page; each frame's pixels
+  // go to the encoder (a fresh buffer per frame, so it can be transferred)
   const render = (index: number) => {
     drawFrame(ctx, frames[index]!, scene);
     return ctx.getImageData(0, 0, GIF_WIDTH, GIF_HEIGHT).data;
   };
 
-  // One palette for the whole GIF (the board has few colors), with the last
-  // slot left free for "unchanged since the previous frame"
-  const palette = quantize(concatPixels(paletteSampleIndices(frames.length).map(render)), 255);
-  const transparentIndex = palette.length;
-  const globalPalette = [...palette, [0, 0, 0]];
-  await yieldToBrowser();
-
-  const gif = GIFEncoder();
-  let previous: Uint8Array | null = null;
-  for (let i = 0; i < frames.length; i++) {
+  return encodeFrames(async (encoder) => {
+    // One palette for the whole GIF (the board has few colors), built from
+    // a few sample frames
+    await encoder.start(GIF_WIDTH, GIF_HEIGHT, concatPixels(paletteSampleIndices(frames.length).map(render)));
+    for (let i = 0; i < frames.length; i++) {
+      throwIfAborted(signal);
+      await encoder.addFrame(render(i), delays[i]!);
+      onProgress?.((i + 1) / frames.length);
+    }
     throwIfAborted(signal);
-    const indexed = applyPalette(render(i), palette);
-    gif.writeFrame(previous ? maskUnchanged(previous, indexed, transparentIndex) : indexed, GIF_WIDTH, GIF_HEIGHT, {
-      palette: i === 0 ? globalPalette : undefined,
-      delay: delays[i],
-      repeat: 0,
-      // Keep each frame under the next, which only draws what changed
-      dispose: 1,
-      transparent: previous !== null,
-      transparentIndex,
-    });
-    previous = indexed;
-    onProgress?.((i + 1) / frames.length);
-    await yieldToBrowser();
-  }
-  gif.finish();
-  return new Blob([gif.bytes()], { type: "image/gif" });
+    return new Blob([await encoder.finish()], { type: "image/gif" });
+  });
 }

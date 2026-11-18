@@ -100,7 +100,7 @@ const CurrentGameBoard = () => {
     newRating: opponentRatings.newRating,
     ratingChange: gameEnded ? opponentRatings.ratingChange : undefined,
     avatar: (
-      <PlayerPopover player={opponent} {...playerCard}>
+      <PlayerPopover player={opponent} gameId={game.id} {...playerCard}>
         <PlayerAvatar
           username={opponentUsername}
           avatarUrl={opponent.avatarUrl}

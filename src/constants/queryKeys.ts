@@ -6,6 +6,7 @@ export const QKEY_SUGGESTED_FRIENDS = "suggested-friends";
 export const QKEY_PENDING_FRIEND_REQUESTS = "pending-friend-requests";
 export const QKEY_USER_SETTINGS = "user-settings";
 export const QKEY_CHALLENGES = "challenges";
+export const QKEY_BLOCKED_USERS = "blocked-users";
 export const QKEY_PROFILE_STATUS = "profile-status";
 /**
  * The signed-in account's profile status. Keyed by Clerk user id so one

@@ -57,6 +57,7 @@ const PostGameActions = ({
     rematchOffered: offered,
     rematchRequested: requested,
     rematchDeclined,
+    rematchUsed,
     requestRematch,
     acceptRematch,
     declineRematch,
@@ -130,7 +131,7 @@ const PostGameActions = ({
           ) : (
             <Button size="md"
               onClick={requestRematch}
-              disabled={rematchDeclined || isSearching}
+              disabled={rematchDeclined || rematchUsed || isSearching}
               className="flex-1"
             >
               {rematchLabel}

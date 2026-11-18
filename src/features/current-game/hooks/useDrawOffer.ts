@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import type {
   DrawOfferMessage,
   DrawResponseMessage,
+  GameErrorMessage,
   InitialGameStateMessage,
   MoveMessage,
   TakebackMessage,
@@ -28,6 +29,9 @@ export const useDrawOffer = () => {
   const [incomingOffer, setIncomingOffer] = useState(false);
   const [offerSent, setOfferSent] = useState(false);
   const [opponentDeclined, setOpponentDeclined] = useState(false);
+  // After a declined offer the server refuses another until we move again
+  // (DRAW_DECLINED), so the button waits for our next move
+  const [declinedSinceMyMove, setDeclinedSinceMyMove] = useState(false);
 
   const respond = useCallback(
     (accepted: boolean) => {
@@ -72,6 +76,14 @@ export const useDrawOffer = () => {
   const handleDrawResponse = useCallback((data: DrawResponseMessage) => {
     setOfferSent(false);
     setOpponentDeclined(!data.accepted);
+    if (!data.accepted) setDeclinedSinceMyMove(true);
+  }, []);
+
+  // The server refused our offer: the opponent declined one since our last move
+  const handleError = useCallback(({ data }: GameErrorMessage) => {
+    if (data.code !== "DRAW_DECLINED") return;
+    setOfferSent(false);
+    setDeclinedSinceMyMove(true);
   }, []);
 
   // My move declines the opponent's offer; the opponent's move declines mine
@@ -79,6 +91,7 @@ export const useDrawOffer = () => {
     (data: MoveMessage) => {
       if (data.userId === id) {
         setIncomingOffer(false);
+        setDeclinedSinceMyMove(false);
         toast.dismiss(DRAW_TOAST_ID);
       } else {
         setOfferSent(false);
@@ -118,6 +131,7 @@ export const useDrawOffer = () => {
     GAME_MESSAGE_TYPES.DRAW_RESPONSE,
     handleDrawResponse
   );
+  useMessageDispatcher<GameErrorMessage>(gameMessages, GAME_MESSAGE_TYPES.ERROR, handleError);
   useMessageDispatcher<MoveMessage>(gameMessages, GAME_MESSAGE_TYPES.MOVE, handleMove);
   useMessageDispatcher<TakebackMessage>(gameMessages, GAME_MESSAGE_TYPES.TAKEBACK, handleTakeback);
   useMessageDispatcher<InitialGameStateMessage>(
@@ -135,6 +149,7 @@ export const useDrawOffer = () => {
   return {
     showDrawOffer: !gameEnded && incomingOffer,
     drawOfferSent: !gameEnded && offerSent,
+    canOfferDraw: !declinedSinceMyMove,
     showOpponentDeclined: !gameEnded && opponentDeclined,
     offerDraw,
     acceptDraw: () => respond(true),

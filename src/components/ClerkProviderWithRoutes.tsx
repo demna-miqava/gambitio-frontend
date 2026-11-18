@@ -4,6 +4,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { setAuthTokenGetter } from "@/services";
 import { QKEY_PROFILE_STATUS } from "@/constants/queryKeys";
+import { setStorageAccount } from "@/utils/userStorage";
+import { releasePushAfterSessionEnd } from "@/features/push/pushClient";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -125,6 +127,10 @@ const CLERK_APPEARANCE: ClerkAppearance = {
  * account changes (sign-out here or in another tab, an expired session,
  * another account signing in) drop all of it, except the new account's own
  * profile status, which may already be loading.
+ *
+ * When nobody is signed in (any more, or on opening the app after the
+ * session ran out), this browser also stops getting the old account's push
+ * notifications; useLogout already did that for "Sign out".
  */
 const ResetCacheOnUserChange = () => {
   const { isLoaded, userId } = useAuth();
@@ -143,14 +149,21 @@ const ResetCacheOnUserChange = () => {
     });
   }, [isLoaded, userId, queryClient]);
 
+  // A no-op unless a subscription is still attached to an account
+  useEffect(() => {
+    if (isLoaded && !userId) void releasePushAfterSessionEnd();
+  }, [isLoaded, userId]);
+
   return null;
 };
 
 /** Gives the API client access to Clerk's session token. */
 const AuthTokenBridge = ({ children }: { children: React.ReactNode }) => {
-  const { getToken } = useAuth();
+  const { getToken, userId } = useAuth();
   // Set during render (not in an effect) so it's ready before children fetch
+  // (or read their saved analyses, which are per account)
   setAuthTokenGetter(getToken);
+  setStorageAccount(userId);
   return (
     <>
       <ResetCacheOnUserChange />

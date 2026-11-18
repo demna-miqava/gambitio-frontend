@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Chess, type PieceSymbol, type Square } from "chess.js";
 import type { Key } from "@lichess-org/chessground/types";
-import type { DrawShape } from "@lichess-org/chessground/draw";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
 import { useSettings } from "@/features/settings/SettingsContext";
@@ -9,7 +8,7 @@ import { syncBoard } from "@/features/game/utils/board-utils";
 import { isPromotionMove } from "@/features/game/utils/promotionUtils";
 import type { PlayerColor } from "@/features/game/types/game.types";
 import type { StudyClientMessage, StudyNode } from "../types";
-import { sameShapes, toStudyShapes } from "../utils/studyState";
+import { sameShapes, toBoardShapes, toStudyShapes } from "../utils/studyState";
 
 export interface StudyPendingPromotion {
   from: Square;
@@ -77,9 +76,11 @@ export const useStudyBoard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [node.id, node.fen, resetKey, boardReady, cgRef, chessRef, setTurn, playSound]);
 
-  // Arrows and circles of the shared position (setShapes doesn't call onChange)
+  // Arrows and circles of the shared position (setShapes doesn't call
+  // onChange). Rebuilt from checked fields only: they come from the server,
+  // and chessground renders some shape fields as HTML
   useLayoutEffect(() => {
-    cgRef.current?.setShapes(node.shapes as DrawShape[]);
+    cgRef.current?.setShapes(toBoardShapes(node.shapes));
   }, [cgRef, node.id, node.shapes, resetKey, boardReady]);
 
   const sendMove = useCallback(

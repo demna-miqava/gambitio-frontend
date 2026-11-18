@@ -10,8 +10,14 @@ export type SendChallengeMessage = {
   data: {
     challengedId: number;
     color: PlayerColorOption;
+    /** The sender's own clock, in seconds */
     time: number;
     increment: number;
+    /**
+     * Time odds: the challenged player's clock, when it differs from the
+     * sender's. Such a game is unrated.
+     */
+    opponentTime?: number;
     /** 3 or 5 plays a series; 1 (the default) a single game */
     bestOf?: BestOf;
     /**
@@ -26,6 +32,12 @@ export type AcceptChallengeMessage = {
   type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_ACCEPTED;
   data: {
     challengerId: number;
+    /**
+     * The version of the challenge the player saw. The server refuses the
+     * accept with CHALLENGE_CHANGED if the challenger changed the terms
+     * since, and sends the new challenge.
+     */
+    version?: number;
   };
 };
 
@@ -54,6 +66,9 @@ export type ChallengeReceivedNotification = {
     color: PlayerColorOption;
     time: number;
     increment: number;
+    /** Time odds: the receiver's clock and the challenger's; null for an even game */
+    ownTime?: number | null;
+    opponentTime?: number | null;
     createdAt: string;
     /** Challenger's rating for this time control */
     rating?: number;
@@ -61,13 +76,15 @@ export type ChallengeReceivedNotification = {
     /** Set when accepting plays the next game of an existing series */
     seriesId?: number;
     seriesGame?: number;
+    /** Changes whenever the challenger changes the terms; sent back when accepting */
+    version?: number;
   };
 };
 
 /** The client message a reply answers, as echoed back by the server */
 export type EchoedRequest = {
   type?: NOTIFICATION_MESSAGE_TYPES;
-  data?: { challengedId?: number; challengerId?: number };
+  data?: { challengedId?: number; challengerId?: number; version?: number };
 };
 
 export type OpponentUnavailableNotification = {
@@ -107,6 +124,11 @@ export type MatchCreatedNotification = {
     color: "white" | "black";
     time: number;
     increment: number;
+    /** Time odds: this player's clock and the opponent's; null for an even game */
+    ownTime?: number | null;
+    opponentTime?: number | null;
+    /** False for a game with time odds */
+    rated?: boolean;
   };
 };
 
@@ -125,8 +147,12 @@ export type Challenge = {
   username: string;
   avatarUrl: string | null;
   color: PlayerColorOption;
+  /** The longer clock when the challenge has time odds */
   time: number;
   increment: number;
+  /** Time odds: your clock and the challenger's; null or missing for an even game */
+  ownTime?: number | null;
+  opponentTime?: number | null;
   createdAt: string;
   /** Challenger's rating for this time control */
   rating?: number;
@@ -134,15 +160,27 @@ export type Challenge = {
   /** Set when accepting plays the next game of an existing series (null over REST) */
   seriesId?: number | null;
   seriesGame?: number | null;
+  /**
+   * Changes whenever the challenger changes the terms (REST and socket);
+   * sent back when accepting, so the player only accepts what they saw
+   */
+  version?: number;
 };
+
+/** What accepting a challenge needs to name it */
+export type ChallengeRef = Pick<Challenge, "challengerId" | "version">;
 
 /** A challenge the signed-in user sent and is waiting on. */
 export type OutgoingChallenge = {
   challengedId: number;
   username: string;
   color: PlayerColorOption;
+  /** The longer clock when the challenge has time odds */
   time: number;
   increment: number;
+  /** Time odds: your clock and the challenged player's; null or missing for an even game */
+  ownTime?: number | null;
+  opponentTime?: number | null;
   /** When it was sent (ms), for the client-side expiry */
   sentAt: number;
   bestOf?: BestOf;
@@ -186,6 +224,12 @@ export type FriendsUpdatedNotification = {
   };
 };
 
+/** The signed-in player blocked or unblocked someone, here or in another tab */
+export type BlocksUpdatedNotification = {
+  type: NOTIFICATION_MESSAGE_TYPES.BLOCKS_UPDATED;
+  data: Record<string, never>;
+};
+
 export type NotificationWebSocketMessage =
   | ActiveGameNotification
   | ChallengeReceivedNotification
@@ -196,4 +240,5 @@ export type NotificationWebSocketMessage =
   | ChallengeErrorNotification
   | SeriesUpdatedNotification
   | StudyInviteNotification
-  | FriendsUpdatedNotification;
+  | FriendsUpdatedNotification
+  | BlocksUpdatedNotification;

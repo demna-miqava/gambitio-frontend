@@ -9,7 +9,9 @@ import type {
   TakebackMessage,
   TimeAddedMessage,
 } from "@/features/game/types/websocket-messages";
-import { getLastMove, syncBoard } from "@/features/game/utils/board-utils";
+import { getTurnColor, syncBoard } from "@/features/game/utils/board-utils";
+import { lastMoveSquares } from "@/features/game/utils/moveHistory";
+import { loadServerPgn } from "@/features/game/utils/loadServerPgn";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { useGameNavigation } from "@/features/game/contexts/GameNavigationContext";
 import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
@@ -119,7 +121,8 @@ export const useLiveGameMessages = ({
 
   /**
    * Replaces the local position with the server's. `playPremove`: play a
-   * premove the player queued, if it's their turn now.
+   * premove the player queued, if it's their turn now. False if the PGN
+   * didn't load: the game, board and move list are then left as they were.
    */
   const syncFromServerState = useCallback(
     (pgn: string, playPremove = true) => {
@@ -129,21 +132,17 @@ export const useLiveGameMessages = ({
       // The clocks restart from the server's times now
       turnStartedAtRef.current = performance.now();
 
-      try {
-        if (pgn) chess.loadPgn(pgn);
-        else chess.reset();
-      } catch {
-        return false;
-      }
+      if (!loadServerPgn(chess, pgn)) return false;
 
-      const turn = syncBoard({
+      // Recorded first: the board's last-move highlight comes from the moves
+      const moves = setTurn(getTurnColor(chess));
+      syncBoard({
         cg,
         chess,
         movableColor: inputLockedRef.current ? undefined : color,
-        lastMove: getLastMove(chess),
+        lastMove: lastMoveSquares(moves),
         playPremove,
       });
-      setTurn(turn);
       goToLastMove();
       return true;
     },
@@ -178,7 +177,7 @@ export const useLiveGameMessages = ({
           lastMove: [move.from, move.to],
           playPremove: true,
         });
-        setTurn(turn);
+        setTurn(turn, move);
         playSoundForMove(move, chess.isCheckmate());
         goToLastMove();
         onOpponentMove?.(move.san, data.userId);
@@ -207,9 +206,11 @@ export const useLiveGameMessages = ({
   const handleMoveRejected = useCallback(
     (data: MoveRejectedMessage) => {
       toast.error(data.message);
+      // The refused move is still on the board: ask for the whole state
       if (syncFromServerState(data.pgn)) serverFenRef.current = chessRef.current.fen();
+      else requestSync();
     },
-    [syncFromServerState, chessRef]
+    [syncFromServerState, chessRef, requestSync]
   );
 
   // An error instead of move_rejected (rate limited, game over, server
@@ -282,6 +283,8 @@ export const useLiveGameMessages = ({
   const handleInitialState = useCallback(
     ({ data }: InitialGameStateMessage) => {
       if (data.isFinished) setInputLocked(true);
+      // This is the answer to a sync, so a PGN that doesn't load isn't
+      // asked for again (it would loop): the board stays as it was
       if (syncFromServerState(data.pgn)) serverFenRef.current = chessRef.current.fen();
       setClockRunning(data.clockRunning && !data.isFinished);
       if (data.whiteTimeLeft !== null) setWhiteTimeLeft(data.whiteTimeLeft);

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useUser } from "@/hooks/useUser";
+import { parsePositiveId } from "@/utils/ids";
 import { useStudyRoom } from "@/features/study/hooks/useStudyRoom";
 import { StudyRoomView } from "@/features/study/components/StudyRoomView";
 
@@ -23,7 +24,8 @@ const StudyRoom = () => {
 };
 
 const StudyRoomPage = ({ roomId }: { roomId: string | undefined }) => {
-  const id = Number(roomId);
+  // 0 (never a room) for anything but a plain numeric id
+  const id = parsePositiveId(roomId) ?? 0;
   const { id: myId } = useUser();
   const room = useStudyRoom(id);
   useDocumentTitle(room.snapshot ? room.snapshot.room.name : "Study room");

@@ -192,6 +192,8 @@ export const AnalysisPanel = ({ onLoadAnotherPgn }: { onLoadAnotherPgn?: () => v
             onPlayMove={playUci}
             compactOnMobile
             id={linesId}
+            // The review runs its own Stockfish; one engine at a time
+            paused={review?.status === "running"}
             {...(reviewReady && {
               hideDesktopHeader: true,
               desktopVisibleLines: moreLines ? 3 : 1,

@@ -13,11 +13,15 @@ import { useIncomingChallenges } from "./useIncomingChallenges";
 import type {
   NotificationWebSocketMessage,
   Challenge,
+  ChallengeRef,
   OutgoingChallenge,
 } from "../types/websocket-messages";
 
+/** The server's answer to accepting a challenge whose terms changed since it was shown */
+export const CHALLENGE_CHANGED = "CHALLENGE_CHANGED";
+
 type Options = {
-  handleAccept: (challengerId: number) => void;
+  handleAccept: (challenge: ChallengeRef) => void;
   handleDecline: (challengerId: number) => void;
   removeChallenge: (challengerId: number) => void;
   /** The challenge we're waiting on, read when a reply arrives */
@@ -90,9 +94,12 @@ export const useChallengeMessageHandlers = ({
         color: message.data.color,
         time: message.data.time,
         increment: message.data.increment,
+        ownTime: message.data.ownTime ?? null,
+        opponentTime: message.data.opponentTime ?? null,
         createdAt: message.data.createdAt,
         rating: message.data.rating,
         bestOf: message.data.bestOf,
+        version: message.data.version,
       };
 
       queryClient.setQueryData<Challenge[]>([QKEY_CHALLENGES], (old = []) =>
@@ -205,6 +212,15 @@ export const useChallengeMessageHandlers = ({
         lastSent === NOTIFICATION_MESSAGE_TYPES.CHALLENGE_DECLINED
       ) {
         invalidateChallenges();
+      }
+      // The challenger changed the terms after we saw them: nothing started.
+      // The server sends the new challenge (a fresh toast); the refetch
+      // above brings it back to the lists too
+      if (message.data.code === CHALLENGE_CHANGED) {
+        toast.info("That challenge just changed. Check the new terms before accepting.", {
+          id: "notification_error",
+        });
+        return;
       }
       toast.error(message.data.message, { id: "notification_error" });
     },

@@ -16,10 +16,13 @@ import { GAME_MODES } from "@/features/game/modes/types";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { GameReviewProvider } from "@/features/game-review";
 import { ShareGifProvider } from "@/features/share-gif";
+import { parsePositiveId } from "@/utils/ids";
 
 const ArchiveGame = () => {
   const { gameId } = useParams();
-  const { data: gameData, isPending, isFetching, error, refetch } = useGameData(gameId, {
+  // Only a plain numeric id reaches the API (React Router decodes "%2F")
+  const validId = parsePositiveId(gameId);
+  const { data: gameData, isPending, isFetching, error, refetch } = useGameData(validId, {
     requireFinished: true,
   });
   const [searchParams] = useSearchParams();
@@ -31,6 +34,8 @@ const ArchiveGame = () => {
       ? `${gameData.whitePlayer.username} vs ${gameData.blackPlayer.username}`
       : undefined
   );
+
+  if (validId === null) return <GameLoadError error={null} onRetry={() => refetch()} />;
 
   // A copy cached while the game was on is being replaced: don't show it
   const refreshingUnfinished = gameData?.status !== "finished" && isFetching;

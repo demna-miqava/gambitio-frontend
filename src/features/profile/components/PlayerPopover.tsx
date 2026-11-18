@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Clock, UserRound, UserRoundPlus } from "lucide-react";
+import { Ban, Check, Clock, UserRound, UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,6 +17,12 @@ import { useHeadToHead } from "@/features/series/hooks/useSeries";
 import { useSendFriendRequest } from "@/features/friends/suggestions/hooks/useSendFriendRequest";
 import { useFriendRequestAction } from "@/features/friends/requests/hooks/useFriendRequestAction";
 import { useFriendship } from "../hooks/useFriendship";
+import { useIsBlocked, useUnblockUser } from "@/features/moderation/hooks/useBlocks";
+import {
+  ModerationDialogs,
+  ModerationMenu,
+  type ModerationAction,
+} from "@/features/moderation/components/PlayerModeration";
 
 export interface PopoverPlayer {
   id: number;
@@ -77,11 +83,29 @@ const HeadToHead = ({ player }: { player: PopoverPlayer }) => {
   );
 };
 
-/** Add friend, or where the request stands. Nothing that leaves the page. */
+/**
+ * Add friend, or where the request stands; Unblock for a player you've
+ * blocked. Nothing that leaves the page.
+ */
 const Friendship = ({ player }: { player: PopoverPlayer }) => {
   const status = useFriendship(player);
   const sendRequest = useSendFriendRequest();
   const requestAction = useFriendRequestAction();
+  const isBlocked = useIsBlocked(player.id);
+  const unblock = useUnblockUser();
+
+  if (isBlocked) {
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={unblock.isPending}
+        onClick={() => unblock.mutate(player)}
+      >
+        <Ban aria-hidden="true" /> Unblock
+      </Button>
+    );
+  }
 
   switch (status.kind) {
     case "loading":
@@ -130,10 +154,13 @@ export const PlayerCard = ({
   player,
   showRatings,
   profileInNewTab,
+  onModerate,
 }: {
   player: PopoverPlayer;
   showRatings: boolean;
   profileInNewTab: boolean;
+  /** Block or report was picked: shows the "more" menu on other players' cards */
+  onModerate?: (action: ModerationAction) => void;
 }) => {
   const { id: viewerId } = useUser();
   const avatarSrc = useAvatarSrc();
@@ -164,6 +191,11 @@ export const PlayerCard = ({
             )
           )}
         </div>
+        {!isSelf && onModerate && (
+          <div className="-mr-1.5 ml-auto self-start">
+            <ModerationMenu player={player} onAction={onModerate} />
+          </div>
+        )}
       </div>
 
       {showRatings && (
@@ -202,33 +234,62 @@ interface PlayerPopoverProps {
   showRatings?: boolean;
   /** Open the profile in a new tab, so a game in progress isn't left */
   profileInNewTab?: boolean;
+  /**
+   * A game the viewer and this player played against each other (the one on
+   * screen): it is sent along if the viewer reports the player
+   */
+  gameId?: number;
   /** The avatar that opens the card */
   children: ReactNode;
 }
 
 /**
  * A player's card, from their avatar beside the board: when they joined,
- * their ratings, your record against them, and Add friend. Nothing is
- * fetched until it's opened.
+ * their ratings, your record against them, Add friend, and block or
+ * report. Nothing is fetched until it's opened.
  */
 export const PlayerPopover = ({
   player,
   showRatings = true,
   profileInNewTab = false,
+  gameId,
   children,
-}: PlayerPopoverProps) => (
-  <Popover>
-    <PopoverTrigger asChild>
-      <button
-        type="button"
-        aria-label={`About ${player.username}`}
-        className="relative touch-target shrink-0 rounded-full outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        {children}
-      </button>
-    </PopoverTrigger>
-    <PopoverContent align="start" sideOffset={8} className="w-72 rounded-xl p-4">
-      <PlayerCard player={player} showRatings={showRatings} profileInNewTab={profileInNewTab} />
-    </PopoverContent>
-  </Popover>
-);
+}: PlayerPopoverProps) => {
+  const [open, setOpen] = useState(false);
+  // The block and report dialogs live outside the card: opening one closes
+  // the popover, which would take a dialog inside it along
+  const [action, setAction] = useState<ModerationAction | null>(null);
+
+  return (
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-label={`About ${player.username}`}
+            className="relative touch-target shrink-0 rounded-full outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {children}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" sideOffset={8} className="w-72 rounded-xl p-4">
+          <PlayerCard
+            player={player}
+            showRatings={showRatings}
+            profileInNewTab={profileInNewTab}
+            onModerate={(picked) => {
+              setOpen(false);
+              setAction(picked);
+            }}
+          />
+        </PopoverContent>
+      </Popover>
+      <ModerationDialogs
+        player={player}
+        action={action}
+        onClose={() => setAction(null)}
+        {...(gameId !== undefined && { gameId })}
+      />
+    </>
+  );
+};
