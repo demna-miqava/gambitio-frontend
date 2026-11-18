@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { Chess } from "chess.js";
-import { countPlayerMoves, evaluateObjective, isHanging, objectiveLabel } from "./objective";
+import {
+  conversionVerdict,
+  countPlayerMoves,
+  evaluateObjective,
+  formatAdvantage,
+  isHanging,
+  objectiveLabel,
+} from "./objective";
 import type { EndgameExercise } from "../types";
 
 type Spec = Pick<EndgameExercise, "fen" | "playerColor" | "objective">;
@@ -156,5 +163,47 @@ describe("objectiveLabel", () => {
     expect(objectiveLabel({ type: "promote" })).toBe("Promote a pawn without losing the new queen");
     expect(objectiveLabel({ type: "promote", maxMoves: 8 })).toBe("Promote a pawn safely within 8 moves");
     expect(objectiveLabel({ type: "draw", surviveMoves: 20 })).toBe("Hold the draw for 20 moves");
+  });
+});
+
+describe("conversions", () => {
+  const cp = (value: number) => ({ type: "cp" as const, value });
+  const mate = (value: number) => ({ type: "mate" as const, value });
+
+  it("go on while the lead holds and the engine fights on", () => {
+    expect(conversionVerdict([])).toBeNull();
+    expect(conversionVerdict([cp(-400), cp(-350), cp(-900)])).toBeNull();
+    // One dip could be the engine's noise
+    expect(conversionVerdict([cp(-400), cp(-100)])).toBeNull();
+    // Hopeless twice, not three times yet
+    expect(conversionVerdict([cp(-400), cp(-1200), cp(-1500)])).toBeNull();
+  });
+
+  it("succeed when the engine sees mate or stays hopeless", () => {
+    expect(conversionVerdict([cp(-500), mate(-7)])?.status).toBe("success");
+    expect(conversionVerdict([cp(-1100), cp(-1200), cp(-1500)])?.status).toBe("success");
+  });
+
+  it("fail when the lead slips for two moves, or the engine mates", () => {
+    const slipped = conversionVerdict([cp(-400), cp(-120), cp(30)]);
+    expect(slipped?.status).toBe("failure");
+    expect(slipped?.message).toContain("−0.3");
+    expect(conversionVerdict([cp(-400), mate(5)])?.status).toBe("failure");
+  });
+
+  it("fail on a draw by rule", () => {
+    const stalemate = new Chess("7k/5Q2/6K1/8/8/8/8/8 b - - 0 1");
+    const result = evaluateObjective(
+      { fen: "7k/8/6K1/8/8/8/5Q2/8 w - - 0 1", playerColor: "white", objective: { type: "convert" } },
+      stalemate,
+      1
+    );
+    expect(result.status).toBe("failure");
+  });
+
+  it("reads advantages from the player's side", () => {
+    expect(formatAdvantage(cp(420))).toBe("+4.2");
+    expect(formatAdvantage(cp(-50))).toBe("−0.5");
+    expect(formatAdvantage(mate(3))).toBe("mate in 3");
   });
 });

@@ -1,5 +1,6 @@
 import { Chess, type Color, type Move, type PieceSymbol, type Square } from "chess.js";
 import type { EndgameExercise, EndgameObjective, ObjectiveEvaluation } from "../types";
+import type { EngineScore } from "@/features/play-bots/services/botEngine";
 
 const PIECES: PieceSymbol[] = ["q", "r", "b", "n"];
 
@@ -67,6 +68,8 @@ const describeLimit = (objective: EndgameObjective): string => {
       return objective.maxMoves ? `${objective.maxMoves} moves` : "";
     case "draw":
       return `${objective.surviveMoves} moves`;
+    case "convert":
+      return "";
   }
 };
 
@@ -82,6 +85,8 @@ export const objectiveLabel = (objective: EndgameObjective): string => {
         : "Promote a pawn without losing the new queen";
     case "draw":
       return `Hold the draw for ${limit}`;
+    case "convert":
+      return "Win it: checkmate, or keep the advantage until the engine resigns";
   }
 };
 
@@ -160,6 +165,11 @@ export const evaluateObjective = (
       return playing();
     }
 
+    case "convert": {
+      if (draw) return failure(`The game is drawn by ${draw}. The win slipped away.`);
+      return playing();
+    }
+
     case "draw": {
       if (draw) return success(`Drawn by ${draw}. Well defended!`);
       if (opponentKeepsPromotion(chess, opponent, startOpponentPieces, lastMove)) {
@@ -184,4 +194,57 @@ export const evaluateObjective = (
 export const countPlayerMoves = (moves: Move[], playerColor: EndgameExercise["playerColor"]): number => {
   const code: Color = playerColor === "white" ? "w" : "b";
   return moves.filter((move) => move.color === code).length;
+};
+
+/**
+ * In a conversion: the engine resigns once it sees a forced mate against it,
+ * or once it has been at least RESIGN_CP behind for RESIGN_AFTER searches in
+ * a row (it would be hopeless to play on, even at full strength).
+ */
+export const CONVERSION_RESIGN_CP = 1000;
+export const CONVERSION_RESIGN_AFTER = 3;
+/**
+ * The win has slipped away once the player's advantage is below SLIPPED_CP
+ * for SLIPPED_AFTER searches in a row (one alone could be the engine's
+ * noise), or the engine sees a mate for itself.
+ */
+export const CONVERSION_SLIPPED_CP = 150;
+export const CONVERSION_SLIPPED_AFTER = 2;
+
+/** "+4.2", "mate in 3" or "−0.5", from the player's side */
+export const formatAdvantage = (score: EngineScore): string => {
+  if (score.type === "mate") {
+    return score.value > 0 ? `mate in ${score.value}` : `being mated in ${-score.value}`;
+  }
+  const pawns = score.value / 100;
+  return `${pawns >= 0 ? "+" : "−"}${Math.abs(pawns).toFixed(1)}`;
+};
+
+/** A score from the engine's side, turned to the player's. */
+const playerSide = (score: EngineScore): EngineScore => ({ type: score.type, value: -score.value });
+
+/**
+ * How a conversion stands, from the engine's scores after each of the
+ * player's moves (its own side to move, oldest first). Null while it goes
+ * on; otherwise success (the engine resigns) or failure (the win slipped).
+ */
+export const conversionVerdict = (engineScores: readonly EngineScore[]): ObjectiveEvaluation | null => {
+  const latest = engineScores.at(-1);
+  if (!latest) return null;
+  if (latest.type === "mate" && latest.value < 0) {
+    return success("Stockfish sees the mate coming and resigns. Converted!");
+  }
+  if (latest.type === "mate" && latest.value > 0) {
+    return failure(`Now Stockfish is the one mating (${formatAdvantage(playerSide(latest))}). The win slipped away.`);
+  }
+  const recent = (count: number) => (engineScores.length >= count ? engineScores.slice(-count) : null);
+  const hopeless = recent(CONVERSION_RESIGN_AFTER);
+  if (hopeless?.every((s) => s.type === "cp" && s.value <= -CONVERSION_RESIGN_CP)) {
+    return success("Stockfish resigns: it's hopelessly behind. Converted!");
+  }
+  const slipping = recent(CONVERSION_SLIPPED_AFTER);
+  if (slipping?.every((s) => s.type === "cp" && -s.value < CONVERSION_SLIPPED_CP)) {
+    return failure(`Your advantage is down to ${formatAdvantage(playerSide(latest))}. The win slipped away.`);
+  }
+  return null;
 };

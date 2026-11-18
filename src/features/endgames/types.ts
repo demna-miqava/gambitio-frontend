@@ -26,7 +26,16 @@ export type EndgameObjective =
    * repetition, 50 moves) or last `surviveMoves` moves without the opponent
    * keeping a new queen or giving mate
    */
-  | { type: "draw"; surviveMoves: number };
+  | { type: "draw"; surviveMoves: number }
+  /**
+   * Win a won position (conversion drills): checkmate, or keep the advantage
+   * until the engine resigns. Failure is a draw, a loss, or the advantage
+   * slipping away (see conversionVerdict)
+   */
+  | { type: "convert" };
+
+/** What the board hook needs to play a position against the engine */
+export type PracticePosition = Pick<EndgameExercise, "fen" | "playerColor" | "objective">;
 
 export interface EndgameExercise {
   /** Slug, also the key the server stores progress under */

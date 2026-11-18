@@ -10,16 +10,21 @@ import { attachTouchDragAssist } from "@/features/game/utils/touchDragAssist";
 import { useMoveNavigation } from "@/features/game/hooks/useMoveNavigation";
 import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
 import { useSettings } from "@/features/settings/SettingsContext";
-import { BotEngine } from "@/features/play-bots/services/botEngine";
+import { BotEngine, type EngineScore } from "@/features/play-bots/services/botEngine";
 import { BOARD_SETTING_DEFAULTS } from "@/features/play-bots/hooks/useBotGame";
-import type { EndgameExercise, ObjectiveEvaluation } from "../types";
-import { countPlayerMoves, evaluateObjective } from "../utils/objective";
+import type { ObjectiveEvaluation, PracticePosition } from "../types";
+import { conversionVerdict, countPlayerMoves, evaluateObjective } from "../utils/objective";
 import { useBoardOrientation } from "@/features/game/hooks/useBoardOrientation";
 
 /** Full strength: the engine always finds the toughest defence (or attack). */
 export const ENDGAME_ENGINE_RATING = 3500;
 /** Enough for best play in these positions, quick enough to retry fast. */
 const ENGINE_MOVE_TIME_MS = 600;
+/**
+ * A conversion starts from a middlegame as often as an endgame: the engine
+ * thinks longer, so it defends as well as it can.
+ */
+const CONVERSION_MOVE_TIME_MS = 1000;
 /** The engine never replies faster than this, so its move can be followed. */
 const MIN_REPLY_MS = 350;
 
@@ -38,8 +43,12 @@ const lastMoveOf = (chess: Chess): [Key, Key] | undefined => {
  * objective is checked after each one. `retry` resets the position at once,
  * keeping the engine; a reply still on its way for an earlier attempt is
  * dropped.
+ *
+ * Conversion drills play through here too (objective "convert"): the
+ * engine's score after each of the player's moves decides when it resigns
+ * or when the win has slipped (conversionVerdict).
  */
-export const useEndgameExercise = (exercise: EndgameExercise) => {
+export const useEndgameExercise = (exercise: PracticePosition) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
   const chessRef = useRef(new Chess(exercise.fen));
@@ -51,6 +60,10 @@ export const useEndgameExercise = (exercise: EndgameExercise) => {
   const engineQueueRef = useRef<Promise<unknown>>(Promise.resolve());
   const attemptRef = useRef(0);
   const finishedRef = useRef(false);
+  /** A conversion's engine scores after each of the player's moves (engine's side) */
+  const scoresRef = useRef<EngineScore[]>([]);
+  const [engineScore, setEngineScore] = useState<EngineScore | null>(null);
+  const converting = exercise.objective.type === "convert";
 
   const { settings } = useSettings();
   const coordinates =
@@ -122,15 +135,31 @@ export const useEndgameExercise = (exercise: EndgameExercise) => {
       // Abandoned while waiting its turn
       if (attemptRef.current !== attemptId) return null;
       const minDelay = wait(MIN_REPLY_MS);
-      const uci = await engine.bestMove(fen, ENDGAME_ENGINE_RATING, { moveTime: ENGINE_MOVE_TIME_MS });
+      const result = await engine.search(fen, ENDGAME_ENGINE_RATING, {
+        moveTime: converting ? CONVERSION_MOVE_TIME_MS : ENGINE_MOVE_TIME_MS,
+      });
       await minDelay;
-      return uci;
+      return result;
     });
     engineQueueRef.current = request.catch(() => {});
     request
-      .then((uci) => {
+      .then((result) => {
+        const uci = result?.move;
         // A retry, or the position changed meanwhile: drop the reply
         if (!uci || attemptRef.current !== attemptId || finishedRef.current || chess.fen() !== fen) return;
+        if (converting && result.score) {
+          scoresRef.current = [...scoresRef.current, result.score];
+          setEngineScore(result.score);
+          const verdict = conversionVerdict(scoresRef.current);
+          if (verdict) {
+            // The engine resigns, or the win is gone: its move isn't played
+            finishedRef.current = true;
+            setEvaluation(verdict);
+            syncBoard();
+            cgRef.current?.stop();
+            return;
+          }
+        }
         const move = chess.move({
           from: uci.slice(0, 2) as Square,
           to: uci.slice(2, 4) as Square,
@@ -144,7 +173,7 @@ export const useEndgameExercise = (exercise: EndgameExercise) => {
       .finally(() => {
         if (attemptRef.current === attemptId) setThinking(false);
       });
-  }, [afterMove]);
+  }, [afterMove, converting, syncBoard]);
 
   /** Returns the move played, or null if it wasn't played */
   const playUserMove = useCallback(
@@ -283,6 +312,8 @@ export const useEndgameExercise = (exercise: EndgameExercise) => {
     engineRef.current?.stop();
     chessRef.current = new Chess(exercise.fen);
     finishedRef.current = false;
+    scoresRef.current = [];
+    setEngineScore(null);
     setHistory([]);
     setEvaluation(PLAYING);
     setThinking(false);
@@ -342,6 +373,11 @@ export const useEndgameExercise = (exercise: EndgameExercise) => {
     orientation,
     flip,
     showArrow,
+    /**
+     * A conversion's latest engine score, from the engine's side (null
+     * before its first search, and for other objectives)
+     */
+    engineScore,
     isPlayerTurn:
       evaluation.status === "playing" && !thinking && chessRef.current.turn() === playerCode,
   };

@@ -42,3 +42,5 @@ export const QKEY_REPERTOIRE_CHECK = "repertoire-check";
 export const QKEY_STUDY_ROOMS = "study-rooms";
 export const QKEY_ENDGAME_PROGRESS = "endgame-progress";
 export const QKEY_ENDGAME_TABLEBASE = "endgame-tablebase";
+export const QKEY_STARTING_OPENINGS = "starting-openings";
+export const QKEY_CONVERSION_DRILLS = "conversion-drills";

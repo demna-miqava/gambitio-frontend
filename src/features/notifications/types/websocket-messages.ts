@@ -1,9 +1,13 @@
 import type { PlayerColorOption } from "@/types/game.types";
 import { NOTIFICATION_MESSAGE_TYPES } from "../constants/websocket-types";
 import type { SeriesSummary } from "@/features/series/types";
+import type { OpeningSummary } from "@/features/openings/startingOpenings";
 
-/** Games in a friend match: a single game, or a best-of series */
-export type BestOf = 1 | 3 | 5;
+/**
+ * Games in a friend match: a single game, a best-of series, or (2) a mirror
+ * match, one game with each colour scored as a pair
+ */
+export type BestOf = 1 | 2 | 3 | 5;
 
 export type SendChallengeMessage = {
   type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_SENT;
@@ -18,13 +22,18 @@ export type SendChallengeMessage = {
      * sender's. Such a game is unrated.
      */
     opponentTime?: number;
-    /** 3 or 5 plays a series; 1 (the default) a single game */
+    /** 3 or 5 plays a series, 2 a mirror match; 1 (the default) a single game */
     bestOf?: BestOf;
     /**
      * False plays a casual game (or series): no rating changes. Defaults to
      * rated. Ignored when continuing a series, which keeps its own setting.
      */
     rated?: boolean;
+    /**
+     * Start from this opening (GET /openings) instead of the initial
+     * position; every game of a series does. Ignored when continuing a series.
+     */
+    openingId?: string;
     /**
      * Continue this series instead: the server takes the time control,
      * length and colours from it, and the challenged player must be the opponent
@@ -83,6 +92,8 @@ export type ChallengeReceivedNotification = {
     seriesGame?: number;
     /** False for a casual game or series (always with time odds) */
     rated?: boolean;
+    /** The opening the game starts from; null for the initial position */
+    opening?: OpeningSummary | null;
     /** Changes whenever the challenger changes the terms; sent back when accepting */
     version?: number;
   };
@@ -169,6 +180,8 @@ export type Challenge = {
   seriesGame?: number | null;
   /** False for a casual game or series (always with time odds); missing means rated */
   rated?: boolean;
+  /** The opening the game starts from; null or missing for the initial position */
+  opening?: OpeningSummary | null;
   /**
    * Changes whenever the challenger changes the terms (REST and socket);
    * sent back when accepting, so the player only accepts what they saw
@@ -195,6 +208,8 @@ export type OutgoingChallenge = {
   bestOf?: BestOf;
   /** False for a casual game or series (always with time odds) */
   rated?: boolean;
+  /** The opening the game starts from; null or missing for the initial position */
+  opening?: OpeningSummary | null;
   /** Set when it continues a series: the game it would start */
   seriesId?: number;
   seriesGame?: number;

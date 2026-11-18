@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useCallback,
+  useState,
 } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +15,7 @@ import { useMatchmaking } from "@/features/matchmaking/hooks/useMatchmaking";
 import { getUserProfile } from "@/services/user";
 import { QKEY_USER_PROFILE } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
+import type { StartingOpening } from "@/features/openings/startingOpenings";
 import {
   getPlaySetupSearch,
   parsePlaySetup,
@@ -51,6 +53,12 @@ interface GameSetupContextValue {
   selectedFriend: ChallengeTarget | null;
   /** The friend is being loaded (opened from a link without navigation state) */
   isSelectedFriendLoading: boolean;
+  /**
+   * The opening the friend challenge starts from (null: the standard
+   * position). Kept here so the board beside the form can show it.
+   */
+  startingOpening: StartingOpening | null;
+  setStartingOpening: (opening: StartingOpening | null) => void;
 
   // Matchmaking
   isSearching: boolean;
@@ -82,6 +90,7 @@ export const GameSetupProvider = ({
   const isSetupStep = state?.setupStep === true;
 
   const { timeControl, updateTimeControl: setTimeControl } = useTimeControl();
+  const [startingOpening, setStartingOpening] = useState<StartingOpening | null>(null);
   const { isSearching, isConnecting, setShouldConnect } = useMatchmaking({
     time: timeControl.time,
     increment: timeControl.increment,
@@ -174,11 +183,14 @@ export const GameSetupProvider = ({
       updateTimeControl,
       selectedFriend,
       isSelectedFriendLoading,
+      startingOpening,
+      setStartingOpening,
       isSearching,
       isConnecting,
       setShouldConnect,
     }),
     [
+      startingOpening,
       activeSection,
       setActiveSection,
       openCustomTime,

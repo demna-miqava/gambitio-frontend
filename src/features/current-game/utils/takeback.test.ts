@@ -124,3 +124,13 @@ describe("takebackReducer", () => {
     });
   });
 });
+
+describe("takebacks in a game from an opening", () => {
+  it("never reach into the opening's moves", () => {
+    // Sicilian: 2 plies played for the players
+    expect(canRequestTakeback(2, "white", 2)).toBe(false);
+    expect(canRequestTakeback(4, "black", 2)).toBe(false);
+    expect(takebackPlies(5, "white", 2)).toBe(1);
+    expect(takebackPlies(6, "white", 2)).toBe(2);
+  });
+});

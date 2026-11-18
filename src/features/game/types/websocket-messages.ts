@@ -128,6 +128,9 @@ export type InitialGameStateMessage = {
     series?: SeriesSummary | null;
     /** 1-based number of this game in its series */
     seriesGame?: number | null;
+    /** The opening the game started from, and the half-moves it played (see Game.startPly) */
+    opening?: { id: string; eco: string; name: string } | null;
+    startPly?: number;
     /** People watching (not the players); only for games in progress */
     spectators?: number;
     /** The players' chat; absent for spectators */

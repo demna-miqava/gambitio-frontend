@@ -16,6 +16,7 @@ import type { SendMessage } from "react-use-websocket";
 import { getSentChallenge } from "@/services/challenges";
 import type { ReadyState } from "react-use-websocket";
 import { timeOdds } from "@/utils/timeControl";
+import type { OpeningSummary } from "@/features/openings/startingOpenings";
 
 /** Same as the server's CHALLENGE_TTL_MS: unanswered challenges expire */
 export const CHALLENGE_TTL_MS = 10 * 60_000;
@@ -80,6 +81,7 @@ export const useManageChallenge = (
           opponentTime: sent.opponentTime ?? null,
           bestOf: sent.bestOf,
           rated: sent.rated !== false,
+          opening: sent.opening ?? null,
           ...(sent.seriesId ? { seriesId: sent.seriesId } : {}),
           ...(sent.seriesGame ? { seriesGame: sent.seriesGame } : {}),
           sentAt: new Date(sent.createdAt).getTime(),
@@ -154,7 +156,10 @@ export const useManageChallenge = (
   }, [send, setOutgoingChallenge]);
 
   const sendChallenge = useCallback(
-    (data: SendChallengeData, target: { username: string; seriesGame?: number }) => {
+    (
+      data: SendChallengeData,
+      target: { username: string; seriesGame?: number; opening?: OpeningSummary | null }
+    ) => {
       if (!checkConnection()) return;
       const previous = outgoingRef.current;
       if (previous?.challengedId === data.challengedId) return;
@@ -173,6 +178,7 @@ export const useManageChallenge = (
         rated: !odds && data.rated !== false,
         username: target.username,
         ...(target.seriesGame ? { seriesGame: target.seriesGame } : {}),
+        opening: target.opening ?? null,
         sentAt: Date.now(),
       });
     },

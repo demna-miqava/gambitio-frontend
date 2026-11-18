@@ -1,9 +1,10 @@
 import type { PlayerColor } from "@/features/game/types/game.types";
 
 /**
- * Least ply a takeback may go back to (the server's MIN_TAKEBACK_PLY): both
- * players keep a move on the board, so a takeback never reopens the abort
- * window.
+ * Least ply a takeback may go back to (the server's MIN_TAKEBACK_PLY),
+ * counted from the game's startPly (the moves an opening played): both
+ * players keep a move of their own on the board, so a takeback never
+ * reopens the abort window or undoes the opening.
  */
 export const MIN_TAKEBACK_PLY = 2;
 
@@ -13,15 +14,15 @@ export const MIN_TAKEBACK_PLY = 2;
  * when that would go back before MIN_TAKEBACK_PLY (which also covers a
  * requester who hasn't moved yet), i.e. the server would refuse it.
  */
-export const takebackPlies = (ply: number, requester: PlayerColor): number | null => {
+export const takebackPlies = (ply: number, requester: PlayerColor, startPly = 0): number | null => {
   const toMove: PlayerColor = ply % 2 === 0 ? "white" : "black";
   const plies = toMove === requester ? 2 : 1;
-  return ply - plies >= MIN_TAKEBACK_PLY ? plies : null;
+  return ply - plies >= startPly + MIN_TAKEBACK_PLY ? plies : null;
 };
 
 /** Whether the board allows `requester` to ask for a takeback at `ply` */
-export const canRequestTakeback = (ply: number, requester: PlayerColor): boolean =>
-  takebackPlies(ply, requester) !== null;
+export const canRequestTakeback = (ply: number, requester: PlayerColor, startPly = 0): boolean =>
+  takebackPlies(ply, requester, startPly) !== null;
 
 const opponentOf = (color: PlayerColor): PlayerColor => (color === "white" ? "black" : "white");
 

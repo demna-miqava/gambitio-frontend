@@ -20,6 +20,8 @@ export const ROUTES = {
   TOURNAMENT: "/tournaments/:tournamentId",
   ENDGAMES: "/endgames",
   ENDGAME_EXERCISE: "/endgames/:exerciseId",
+  CONVERSION_DRILLS: "/drills",
+  CONVERSION_DRILL: "/drills/:drillId",
   PROFILE: {
     ROOT: "/profile/:id",
     OVERVIEW: "",
@@ -54,6 +56,7 @@ export const getTournamentRoute = (tournamentId: number) => `/tournaments/${tour
 export const getSeriesRoute = (seriesId: number) => `/series/${seriesId}`;
 export const getStudyRoomRoute = (roomId: number) => `/study/${roomId}`;
 export const getEndgameExerciseRoute = (exerciseId: string) => `/endgames/${exerciseId}`;
+export const getConversionDrillRoute = (drillId: number) => `/drills/${drillId}`;
 export const getProfileRoute = (id: number) => `/profile/${id}`;
 export const getProfileGamesRoute = (id: number) => `/profile/${id}/games`;
 export const getProfileStatsRoute = (id: number) => `/profile/${id}/stats`;

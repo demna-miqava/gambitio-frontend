@@ -1536,6 +1536,10 @@
 }
 
 @media (width >= 64rem), (width >= 48rem) and (orientation: landscape) {
+  /* A panel's stand-in for the decorative board, for when it is hidden */
+  .game-layout[data-decorative-board] .decorative-board-fallback {
+    display: none;
+  }
   .game-layout {
     grid-template-columns:
       minmax(0, calc(var(--board-max) + var(--board-extra)))

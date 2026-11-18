@@ -34,7 +34,7 @@ const NOT_CONNECTED = "Not connected. Try again when you're back online.";
  */
 export const useTakeback = () => {
   const { id } = useUser();
-  const { gameEnded, sendMessage } = useLiveGame();
+  const { game, gameEnded, sendMessage } = useLiveGame();
   const { getMoves, color, ply } = useChessBoardContext();
   const [state, dispatch] = useReducer(takebackReducer, INITIAL_TAKEBACK_STATE);
   // For the takeback handler: whether this player was the one who asked
@@ -175,7 +175,7 @@ export const useTakeback = () => {
      * back, no request is pending either way, and none was just declined
      */
     canRequestTakeback:
-      !gameEnded && !sent && !state.incoming && !declined && canRequestTakeback(ply, color),
+      !gameEnded && !sent && !state.incoming && !declined && canRequestTakeback(ply, color, game.startPly ?? 0),
     requestTakeback,
     acceptTakeback: () => respond(true),
     declineTakeback: () => respond(false),

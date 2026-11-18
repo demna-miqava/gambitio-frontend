@@ -16,8 +16,17 @@ export const formatScoreline = (first: SeriesPlayer, second: SeriesPlayer): stri
 export const spokenScoreline = (first: SeriesPlayer, second: SeriesPlayer): string =>
   `${first.score} to ${second.score}`;
 
-/** "Best of 3" */
-export const bestOfLabel = (bestOf: number): string => `Best of ${bestOf}`;
+/** A series of two games, one with each colour, scored as a pair */
+export const MIRROR_MATCH_BEST_OF = 2;
+
+export const isMirrorMatch = (bestOf: number | undefined): boolean => bestOf === MIRROR_MATCH_BEST_OF;
+
+/** "Best of 3", or "Mirror match" */
+export const bestOfLabel = (bestOf: number): string =>
+  isMirrorMatch(bestOf) ? "Mirror match" : `Best of ${bestOf}`;
+
+/** What the players call it: a mirror match is a "match", the rest a "series" */
+const seriesNoun = (bestOf: number) => (isMirrorMatch(bestOf) ? "match" : "series");
 
 /** The two players with `viewerId` first, when they play in the series. */
 export const playersFor = (
@@ -45,6 +54,7 @@ export const seriesOutcomeFor = (series: SeriesSummary, userId?: number): Series
  * One line on where the series stands: "Game 3 of 5", "alice won the
  * series", "You won the series", "Drawn series", "bobby resigned the
  * series" (the winner is the other player), or how an expired series ended.
+ * A mirror match says "match" instead ("Drawn match").
  */
 export const seriesStatusLabel = (series: SeriesSummary, viewerId?: number): string => {
   if (series.status === "active") {
@@ -52,15 +62,16 @@ export const seriesStatusLabel = (series: SeriesSummary, viewerId?: number): str
   }
   const winner = playerById(series, series.winnerId);
   const name = (p: SeriesPlayer) => (p.id === viewerId ? "You" : p.username);
+  const noun = seriesNoun(series.bestOf);
   if (series.endReason === "expired") {
-    return winner ? `${name(winner)} won the series on points (expired)` : "Drawn series (expired)";
+    return winner ? `${name(winner)} won the ${noun} on points (expired)` : `Drawn ${noun} (expired)`;
   }
-  if (!winner) return "Drawn series";
+  if (!winner) return `Drawn ${noun}`;
   if (series.endReason === "resignation") {
     const loser = winner.id === series.playerOne.id ? series.playerTwo : series.playerOne;
-    return `${name(loser)} resigned the series`;
+    return `${name(loser)} resigned the ${noun}`;
   }
-  return `${name(winner)} won the series`;
+  return `${name(winner)} won the ${noun}`;
 };
 
 /** Who has white in the next game, e.g. "You play white in game 2". */

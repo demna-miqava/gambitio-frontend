@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
 import {
   describeChallengeColor,
+  describeChallengeOpening,
   describeChallengeTime,
   describeMatchFormat,
   isCasualChallenge,
@@ -18,6 +19,7 @@ export const OutgoingChallengeCard = ({ className }: { className?: string }) => 
   if (!outgoingChallenge) return null;
   const { username, color, bestOf, seriesGame } = outgoingChallenge;
   const format = describeMatchFormat(bestOf, seriesGame);
+  const opening = describeChallengeOpening(outgoingChallenge.opening);
 
   return (
     <div
@@ -38,6 +40,7 @@ export const OutgoingChallengeCard = ({ className }: { className?: string }) => 
           {" · "}
           {describeChallengeColor(color)}
         </p>
+        {opening && <p className="text-sm text-muted-foreground">{opening}</p>}
       </div>
       <Button size="lg" variant="outline" onClick={cancelChallenge}>
         Cancel challenge

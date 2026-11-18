@@ -1,4 +1,8 @@
 import { DEFAULT_STOCKFISH_URL } from "@/features/engine-analysis/constants";
+import { parseInfoLine, pickFinalInfo, type UciInfo } from "@/features/game-review/utils/uci";
+
+/** A search's score from the side to move's point of view: centipawns, or moves to mate (negative: being mated) */
+export type EngineScore = UciInfo["score"];
 
 /**
  * A dedicated Stockfish worker that plays moves at a target strength.
@@ -105,16 +109,38 @@ export class BotEngine {
    * `options.moveTime` replaces the think time the rating would give.
    */
   async bestMove(fen: string, rating: number, options: { moveTime?: number } = {}): Promise<string | null> {
+    return (await this.search(fen, rating, options)).move;
+  }
+
+  /**
+   * The engine's move, with the score its search ended on: from the side to
+   * move's point of view, as Stockfish reports it (null if it sent none).
+   */
+  async search(
+    fen: string,
+    rating: number,
+    options: { moveTime?: number } = {}
+  ): Promise<{ move: string | null; score: EngineScore | null }> {
     await this.ready;
     const strength = getStrengthSettings(rating);
     const { depth } = strength;
     const moveTime = options.moveTime ?? strength.moveTime;
-    this.send(`position fen ${fen}`);
-    const line = await this.waitFor("bestmove", () =>
-      this.send(depth ? `go depth ${depth} movetime ${moveTime}` : `go movetime ${moveTime}`)
-    );
-    const move = line.split(" ")[1];
-    return move && move !== "(none)" ? move : null;
+    const infos: UciInfo[] = [];
+    const collect = (line: string) => {
+      const info = parseInfoLine(line);
+      if (info) infos.push(info);
+    };
+    this.listeners.add(collect);
+    try {
+      this.send(`position fen ${fen}`);
+      const line = await this.waitFor("bestmove", () =>
+        this.send(depth ? `go depth ${depth} movetime ${moveTime}` : `go movetime ${moveTime}`)
+      );
+      const move = line.split(" ")[1];
+      return { move: move && move !== "(none)" ? move : null, score: pickFinalInfo(infos)?.score ?? null };
+    } finally {
+      this.listeners.delete(collect);
+    }
   }
 
   /** Ends the current search early; its bestmove still arrives (and resolves bestMove). */

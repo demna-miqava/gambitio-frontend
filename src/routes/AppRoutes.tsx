@@ -9,6 +9,8 @@ import {
   CurrentGame,
   EndgameExercise,
   EndgameLab,
+  ConversionDrills,
+  ConversionDrill,
   Home,
   ImportGame,
   IntroPage,
@@ -68,6 +70,9 @@ export const AppRoutes = () => {
           <Route path={ROUTES.TOOLS.IMPORT_GAME} element={<ImportGame />} />
           <Route path={ROUTES.TOOLS.ANALYSIS_BOARD} element={<AnalysisBoard />} />
           <Route path={ROUTES.ENDGAME_EXERCISE} element={<EndgameExercise />} />
+          {/* Scanning games and playing drills both run Stockfish */}
+          <Route path={ROUTES.CONVERSION_DRILLS} element={<ConversionDrills />} />
+          <Route path={ROUTES.CONVERSION_DRILL} element={<ConversionDrill />} />
           <Route path={ROUTES.STUDY_ROOM} element={<StudyRoom />} />
           <Route path={ROUTES.REPERTOIRE} element={<Repertoire />} />
         </Route>

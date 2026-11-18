@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { SeriesSummary } from "../types";
 import {
+  bestOfLabel,
   formatPoints,
   formatScoreline,
   nextGameLabel,
@@ -96,5 +97,16 @@ describe("nextGameLabel", () => {
     expect(nextGameLabel(series(), 1)).toBe("You play black in game 2");
     expect(nextGameLabel(series())).toBe("bobby plays white in game 2");
     expect(nextGameLabel(series({ next: null }))).toBeNull();
+  });
+});
+
+describe("mirror matches", () => {
+  it("are called a match, not a series", () => {
+    expect(bestOfLabel(2)).toBe("Mirror match");
+    expect(bestOfLabel(3)).toBe("Best of 3");
+    const finished = { bestOf: 2, status: "finished" as const, endReason: "played_out" as const, next: null };
+    expect(seriesStatusLabel(series({ ...finished, winnerId: null }))).toBe("Drawn match");
+    expect(seriesStatusLabel(series({ ...finished, winnerId: 1 }), 1)).toBe("You won the match");
+    expect(seriesStatusLabel(series({ bestOf: 2 }))).toBe("Game 2 of 2");
   });
 });

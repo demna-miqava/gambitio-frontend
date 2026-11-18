@@ -1,14 +1,21 @@
 import type { PlayerColorOption } from "@/types/game.types";
 import { formatClock, formatTimeControl, timeOdds } from "@/utils/timeControl";
+import { bestOfLabel, isMirrorMatch } from "@/features/series/utils/seriesFormat";
 
 /**
- * "Best of 3" for a series challenge, "Game 2 of 3" for one that continues
- * a series; null for a single game.
+ * "Best of 3" or "Mirror match" for a series challenge, "Game 2 of 3" (or
+ * "Mirror match, game 2") for one that continues a series; null for a
+ * single game.
  */
 export const describeMatchFormat = (bestOf: number | undefined, seriesGame?: number | null): string | null => {
   if (!bestOf || bestOf <= 1) return null;
-  return seriesGame ? `Game ${seriesGame} of ${bestOf}` : `Best of ${bestOf}`;
+  if (!seriesGame) return bestOfLabel(bestOf);
+  return isMirrorMatch(bestOf) ? `Mirror match, game ${seriesGame}` : `Game ${seriesGame} of ${bestOf}`;
 };
+
+/** "From the Sicilian Defense", for a challenge that starts from an opening; null otherwise */
+export const describeChallengeOpening = (opening: { name: string } | null | undefined): string | null =>
+  opening ? `From the ${opening.name}` : null;
 
 /**
  * Whether to call a challenge unrated. A challenge with time odds is unrated

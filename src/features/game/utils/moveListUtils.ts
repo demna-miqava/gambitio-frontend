@@ -17,17 +17,32 @@ export interface MovePair<T> {
 /**
  * Groups moves into pairs (white/black) for display
  * Works with any move type by using a generic
+ *
+ * `startPly`: half-moves played before the first of `moves` (a position set
+ * up mid-game). With an odd one the first pair has only black's move.
  */
-export function groupMovesIntoPairs<T>(moves: T[]): MovePair<T>[] {
+export function groupMovesIntoPairs<T>(moves: T[], startPly = 0): MovePair<T>[] {
   const pairs: MovePair<T>[] = [];
 
-  for (let i = 0; i < moves.length; i += 2) {
+  // Index of the first white move in `moves`: -1 when black moves first
+  for (let i = -(startPly % 2); i < moves.length; i += 2) {
     pairs.push({
-      moveNumber: getMoveNumber(i),
+      moveNumber: getMoveNumber(startPly + i),
       white: moves[i] ?? null,
       black: moves[i + 1] ?? null,
     });
   }
 
   return pairs;
+}
+
+/**
+ * Half-moves before a FEN's position, from its move number and side to move
+ * ("… b - - 0 6" is 11): where a move list starting there is numbered from
+ */
+export function startPlyOfFen(fen: string): number {
+  const fields = fen.trim().split(/\s+/);
+  const fullmove = Number(fields[5]);
+  const base = Number.isInteger(fullmove) && fullmove > 0 ? (fullmove - 1) * 2 : 0;
+  return base + (fields[1] === "b" ? 1 : 0);
 }

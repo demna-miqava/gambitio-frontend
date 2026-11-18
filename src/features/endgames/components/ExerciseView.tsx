@@ -9,6 +9,7 @@ import { MoveNavigationControls } from "@/features/game/components/MoveControls"
 import { FlipBoardButton } from "@/features/game/components/FlipBoardButton";
 import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
 import { SettingsMovesListView } from "@/features/game/components/MovesList";
+import { startPlyOfFen } from "@/features/game/utils/moveListUtils";
 import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ const ENGINE_NAME = "Stockfish";
 const budgetText = (exercise: EndgameExercise, playerMoves: number): string => {
   const { objective } = exercise;
   if (objective.type === "draw") return `Held ${playerMoves} of ${objective.surviveMoves} moves`;
-  if (objective.maxMoves) return `${playerMoves} of ${objective.maxMoves} moves used`;
+  if (objective.type !== "convert" && objective.maxMoves) return `${playerMoves} of ${objective.maxMoves} moves used`;
   return `${movesLabel(playerMoves)} played`;
 };
 
@@ -274,7 +275,12 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
 
       <div className="space-y-2 lg:border-t lg:border-border lg:pt-3">
         <div className="rounded-xl bg-card px-1 py-1.5 lg:rounded-none lg:bg-transparent lg:p-0">
-          <SettingsMovesListView moves={history} activeIndex={navigation.currentIndex - 1} onSelect={navigation.goToMove} />
+          <SettingsMovesListView
+            moves={history}
+            activeIndex={navigation.currentIndex - 1}
+            onSelect={navigation.goToMove}
+            startPly={startPlyOfFen(exercise.fen)}
+          />
         </div>
         <div className="flex gap-1.5">
           <div className="min-w-0 flex-1">

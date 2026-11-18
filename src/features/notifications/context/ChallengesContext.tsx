@@ -1,4 +1,5 @@
 import { createContext, useContext, type ReactNode, useMemo } from "react";
+import type { OpeningSummary } from "@/features/openings/startingOpenings";
 import { useNotificationWebSocket } from "../hooks/useNotificationWebSocket";
 import {
   useManageChallenge,
@@ -16,7 +17,11 @@ type ChallengesContextType = {
    * Challenge a friend; a challenge already waiting on someone else is
    * withdrawn. `seriesGame`: the game a series continuation would start
    */
-  sendChallenge: (data: SendChallengeData, target: { username: string; seriesGame?: number }) => void;
+  sendChallenge: (
+    data: SendChallengeData,
+    /** For the "waiting for…" card: who, which series game, and the opening it starts from */
+    target: { username: string; seriesGame?: number; opening?: OpeningSummary | null }
+  ) => void;
   /** Withdraw the challenge we're waiting on */
   cancelChallenge: () => void;
   /** The challenge we sent and are waiting on, if any */

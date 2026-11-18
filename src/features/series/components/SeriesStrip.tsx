@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { SeriesSummary } from "../types";
 import {
   bestOfLabel,
+  isMirrorMatch,
   formatScoreline,
   playersFor,
   spokenScoreline,
@@ -12,7 +13,7 @@ import {
 
 /**
  * One line above a series game's moves: "Best of 3 · Game 2 · alice 1–0
- * bobby", linking to the series page.
+ * bobby" ("Mirror match 2/2" for a mirror match), linking to the series page.
  */
 export const SeriesStrip = ({
   series,
@@ -27,7 +28,11 @@ export const SeriesStrip = ({
   className?: string;
 }) => {
   const [left, right] = playersFor(series, viewerId);
-  const gameLabel = seriesGame ? `Game ${seriesGame} of ${series.bestOf}` : bestOfLabel(series.bestOf);
+  const gameLabel = !seriesGame
+    ? bestOfLabel(series.bestOf)
+    : isMirrorMatch(series.bestOf)
+      ? `Mirror match ${seriesGame}/${series.bestOf}`
+      : `Game ${seriesGame} of ${series.bestOf}`;
   const name = (id: number, username: string) => (id === viewerId ? "You" : username);
 
   return (

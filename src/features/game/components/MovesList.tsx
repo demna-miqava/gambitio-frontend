@@ -40,6 +40,11 @@ interface MovesListViewProps {
   onSelect: (moveCount: number) => void;
   /** Figurines instead of piece letters (the account's notation setting) */
   showIcons?: boolean;
+  /**
+   * Half-moves played before the first of `moves`, for a position set up
+   * mid-game: numbering starts there, and with an odd one black moves first
+   */
+  startPly?: number;
 }
 
 /**
@@ -51,10 +56,10 @@ interface MovesListViewProps {
  * Reads no account settings itself, so it also works on pages without a
  * signed-in user (a shared game); SettingsMovesListView adds them.
  */
-export const MovesListView = ({ moves, activeIndex, onSelect, showIcons = false }: MovesListViewProps) => {
+export const MovesListView = ({ moves, activeIndex, onSelect, showIcons = false, startPly = 0 }: MovesListViewProps) => {
   const stripRef = useRef<HTMLOListElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
-  const movePairs = groupMovesIntoPairs(moves);
+  const movePairs = groupMovesIntoPairs(moves, startPly);
   const showSheet = useMediaQuery(SHEET_QUERY);
 
   // Keep the newest / selected move in view
@@ -81,8 +86,9 @@ export const MovesListView = ({ moves, activeIndex, onSelect, showIcons = false 
   const renderMove = (move: Move | null, index: number) => {
     if (!move) return <span />;
     const active = index === activeIndex;
-    const moveNumber = Math.floor(index / 2) + 1;
-    const side = index % 2 === 0 ? "White" : "Black";
+    const ply = startPly + index;
+    const moveNumber = Math.floor(ply / 2) + 1;
+    const side = ply % 2 === 0 ? "White" : "Black";
     return (
       <button
         type="button"
@@ -113,7 +119,7 @@ export const MovesListView = ({ moves, activeIndex, onSelect, showIcons = false 
     >
       <ol className="grid grid-cols-[2.5rem_1fr_1fr] gap-y-0.5 text-sm" aria-label="Moves">
         {movePairs.map((pair) => {
-          const whiteIndex = (pair.moveNumber - 1) * 2;
+          const whiteIndex = (pair.moveNumber - 1) * 2 - startPly;
           return (
             <li key={pair.moveNumber} className="contents">
               <span
@@ -138,12 +144,14 @@ export const MovesListView = ({ moves, activeIndex, onSelect, showIcons = false 
     >
       {moves.map((move, index) => (
         <li key={index} className="flex items-center">
-          {index % 2 === 0 && (
+          {((startPly + index) % 2 === 0 || index === 0) && (
             <span
               className="pl-1.5 text-xs tabular-nums text-muted-foreground"
               aria-hidden="true"
             >
-              {index / 2 + 1}.
+              {/* "6…" when black's move opens the list */}
+              {Math.floor((startPly + index) / 2) + 1}
+              {(startPly + index) % 2 === 0 ? "." : "…"}
             </span>
           )}
           {renderMove(move, index)}

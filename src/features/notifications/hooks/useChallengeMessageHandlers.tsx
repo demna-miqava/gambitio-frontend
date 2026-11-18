@@ -100,6 +100,7 @@ export const useChallengeMessageHandlers = ({
         rating: message.data.rating,
         bestOf: message.data.bestOf,
         rated: message.data.rated,
+        opening: message.data.opening ?? null,
         version: message.data.version,
       };
 

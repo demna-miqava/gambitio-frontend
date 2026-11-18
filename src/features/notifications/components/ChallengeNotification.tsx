@@ -6,6 +6,7 @@ import { challengeToastId } from "../hooks/useManageChallenge";
 import type { Challenge, ChallengeRef } from "../types/websocket-messages";
 import {
   describeChallengeColor,
+  describeChallengeOpening,
   describeChallengeTime,
   describeMatchFormat,
   isCasualChallenge,
@@ -24,6 +25,7 @@ const ChallengeNotification = ({
 }: ChallengeNotificationProps) => {
   const { challengerId, username, avatarUrl, color, rating, bestOf, seriesGame } = challenge;
   const format = describeMatchFormat(bestOf, seriesGame);
+  const opening = describeChallengeOpening(challenge.opening);
 
   return (
     <div className="relative flex w-full flex-col gap-3">
@@ -54,6 +56,7 @@ const ChallengeNotification = ({
             {" · "}
             {format && !seriesGame ? `${describeChallengeColor(color)} first` : describeChallengeColor(color)}
           </p>
+          {opening && <p className="mt-0.5 text-xs text-muted-foreground">{opening}</p>}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">

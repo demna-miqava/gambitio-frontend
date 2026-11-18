@@ -41,6 +41,8 @@ export const Tournaments = page(() => import("@/pages/Tournaments"));
 export const Tournament = page(() => import("@/pages/Tournament"));
 export const EndgameLab = page(() => import("@/pages/EndgameLab"));
 export const EndgameExercise = page(() => import("@/pages/EndgameExercise"));
+export const ConversionDrills = page(() => import("@/pages/ConversionDrills"));
+export const ConversionDrill = page(() => import("@/pages/ConversionDrill"));
 export const NotFoundPage = page(() => import("@/pages/NotFoundPage"));
 // Profile
 export const Profile = page(() => import("@/pages/Profile"));
@@ -142,6 +144,8 @@ const ROUTE_PAGES: [pattern: string, pages: Page[]][] = [
   [ROUTES.TOURNAMENT, [Tournament]],
   [ROUTES.ENDGAMES, [EndgameLab]],
   [ROUTES.ENDGAME_EXERCISE, [EndgameExercise]],
+  [ROUTES.CONVERSION_DRILLS, [ConversionDrills]],
+  [ROUTES.CONVERSION_DRILL, [ConversionDrill]],
   [ROUTES.TOOLS.IMPORT_GAME, [ImportGame]],
   [ROUTES.TOOLS.ANALYSIS_BOARD, [AnalysisBoard]],
 ];

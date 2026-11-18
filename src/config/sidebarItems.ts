@@ -97,13 +97,14 @@ export const getNavItems = (userId: number): NavItem[] => [
     title: "Puzzles",
     url: ROUTES.PUZZLES,
     icon: Puzzle,
-    // The endgame lab is training too
-    match: [ROUTES.PUZZLES, ROUTES.ENDGAMES],
+    // The endgame lab and conversion drills are training too
+    match: [ROUTES.PUZZLES, ROUTES.ENDGAMES, ROUTES.CONVERSION_DRILLS],
     items: [
       { title: "Solve puzzles", url: getPuzzleModeRoute("infinite") },
       { title: "Puzzle Rush", url: getPuzzleModeRoute("rush") },
       { title: "Survival", url: getPuzzleModeRoute("survival") },
       { title: "Endgame lab", url: ROUTES.ENDGAMES },
+      { title: "Conversion drills", url: ROUTES.CONVERSION_DRILLS },
     ],
   },
   {

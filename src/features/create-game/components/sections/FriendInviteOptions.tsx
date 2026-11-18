@@ -19,14 +19,32 @@ import { defaultShorterClock, shorterClocks } from "../../constants/timeControls
 import { OutgoingChallengeCard } from "../OutgoingChallengeCard";
 import { SegmentedRadioGroup, type SegmentedOption } from "@/components/SegmentedRadioGroup";
 import type { BestOf } from "@/features/notifications/types/websocket-messages";
+import { OpeningPicker } from "./OpeningPicker";
+import { isMirrorMatch } from "@/features/series/utils/seriesFormat";
 
-type MatchFormat = "1" | "3" | "5";
+type MatchFormat = "1" | "2" | "3" | "5";
 
 const FORMAT_CHOICES: SegmentedOption<MatchFormat>[] = [
-  { value: "1", label: "Single game" },
+  { value: "1", label: "Single" },
+  { value: "2", label: "Mirror" },
   { value: "3", label: "Best of 3" },
   { value: "5", label: "Best of 5" },
 ];
+
+/** Under the format choice: how the chosen one is played and scored */
+const formatHint = (bestOf: BestOf): string | null => {
+  if (isMirrorMatch(bestOf)) {
+    return "Two games from the same position, one with each colour, scored as a pair: a win each is a drawn match.";
+  }
+  if (bestOf > 1) {
+    return `Colours alternate each game and a draw is half a point. Whoever leads after ${bestOf} games wins, or sooner once the lead can't be caught.`;
+  }
+  return null;
+};
+
+/** What Send says the challenge is: "best-of-3 challenge", "mirror match" */
+const challengeNoun = (bestOf: BestOf): string =>
+  isMirrorMatch(bestOf) ? "mirror match" : bestOf > 1 ? `best-of-${bestOf} challenge` : "challenge";
 
 /** Who starts with less time: nobody, the sender, or the friend */
 type TimeOdds = "even" | "me" | "them";
@@ -59,8 +77,14 @@ export const FriendInviteOptions = () => {
   const [rating, setRating] = useState<Rating>("rated");
   // The shorter clock the player picked; dropped when it no longer fits the time control
   const [pickedClock, setPickedClock] = useState<number | null>(null);
-  const { selectedFriend, isSelectedFriendLoading, timeControl, goBack } =
-    useGameSetup();
+  const {
+    selectedFriend,
+    isSelectedFriendLoading,
+    timeControl,
+    goBack,
+    startingOpening,
+    setStartingOpening,
+  } = useGameSetup();
   const { sendChallenge, outgoingChallenge } = useChallenges();
 
   if (isSelectedFriendLoading) {
@@ -203,13 +227,22 @@ export const FriendInviteOptions = () => {
               onValueChange={setFormat}
               options={FORMAT_CHOICES}
             />
-            {bestOf > 1 && (
-              <p className="text-xs text-muted-foreground">
-                Colours alternate each game and a draw is half a point. Whoever leads after{" "}
-                {bestOf} games wins, or sooner once the lead can't be caught.
-              </p>
+            {formatHint(bestOf) && (
+              <p className="text-xs text-muted-foreground">{formatHint(bestOf)}</p>
             )}
           </section>
+
+          <OpeningPicker
+            value={startingOpening?.id ?? null}
+            onChange={setStartingOpening}
+            hint={
+              isMirrorMatch(bestOf) && !startingOpening
+                ? "Pick an opening to play it from both sides."
+                : startingOpening && bestOf > 1
+                  ? "Every game starts from this position."
+                  : undefined
+            }
+          />
 
           <section className="space-y-2">
             <p
@@ -239,8 +272,9 @@ export const FriendInviteOptions = () => {
                   ...(hasOdds && { opponentTime: friendTime }),
                   bestOf,
                   ...(isUnrated && { rated: false }),
+                  ...(startingOpening && { openingId: startingOpening.id }),
                 },
-                { username: selectedFriend.username }
+                { username: selectedFriend.username, opening: startingOpening }
               )
             }
           >
@@ -253,7 +287,7 @@ export const FriendInviteOptions = () => {
             <span className="flex flex-wrap justify-center gap-x-1.5">
               <span className="whitespace-nowrap">
                 Send {isUnrated && "unrated "}
-                {bestOf > 1 && `best-of-${bestOf} `}challenge
+                {challengeNoun(bestOf)}
               </span>
               <span className="whitespace-nowrap tabular-nums opacity-80">
                 (

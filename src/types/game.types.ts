@@ -41,6 +41,14 @@ export type Game = {
   seriesGame?: number | null;
   /** The arena tournament that paired the game, if any */
   tournamentId?: number | null;
+  /** The opening the game started from (a friend challenge); null for the initial position */
+  opening?: { id: string; eco: string; name: string } | null;
+  /**
+   * Half-moves the opening played before the players took over (the first
+   * moves of `pgn`); 0 or missing without one. The first-move rules (abort,
+   * takebacks) count from here.
+   */
+  startPly?: number;
 };
 
 /** A player in a stored game; the computer in a bot game has no id */

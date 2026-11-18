@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   describeChallengeColor,
+  describeChallengeOpening,
   describeChallengeTime,
   describeMatchFormat,
   isCasualChallenge,
@@ -56,5 +57,18 @@ describe("isCasualChallenge", () => {
 
   it("leaves it to the clocks when there are time odds", () => {
     expect(isCasualChallenge({ rated: false, ownTime: 300, opponentTime: 60 })).toBe(false);
+  });
+});
+
+describe("mirror matches and openings", () => {
+  it("names a mirror match and the game a continued one goes on with", () => {
+    expect(describeMatchFormat(2)).toBe("Mirror match");
+    expect(describeMatchFormat(2, 2)).toBe("Mirror match, game 2");
+  });
+
+  it("names the opening a challenge starts from", () => {
+    expect(describeChallengeOpening({ name: "Queen's Gambit" })).toBe("From the Queen's Gambit");
+    expect(describeChallengeOpening(null)).toBeNull();
+    expect(describeChallengeOpening(undefined)).toBeNull();
   });
 });

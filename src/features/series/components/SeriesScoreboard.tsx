@@ -60,6 +60,12 @@ export const SeriesScoreboard = ({
     >
       <p className="mb-4 flex flex-wrap items-center justify-center gap-x-2 text-sm text-muted-foreground">
         <span>{bestOfLabel(series.bestOf)}</span>
+        {series.opening && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>{series.opening.name}</span>
+          </>
+        )}
         <span aria-hidden="true">·</span>
         <span className="tabular-nums">
           {odds

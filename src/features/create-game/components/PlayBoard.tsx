@@ -1,5 +1,6 @@
 import { useUser } from "@/hooks/useUser";
 import { Chessground } from "@lichess-org/chessground";
+import type { Api } from "@lichess-org/chessground/api";
 import { useEffect, useRef } from "react";
 import { Loader2, UserRound } from "lucide-react";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
@@ -38,24 +39,36 @@ const OpponentSlot = ({ searching }: { searching: boolean }) => (
   </span>
 );
 
+const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
 export const PlayBoard = () => {
   const user = useUser();
   const { username, image } = user;
-  const { timeControl, selectedFriend, isSearching, activeSection } = useGameSetup();
+  const { timeControl, selectedFriend, isSearching, activeSection, startingOpening } = useGameSetup();
   const boardRef = useRef<HTMLDivElement>(null);
+  const cgRef = useRef<Api | null>(null);
 
   useEffect(() => {
     if (!boardRef.current) return;
     const cg = Chessground(boardRef.current, {
-      fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
+      fen: START_FEN,
       viewOnly: true,
       coordinates: true,
     });
-    return () => cg.destroy();
+    cgRef.current = cg;
+    return () => {
+      cg.destroy();
+      cgRef.current = null;
+    };
   }, []);
 
   // The challenged friend once one is picked; otherwise a neutral slot
   const friend = activeSection === "friend-invite-options" ? selectedFriend : null;
+  // The challenge form's opening, while it's open
+  const fen = (friend && startingOpening?.fen) || START_FEN;
+  useEffect(() => {
+    cgRef.current?.set({ fen });
+  }, [fen]);
   const topPlayer = friend
     ? {
         name: friend.username,

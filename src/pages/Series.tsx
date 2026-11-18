@@ -18,7 +18,7 @@ import { getGameRoute } from "@/constants/routes";
 import { SeriesScoreboard } from "@/features/series/components/SeriesScoreboard";
 import { SeriesGamesList } from "@/features/series/components/SeriesGamesList";
 import { useResignSeries, useSeries } from "@/features/series/hooks/useSeries";
-import { bestOfLabel, nextGameLabel } from "@/features/series/utils/seriesFormat";
+import { bestOfLabel, isMirrorMatch, nextGameLabel } from "@/features/series/utils/seriesFormat";
 import { parsePositiveId } from "@/utils/ids";
 
 const SeriesSkeleton = () => (
@@ -87,7 +87,7 @@ const Series = () => {
         rated: series.rated !== false,
         seriesId: series.id,
       },
-      { username: opponent.username, seriesGame: series.next.number }
+      { username: opponent.username, seriesGame: series.next.number, opening: series.opening }
     );
   };
 
@@ -97,7 +97,11 @@ const Series = () => {
         title="Series"
         description={
           series
-            ? `${series.playerOne.username} challenged ${series.playerTwo.username} to a ${bestOfLabel(series.bestOf).toLowerCase()}. Colours alternate every game.`
+            ? `${series.playerOne.username} challenged ${series.playerTwo.username} to a ${bestOfLabel(series.bestOf).toLowerCase()}${series.opening ? ` from the ${series.opening.name}` : ""}. ${
+                isMirrorMatch(series.bestOf)
+                  ? "Each plays it once with each colour, scored as a pair."
+                  : "Colours alternate every game."
+              }`
             : undefined
         }
       />

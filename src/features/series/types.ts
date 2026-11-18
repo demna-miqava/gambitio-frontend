@@ -1,8 +1,10 @@
 import type { StoredGameListItem } from "@/types";
+import type { OpeningSummary } from "@/features/openings/startingOpenings";
 
 /**
- * A friend series (best of 3 or 5), as the server sends it
- * (SeriesSummary in the backend's services/seriesService.ts).
+ * A friend series (best of 3 or 5, or a mirror match: two games, one with
+ * each colour), as the server sends it (SeriesSummary in the backend's
+ * services/seriesService.ts).
  */
 export type SeriesStatus = "active" | "finished";
 /**
@@ -30,6 +32,8 @@ export interface SeriesSummary {
   increment: number;
   /** False when its games change no ratings: a casual series, or one with time odds */
   rated?: boolean;
+  /** The opening every game starts from; null or missing for the initial position */
+  opening?: OpeningSummary | null;
   status: SeriesStatus;
   endReason: SeriesEndReason | null;
   endedAt: string | null;
