@@ -66,7 +66,7 @@ export const SeriesScoreboard = ({
             ? formatTimeOdds(odds[0], odds[1], series.increment)
             : formatTimeControl(series.time, series.increment)}
         </span>
-        {odds && (
+        {(odds || series.rated === false) && (
           <>
             <span aria-hidden="true">·</span>
             <span>Unrated</span>

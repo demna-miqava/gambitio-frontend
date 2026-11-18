@@ -3,6 +3,7 @@ import {
   describeChallengeColor,
   describeChallengeTime,
   describeMatchFormat,
+  isCasualChallenge,
 } from "./challengeLabels";
 
 describe("describeMatchFormat", () => {
@@ -42,5 +43,18 @@ describe("describeChallengeTime", () => {
     expect(
       describeChallengeTime({ time: 300, increment: 2, ownTime: 30, opponentTime: 300 }, "alice")
     ).toBe("Time odds: you 30 sec, alice 5 min, +2 sec");
+  });
+});
+
+describe("isCasualChallenge", () => {
+  it("calls a challenge unrated only when it says so", () => {
+    expect(isCasualChallenge({ rated: false })).toBe(true);
+    expect(isCasualChallenge({ rated: true })).toBe(false);
+    // From a server that predates casual challenges
+    expect(isCasualChallenge({})).toBe(false);
+  });
+
+  it("leaves it to the clocks when there are time odds", () => {
+    expect(isCasualChallenge({ rated: false, ownTime: 300, opponentTime: 60 })).toBe(false);
   });
 });

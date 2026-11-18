@@ -21,6 +21,11 @@ export type SendChallengeMessage = {
     /** 3 or 5 plays a series; 1 (the default) a single game */
     bestOf?: BestOf;
     /**
+     * False plays a casual game (or series): no rating changes. Defaults to
+     * rated. Ignored when continuing a series, which keeps its own setting.
+     */
+    rated?: boolean;
+    /**
      * Continue this series instead: the server takes the time control,
      * length and colours from it, and the challenged player must be the opponent
      */
@@ -76,6 +81,8 @@ export type ChallengeReceivedNotification = {
     /** Set when accepting plays the next game of an existing series */
     seriesId?: number;
     seriesGame?: number;
+    /** False for a casual game or series (always with time odds) */
+    rated?: boolean;
     /** Changes whenever the challenger changes the terms; sent back when accepting */
     version?: number;
   };
@@ -160,6 +167,8 @@ export type Challenge = {
   /** Set when accepting plays the next game of an existing series (null over REST) */
   seriesId?: number | null;
   seriesGame?: number | null;
+  /** False for a casual game or series (always with time odds); missing means rated */
+  rated?: boolean;
   /**
    * Changes whenever the challenger changes the terms (REST and socket);
    * sent back when accepting, so the player only accepts what they saw
@@ -184,6 +193,8 @@ export type OutgoingChallenge = {
   /** When it was sent (ms), for the client-side expiry */
   sentAt: number;
   bestOf?: BestOf;
+  /** False for a casual game or series (always with time odds) */
+  rated?: boolean;
   /** Set when it continues a series: the game it would start */
   seriesId?: number;
   seriesGame?: number;

@@ -178,7 +178,7 @@ const SpectatorPanel = ({
               {formatGameTime(game)}
             </span>
             <span className="capitalize">
-              · {hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
+              · {game.rated === false || hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
             </span>
           </span>
         </span>

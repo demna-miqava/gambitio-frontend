@@ -10,6 +10,16 @@ export const describeMatchFormat = (bestOf: number | undefined, seriesGame?: num
   return seriesGame ? `Game ${seriesGame} of ${bestOf}` : `Best of ${bestOf}`;
 };
 
+/**
+ * Whether to call a challenge unrated. A challenge with time odds is unrated
+ * too, but its clocks already say so ("Time odds: …").
+ */
+export const isCasualChallenge = (challenge: {
+  rated?: boolean;
+  ownTime?: number | null;
+  opponentTime?: number | null;
+}): boolean => challenge.rated === false && !timeOdds(challenge.ownTime, challenge.opponentTime);
+
 /** "You play white" / "You play black" / "Random colors", from the receiver's side. */
 export const describeChallengeColor = (color: PlayerColorOption): string => {
   switch (color) {

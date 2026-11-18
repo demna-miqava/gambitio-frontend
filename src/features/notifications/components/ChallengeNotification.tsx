@@ -8,6 +8,7 @@ import {
   describeChallengeColor,
   describeChallengeTime,
   describeMatchFormat,
+  isCasualChallenge,
 } from "../utils/challengeLabels";
 
 type ChallengeNotificationProps = {
@@ -49,6 +50,7 @@ const ChallengeNotification = ({
           <p className="mt-0.5 text-xs text-muted-foreground">
             {format && <span className="font-medium text-foreground">{format} · </span>}
             <span className="tabular-nums">{describeChallengeTime(challenge, username)}</span>
+            {isCasualChallenge(challenge) && " · Unrated"}
             {" · "}
             {format && !seriesGame ? `${describeChallengeColor(color)} first` : describeChallengeColor(color)}
           </p>

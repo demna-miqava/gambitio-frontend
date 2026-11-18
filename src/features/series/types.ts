@@ -28,6 +28,8 @@ export interface SeriesSummary {
   /** The longer clock when the series has time odds (see SeriesPlayer.time) */
   time: number;
   increment: number;
+  /** False when its games change no ratings: a casual series, or one with time odds */
+  rated?: boolean;
   status: SeriesStatus;
   endReason: SeriesEndReason | null;
   endedAt: string | null;

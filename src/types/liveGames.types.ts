@@ -19,6 +19,8 @@ export type LiveGameSummary = {
   whiteTime?: number | null;
   blackTime?: number | null;
   type: TimeControlType;
+  /** False for a game that changes no ratings (casual, time odds, unrated tournament) */
+  rated?: boolean;
   numMoves: number;
   fen: string | null;
   whitePlayer: LivePlayer;

@@ -5,6 +5,7 @@ import {
   describeChallengeColor,
   describeChallengeTime,
   describeMatchFormat,
+  isCasualChallenge,
 } from "@/features/notifications/utils/challengeLabels";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,7 @@ export const OutgoingChallengeCard = ({ className }: { className?: string }) => 
         <p className="text-sm text-muted-foreground">
           {format && `${format} · `}
           <span className="tabular-nums">{describeChallengeTime(outgoingChallenge, username)}</span>
+          {isCasualChallenge(outgoingChallenge) && " · Unrated"}
           {" · "}
           {describeChallengeColor(color)}
         </p>

@@ -181,7 +181,7 @@ export const MovesContainer = () => {
               <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                 <span className="tabular-nums">{formatGameTime(game)}</span>
                 <span className="truncate capitalize">
-                  · {tournamentId !== null ? "tournament" : hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
+                  · {tournamentId !== null ? "tournament" : game.rated === false || hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
                 </span>
               </span>
             )

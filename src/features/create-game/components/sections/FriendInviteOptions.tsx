@@ -37,6 +37,14 @@ const ODDS_CHOICES: SegmentedOption<TimeOdds>[] = [
   { value: "them", label: "Less for them" },
 ];
 
+/** Whether the game (or every game of the series) changes ratings */
+type Rating = "rated" | "unrated";
+
+const RATING_CHOICES: SegmentedOption<Rating>[] = [
+  { value: "rated", label: "Rated" },
+  { value: "unrated", label: "Unrated" },
+];
+
 const COLOR_CHOICES: SegmentedOption<PlayerColorOption>[] = [
   { value: "white", label: "White" },
   { value: "random", label: "Random" },
@@ -48,6 +56,7 @@ export const FriendInviteOptions = () => {
   const [format, setFormat] = useState<MatchFormat>("1");
   const bestOf = Number(format) as BestOf;
   const [odds, setOdds] = useState<TimeOdds>("even");
+  const [rating, setRating] = useState<Rating>("rated");
   // The shorter clock the player picked; dropped when it no longer fits the time control
   const [pickedClock, setPickedClock] = useState<number | null>(null);
   const { selectedFriend, isSelectedFriendLoading, timeControl, goBack } =
@@ -77,7 +86,7 @@ export const FriendInviteOptions = () => {
     );
   }
 
-  const rating = selectedFriend[`${timeControl.format}Rating`];
+  const friendRating = selectedFriend[`${timeControl.format}Rating`];
   // Time odds: one player keeps the time control's clock, the other gets a
   // shorter one. No shorter clock exists below the shortest time control
   const clockChoices = shorterClocks(timeControl.time);
@@ -88,6 +97,8 @@ export const FriendInviteOptions = () => {
   const hasOdds = odds !== "even" && shorterClock !== null;
   const ownTime = hasOdds && odds === "me" ? shorterClock : timeControl.time;
   const friendTime = hasOdds && odds === "them" ? shorterClock : timeControl.time;
+  // Time odds always make it unrated, so the choice only applies to even clocks
+  const isUnrated = !hasOdds && rating === "unrated";
   const isWaitingForThisFriend = outgoingChallenge?.challengedId === selectedFriend.id;
 
   return (
@@ -100,9 +111,9 @@ export const FriendInviteOptions = () => {
         />
         <div className="min-w-0 leading-tight">
           <p className="truncate font-medium">{selectedFriend.username}</p>
-          {rating != null && (
+          {friendRating != null && (
             <p className="text-xs capitalize text-muted-foreground tabular-nums">
-              {timeControl.format} {rating}
+              {timeControl.format} {friendRating}
             </p>
           )}
         </div>
@@ -159,6 +170,26 @@ export const FriendInviteOptions = () => {
             </section>
           )}
 
+          {!hasOdds && (
+            <section className="space-y-2">
+              <p aria-hidden="true" className="text-sm text-muted-foreground">
+                Rating
+              </p>
+              <SegmentedRadioGroup
+                label="Rating"
+                value={rating}
+                onValueChange={setRating}
+                options={RATING_CHOICES}
+              />
+              {isUnrated && (
+                <p className="text-xs text-muted-foreground">
+                  {bestOf > 1 ? "No game of the series changes" : "The game doesn't change"} either
+                  player's rating.
+                </p>
+              )}
+            </section>
+          )}
+
           <section className="space-y-2">
             <p
               aria-hidden="true"
@@ -207,6 +238,7 @@ export const FriendInviteOptions = () => {
                   increment: timeControl.increment,
                   ...(hasOdds && { opponentTime: friendTime }),
                   bestOf,
+                  ...(isUnrated && { rated: false }),
                 },
                 { username: selectedFriend.username }
               )
@@ -218,6 +250,7 @@ export const FriendInviteOptions = () => {
                 ? formatTimeOdds(ownTime, friendTime)
                 : formatTimeControl(timeControl.time, timeControl.increment)}
             </span>{" "}
+            {isUnrated && "unrated "}
             {bestOf > 1 ? `best-of-${bestOf} challenge` : "challenge"}
           </Button>
           {outgoingChallenge && (

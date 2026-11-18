@@ -83,6 +83,8 @@ const Series = () => {
         ...(opponent.time != null && { opponentTime: opponent.time }),
         increment: series.increment,
         bestOf: series.bestOf as BestOf,
+        // As the series is (the server keeps the series' setting anyway)
+        rated: series.rated !== false,
         seriesId: series.id,
       },
       { username: opponent.username, seriesGame: series.next.number }

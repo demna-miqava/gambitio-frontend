@@ -79,6 +79,7 @@ export const useManageChallenge = (
           ownTime: sent.ownTime ?? null,
           opponentTime: sent.opponentTime ?? null,
           bestOf: sent.bestOf,
+          rated: sent.rated !== false,
           ...(sent.seriesId ? { seriesId: sent.seriesId } : {}),
           ...(sent.seriesGame ? { seriesGame: sent.seriesGame } : {}),
           sentAt: new Date(sent.createdAt).getTime(),
@@ -168,6 +169,8 @@ export const useManageChallenge = (
         time: odds ? Math.max(...odds) : data.time,
         ownTime: odds?.[0] ?? null,
         opponentTime: odds?.[1] ?? null,
+        // Time odds always make it unrated
+        rated: !odds && data.rated !== false,
         username: target.username,
         ...(target.seriesGame ? { seriesGame: target.seriesGame } : {}),
         sentAt: Date.now(),

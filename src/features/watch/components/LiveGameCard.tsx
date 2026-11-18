@@ -73,7 +73,7 @@ export const LiveGameCard = ({ game, currentUserId }: LiveGameCardProps) => {
         <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
           <span className="tabular-nums">{formatGameTime(game)}</span>
           <span className="capitalize">
-            {hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
+            {game.rated === false || hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
           </span>
           <span aria-hidden="true">·</span>
           <span>

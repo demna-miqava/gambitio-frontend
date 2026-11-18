@@ -17,7 +17,7 @@ export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListI
     minSize: 90,
     maxSize: 120,
     cell: ({ row }) => {
-      const { type, time, increment, whiteTime, blackTime } = row.original;
+      const { type, time, increment, whiteTime, blackTime, rated } = row.original;
       return (
         <TimeControlCell
           type={type}
@@ -25,6 +25,7 @@ export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListI
           increment={increment}
           whiteTime={whiteTime}
           blackTime={blackTime}
+          rated={rated}
         />
       );
     },

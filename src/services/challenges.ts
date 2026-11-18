@@ -18,6 +18,8 @@ export type SentChallenge = {
   /** Set when it continues a series, with the game it would start */
   seriesId?: number | null;
   seriesGame?: number | null;
+  /** False for a casual game or series */
+  rated?: boolean;
 };
 
 export const getChallenges = async (): Promise<Challenge[]> => {

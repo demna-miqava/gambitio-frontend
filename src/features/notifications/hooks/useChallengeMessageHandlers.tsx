@@ -99,6 +99,7 @@ export const useChallengeMessageHandlers = ({
         createdAt: message.data.createdAt,
         rating: message.data.rating,
         bestOf: message.data.bestOf,
+        rated: message.data.rated,
         version: message.data.version,
       };
 

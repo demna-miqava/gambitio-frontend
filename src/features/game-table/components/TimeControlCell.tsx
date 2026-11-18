@@ -8,6 +8,8 @@ interface TimeControlCellProps {
   /** Each side's starting clock when they differ (time odds) */
   whiteTime?: number | null;
   blackTime?: number | null;
+  /** False for a game that changed no ratings (casual, time odds, bots) */
+  rated?: boolean;
 }
 
 export const TimeControlCell = ({
@@ -16,6 +18,7 @@ export const TimeControlCell = ({
   increment,
   whiteTime,
   blackTime,
+  rated,
 }: TimeControlCellProps) => {
   // Bot games have no clock and don't count for rating
   if (type === null || time === null) {
@@ -37,11 +40,12 @@ export const TimeControlCell = ({
     );
   }
 
-  // "5+0 Blitz": the label says what the icon used to
+  // "5+0 Blitz": the label says what the icon used to; "5+0 Unrated" for a
+  // casual game
   return (
     <span className="whitespace-nowrap text-xs text-muted-foreground">
       <span className="tabular-nums text-foreground">{formatTimeControl(time, increment)}</span>{" "}
-      <span className="capitalize">{type}</span>
+      {rated === false ? "Unrated" : <span className="capitalize">{type}</span>}
     </span>
   );
 };
