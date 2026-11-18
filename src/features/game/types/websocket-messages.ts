@@ -98,6 +98,7 @@ export type GamePlayer = {
   id: number;
   username: string;
   rating: number;
+  provisional?: boolean;
   avatarUrl: string | null;
 };
 

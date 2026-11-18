@@ -8,7 +8,10 @@ import {
   ProfileGames,
   ProfileOverview,
   PuzzleModePage,
+  SharedGame,
   StudyRoom,
+  Tournament,
+  Tournaments,
   isConstrainedConnection,
   pagesForPath,
 } from "./pages";
@@ -21,6 +24,9 @@ describe("pagesForPath", () => {
     expect(pagesForPath("/archive/12")).toEqual([ArchiveGame]);
     expect(pagesForPath("/puzzles/rush")).toEqual([PuzzleModePage]);
     expect(pagesForPath("/study/3")).toEqual([StudyRoom]);
+    expect(pagesForPath("/tournaments")).toEqual([Tournaments]);
+    expect(pagesForPath("/tournaments/9")).toEqual([Tournament]);
+    expect(pagesForPath("/share/aB3dE6gH9jK2mN")).toEqual([SharedGame]);
   });
 
   it("includes the profile shell with its tab", () => {

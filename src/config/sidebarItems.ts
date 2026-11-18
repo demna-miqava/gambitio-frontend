@@ -1,6 +1,7 @@
 import {
   Eye,
   Home,
+  Medal,
   Puzzle,
   Settings,
   Swords,
@@ -82,6 +83,14 @@ export const getNavItems = (userId: number): NavItem[] => [
     icon: Eye,
     // Watching a game happens on /game/:id, which stays under Play
     match: [ROUTES.WATCH],
+    hideInBottomNav: true,
+  },
+  {
+    title: "Tournaments",
+    url: ROUTES.TOURNAMENTS,
+    icon: Medal,
+    // A tournament's games are played on /game/:id, which stays under Play
+    match: [ROUTES.TOURNAMENTS],
     hideInBottomNav: true,
   },
   {

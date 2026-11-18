@@ -8,6 +8,10 @@ export type User = {
   blitzRating: number;
   bulletRating: number;
   rapidRating: number;
+  /** Whether each rating is still settling (shown with a "?") */
+  blitzProvisional?: boolean;
+  bulletProvisional?: boolean;
+  rapidProvisional?: boolean;
   /** Absent from responses of servers older than migration 008 */
   puzzleRating?: number;
   highestPuzzleRating?: number;
@@ -26,6 +30,9 @@ export type UserProfile = {
   rapidRating: number;
   blitzRating: number;
   bulletRating: number;
+  rapidProvisional?: boolean;
+  blitzProvisional?: boolean;
+  bulletProvisional?: boolean;
   puzzleRating?: number;
   friendCount: number;
 };

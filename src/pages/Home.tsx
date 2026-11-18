@@ -1,3 +1,4 @@
+import { TournamentBanner } from "@/features/tournaments/components/TournamentBanner";
 import { GameTable } from "@/features/game-table";
 import { Header } from "@/components/home/Header";
 import { QuickPairing } from "@/components/home/QuickPairing";
@@ -23,6 +24,7 @@ const Home = () => {
   return (
     <PageContainer className="space-y-8 lg:space-y-10">
       <ReturnToGameBanner />
+      <TournamentBanner />
       <Challenges className="rounded-2xl bg-card p-5 sm:p-6" />
       <Header />
 

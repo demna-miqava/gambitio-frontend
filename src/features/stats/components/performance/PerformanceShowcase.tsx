@@ -39,6 +39,8 @@ export const PerformanceShowcase = () => {
             key={key}
             label={label}
             rating={stats[key].rating}
+            // Nobody's rating is settled before their first game: "No games yet" says it
+            provisional={played && stats[key].provisional}
             delta={stats[key].delta}
             // A best rating means nothing before the first game
             highestRating={played ? stats[key].highestRating : undefined}

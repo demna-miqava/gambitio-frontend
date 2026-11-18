@@ -7,7 +7,7 @@ import { PromotionSelector } from "@/features/game/components/PromotionSelector"
 import { MoveNavigationControls } from "@/features/game/components/MoveControls";
 import { FlipBoardButton } from "@/features/game/components/FlipBoardButton";
 import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
-import { MovesListView } from "@/features/game/components/MovesList";
+import { SettingsMovesListView } from "@/features/game/components/MovesList";
 import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { ActionButton } from "@/features/current-game/components/ActionButton";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -218,7 +218,7 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
       {/* Phones: moves strip sits right under the board */}
       <div className="rounded-xl bg-card px-1 py-1.5 lg:rounded-none lg:bg-transparent lg:p-0">
         <OpeningName fens={shownLine} className="px-1.5 pb-1 lg:px-0 lg:pb-2" />
-        <MovesListView
+        <SettingsMovesListView
           moves={history}
           activeIndex={navigation.currentIndex - 1}
           onSelect={navigation.goToMove}

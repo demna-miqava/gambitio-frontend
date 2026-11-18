@@ -23,6 +23,11 @@ interface MatchActionsProps {
   canRequestTakeback: boolean;
   /** Offline: nothing could be sent */
   disabled: boolean;
+  /**
+   * A tournament game: it can't be aborted (resigning is the way out, from
+   * the first move) and has no takebacks
+   */
+  tournament?: boolean;
 }
 
 /** Abort, or Resign, Offer draw and Takeback, while the game is on. */
@@ -37,11 +42,12 @@ const MatchActions = ({
   takebackRequested,
   canRequestTakeback,
   disabled,
+  tournament = false,
 }: MatchActionsProps) => {
   const { settings } = useSettings();
   const confirmDrawResignationEnabled = settings?.confirmDrawResignationEnabled;
 
-  if (!hasMoves) {
+  if (!hasMoves && !tournament) {
     return (
       <ActionButton
         variant="abort"
@@ -73,13 +79,15 @@ const MatchActions = ({
           confirmDrawResignationEnabled ? "Offer your opponent a draw?" : undefined
         }
       />
-      <ActionButton
-        variant="takeback"
-        className={cn(GAME_BUTTON_STYLES.takeback, "col-span-2")}
-        onClick={onRequestTakeback}
-        label={takebackRequested ? "Takeback requested…" : "Ask for a takeback"}
-        disabled={disabled || !canRequestTakeback}
-      />
+      {!tournament && (
+        <ActionButton
+          variant="takeback"
+          className={cn(GAME_BUTTON_STYLES.takeback, "col-span-2")}
+          onClick={onRequestTakeback}
+          label={takebackRequested ? "Takeback requested…" : "Ask for a takeback"}
+          disabled={disabled || !canRequestTakeback}
+        />
+      )}
     </div>
   );
 };

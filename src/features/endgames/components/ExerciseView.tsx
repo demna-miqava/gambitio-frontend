@@ -8,7 +8,7 @@ import { PromotionSelector } from "@/features/game/components/PromotionSelector"
 import { MoveNavigationControls } from "@/features/game/components/MoveControls";
 import { FlipBoardButton } from "@/features/game/components/FlipBoardButton";
 import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
-import { MovesListView } from "@/features/game/components/MovesList";
+import { SettingsMovesListView } from "@/features/game/components/MovesList";
 import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { Button } from "@/components/ui/button";
@@ -274,7 +274,7 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
 
       <div className="space-y-2 lg:border-t lg:border-border lg:pt-3">
         <div className="rounded-xl bg-card px-1 py-1.5 lg:rounded-none lg:bg-transparent lg:p-0">
-          <MovesListView moves={history} activeIndex={navigation.currentIndex - 1} onSelect={navigation.goToMove} />
+          <SettingsMovesListView moves={history} activeIndex={navigation.currentIndex - 1} onSelect={navigation.goToMove} />
         </div>
         <div className="flex gap-1.5">
           <div className="min-w-0 flex-1">

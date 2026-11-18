@@ -97,6 +97,7 @@ const CurrentGameBoard = () => {
   const opponentRow = {
     name: opponentUsername,
     startingRating: opponentRatings.startingRating,
+    provisional: opponent.provisional,
     newRating: opponentRatings.newRating,
     ratingChange: gameEnded ? opponentRatings.ratingChange : undefined,
     avatar: (
@@ -113,6 +114,7 @@ const CurrentGameBoard = () => {
   const playerRow = {
     name: username,
     startingRating: playerRatings.startingRating,
+    provisional: player.provisional,
     newRating: playerRatings.newRating,
     ratingChange: gameEnded ? playerRatings.ratingChange : undefined,
     avatar: (

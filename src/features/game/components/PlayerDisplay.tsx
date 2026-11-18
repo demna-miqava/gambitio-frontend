@@ -1,9 +1,12 @@
 import { CountingNumber } from "@/components/ui/shadcn-io/counting-number";
 import type { ReactNode } from "react";
+import { ProvisionalMark } from "@/components/ProvisionalMark";
 
 interface PlayerDisplayProps {
   name: string;
   startingRating?: number;
+  /** The rating is still settling: a "?" follows it */
+  provisional?: boolean;
   newRating?: number;
   ratingChange?: number;
   avatar?: ReactNode;
@@ -15,6 +18,7 @@ interface PlayerDisplayProps {
 export const PlayerDisplay = ({
   name,
   startingRating,
+  provisional,
   newRating,
   ratingChange,
   avatar,
@@ -41,6 +45,7 @@ export const PlayerDisplay = ({
                     number={newRating!}
                     transition={{ stiffness: 120, damping: 35 }}
                   />
+                  <ProvisionalMark provisional={provisional} className="-ml-1.5" />
                   {ratingChange !== undefined && (
                     <span
                       className={
@@ -56,7 +61,10 @@ export const PlayerDisplay = ({
                 </span>
               ) : (
                 startingRating !== undefined && (
-                  <span className="shrink-0 tabular-nums">{startingRating}</span>
+                  <span className="shrink-0 tabular-nums">
+                    {startingRating}
+                    <ProvisionalMark provisional={provisional} />
+                  </span>
                 )
               )}
               {material}

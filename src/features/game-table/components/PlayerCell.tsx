@@ -1,11 +1,13 @@
 import { cn } from "@/lib/utils";
 import { SideDot } from "@/features/game-review/components/SideDot";
+import { ProvisionalMark } from "@/components/ProvisionalMark";
 
 interface CellPlayer {
   /** Null for the computer in a bot game */
   id: number | null;
   username: string;
   rating: number;
+  provisional?: boolean;
 }
 
 interface PlayerCellProps {
@@ -34,7 +36,10 @@ const PlayerLine = ({
     <SideDot side={color} />
     <span className="truncate text-foreground">{player.username}</span>
     {isBot && <BotTag />}
-    <span className="text-xs tabular-nums text-muted-foreground">{player.rating}</span>
+    <span className="text-xs tabular-nums text-muted-foreground">
+      {player.rating}
+      <ProvisionalMark provisional={player.provisional} />
+    </span>
   </span>
 );
 

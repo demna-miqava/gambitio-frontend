@@ -1,10 +1,13 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import RatingDelta from "../RatingDelta";
+import { ProvisionalMark } from "@/components/ProvisionalMark";
 
 export type PerformanceCardProps = {
   label: string;
   rating: number;
+  /** The rating is still settling: a "?" follows it */
+  provisional?: boolean;
   delta?: number;
   highestRating?: number;
   /** Shown instead of best/delta when there's nothing to compare yet, e.g. "No games yet" */
@@ -20,6 +23,7 @@ const FOOTER = "flex min-h-4 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs te
 export const PerformanceCard = ({
   label,
   rating,
+  provisional,
   delta,
   highestRating,
   emptyHint,
@@ -28,7 +32,10 @@ export const PerformanceCard = ({
   return (
     <div className={cn(CARD, className)}>
       <span className="text-sm text-muted-foreground">{label}</span>
-      <p className="font-display-num text-3xl leading-none text-foreground sm:text-4xl">{rating}</p>
+      <p className="font-display-num text-3xl leading-none text-foreground sm:text-4xl">
+        {rating}
+        <ProvisionalMark provisional={provisional} className="text-2xl sm:text-3xl" />
+      </p>
       <div className={FOOTER}>
         {emptyHint ? (
           <span>{emptyHint}</span>

@@ -25,10 +25,12 @@ import { OpeningName } from "@/features/openings";
 import { nodesAlong } from "../utils/analysisTree";
 import { useLineActions } from "../hooks/useLineActions";
 import { ShareGifButton } from "@/features/share-gif";
+import { ShareLinkButton, useShareLink } from "@/features/shared-game";
 
 /** Phones: the desktop header (with these in its menu) is hidden */
 const MobileLineActions = () => {
   const { canSaveLine, openRepertoire, openStudy, dialogs } = useLineActions();
+  const shareLink = useShareLink();
   return (
     <div className="order-6 grid grid-cols-2 gap-2 lg:hidden">
       <Button variant="outline" size="md" onClick={openRepertoire} disabled={!canSaveLine}>
@@ -37,8 +39,10 @@ const MobileLineActions = () => {
       <Button variant="outline" size="md" onClick={openStudy}>
         <UsersRound aria-hidden="true" /> Study together
       </Button>
+      {/* The viewer's own finished games: a link anyone can open */}
+      <ShareLinkButton />
       {/* Finished games only */}
-      <ShareGifButton className="col-span-2" />
+      <ShareGifButton className={shareLink ? undefined : "col-span-2"} />
       {dialogs}
     </div>
   );

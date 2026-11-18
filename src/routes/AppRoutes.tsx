@@ -27,10 +27,13 @@ import {
   Repertoire,
   Series,
   Settings,
+  SharedGame,
   SignIn,
   SignUp,
   StudyRoom,
   StudyRooms,
+  Tournament,
+  Tournaments,
   Watch,
 } from "./pages";
 
@@ -55,6 +58,8 @@ export const AppRoutes = () => {
         <Route path={ROUTES.SERIES} element={<Series />} />
         <Route path={ROUTES.STUDY} element={<StudyRooms />} />
         <Route path={ROUTES.ENDGAMES} element={<EndgameLab />} />
+        <Route path={ROUTES.TOURNAMENTS} element={<Tournaments />} />
+        <Route path={ROUTES.TOURNAMENT} element={<Tournament />} />
         {/* Engine, analysis and opening preparation: closed while you're in a live game */}
         <Route element={<FairPlayGate />}>
           <Route path={ROUTES.BOT_GAME} element={<BotGame />} />
@@ -73,6 +78,8 @@ export const AppRoutes = () => {
       <Route path={ROUTES.AUTH.SIGN_IN} element={<SignIn />} />
       <Route path={ROUTES.AUTH.SIGN_UP} element={<SignUp />} />
       <Route path={ROUTES.AUTH.PROFILE_SETUP} element={<ProfileSetup />} />
+      {/* Open to everyone, outside the signed-in shell (see AuthGuard) */}
+      <Route path={ROUTES.SHARED_GAME} element={<SharedGame />} />
     </Routes>
   );
 };

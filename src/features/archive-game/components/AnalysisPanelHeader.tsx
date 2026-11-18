@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { BookMarked, Copy, Download, FileUp, Film, FlipVertical2, Loader2, MoreHorizontal, RotateCcw, UsersRound } from "lucide-react";
+import { BookMarked, Copy, Download, FileUp, Film, FlipVertical2, Link2, Loader2, MoreHorizontal, RotateCcw, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAnalysis } from "@/features/engine-analysis";
 import { useShareGif } from "@/features/share-gif";
+import { useShareLink } from "@/features/shared-game";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { cn } from "@/lib/utils";
 import { useArchiveGame } from "../contexts/ArchiveGameContext";
@@ -71,6 +72,8 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
   const { flipBoard } = useChessBoardContext();
   // Finished games only (null on the import page and the analysis board)
   const shareGif = useShareGif();
+  // The viewer's own finished games only
+  const shareLink = useShareLink();
 
   return (
     <div className={cn("h-13 shrink-0 items-center gap-0.5 border-b border-border pr-3 pl-3.5", className)}>
@@ -86,6 +89,14 @@ export const AnalysisPanelHeader = ({ onLoadAnotherPgn, className }: AnalysisPan
           onClick={resetAnalysis}
           disabled={!hasAnalysis}
         />
+        {shareLink && (
+          <IconAction
+            icon={Link2}
+            label="Share link"
+            hint="Share a link anyone can open"
+            onClick={shareLink.openShareLink}
+          />
+        )}
         {shareGif && (
           <IconAction
             icon={Film}

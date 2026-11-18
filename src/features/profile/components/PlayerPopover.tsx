@@ -1,3 +1,4 @@
+import { ProvisionalMark } from "@/components/ProvisionalMark";
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -31,9 +32,9 @@ export interface PopoverPlayer {
 }
 
 const RATINGS = [
-  { key: "bulletRating", label: "Bullet" },
-  { key: "blitzRating", label: "Blitz" },
-  { key: "rapidRating", label: "Rapid" },
+  { key: "bulletRating", provisional: "bulletProvisional", label: "Bullet" },
+  { key: "blitzRating", provisional: "blitzProvisional", label: "Blitz" },
+  { key: "rapidRating", provisional: "rapidProvisional", label: "Rapid" },
 ] as const;
 
 /** Your record against the player: games, then series if you've played any. */
@@ -200,11 +201,18 @@ export const PlayerCard = ({
 
       {showRatings && (
         <dl className="grid grid-cols-3 gap-3">
-          {RATINGS.map(({ key, label }) => (
+          {RATINGS.map(({ key, provisional, label }) => (
             <div key={key}>
               <dt className="text-xs text-muted-foreground">{label}</dt>
               <dd className="font-display-num text-lg text-foreground">
-                {isPending ? <Skeleton className="mt-1 h-5 w-10" /> : (profile?.[key] ?? "–")}
+                {isPending ? (
+                  <Skeleton className="mt-1 h-5 w-10" />
+                ) : (
+                  <>
+                    {profile?.[key] ?? "–"}
+                    {profile && <ProvisionalMark provisional={profile[provisional]} />}
+                  </>
+                )}
               </dd>
             </div>
           ))}

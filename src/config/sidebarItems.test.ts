@@ -55,6 +55,8 @@ describe("isNavItemActive", () => {
     expect(activeTitles("/repertoire")).toEqual(["Analysis"]);
     expect(activeTitles("/study/4")).toEqual(["Analysis"]);
     expect(activeTitles("/series/2")).toEqual(["Play"]);
+    expect(activeTitles("/tournaments")).toEqual(["Tournaments"]);
+    expect(activeTitles("/tournaments/7")).toEqual(["Tournaments"]);
   });
 });
 

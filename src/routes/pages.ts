@@ -37,6 +37,8 @@ export const Series = page(() => import("@/pages/Series"));
 export const Repertoire = page(() => import("@/pages/Repertoire"));
 export const StudyRooms = page(() => import("@/pages/StudyRooms"));
 export const StudyRoom = page(() => import("@/pages/StudyRoom"));
+export const Tournaments = page(() => import("@/pages/Tournaments"));
+export const Tournament = page(() => import("@/pages/Tournament"));
 export const EndgameLab = page(() => import("@/pages/EndgameLab"));
 export const EndgameExercise = page(() => import("@/pages/EndgameExercise"));
 export const NotFoundPage = page(() => import("@/pages/NotFoundPage"));
@@ -51,6 +53,7 @@ export const SignIn = page(() => import("@/pages/SignIn"));
 export const SignUp = page(() => import("@/pages/SignUp"));
 export const IntroPage = page(() => import("@/pages/IntroPage"));
 export const ProfileSetup = page(() => import("@/pages/ProfileSetup"));
+export const SharedGame = page(() => import("@/pages/SharedGame"));
 
 /**
  * The pages most visits go to, main destinations first: fetched in the
@@ -115,6 +118,7 @@ const ROUTE_PAGES: [pattern: string, pages: Page[]][] = [
   [ROUTES.AUTH.SIGN_IN, [SignIn]],
   [ROUTES.AUTH.SIGN_UP, [SignUp]],
   [ROUTES.AUTH.PROFILE_SETUP, [ProfileSetup]],
+  [ROUTES.SHARED_GAME, [SharedGame]],
   [ROUTES.HOME, [Home]],
   [ROUTES.PROFILE.ROOT, [Profile, ProfileOverview]],
   [`${ROUTES.PROFILE.ROOT}/${ROUTES.PROFILE.GAMES}`, [Profile, ProfileGames]],
@@ -134,6 +138,8 @@ const ROUTE_PAGES: [pattern: string, pages: Page[]][] = [
   [ROUTES.REPERTOIRE, [Repertoire]],
   [ROUTES.STUDY, [StudyRooms]],
   [ROUTES.STUDY_ROOM, [StudyRoom]],
+  [ROUTES.TOURNAMENTS, [Tournaments]],
+  [ROUTES.TOURNAMENT, [Tournament]],
   [ROUTES.ENDGAMES, [EndgameLab]],
   [ROUTES.ENDGAME_EXERCISE, [EndgameExercise]],
   [ROUTES.TOOLS.IMPORT_GAME, [ImportGame]],

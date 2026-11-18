@@ -13,6 +13,7 @@ interface ArchivePlayer {
   id?: number | null;
   username: string;
   rating: number;
+  provisional?: boolean;
   avatarUrl?: string | null;
 }
 
@@ -75,6 +76,7 @@ const ArchiveGameBoard = ({
       topPlayer={{
         name: topPlayer.username,
         startingRating: topPlayer.rating,
+        provisional: topPlayer.provisional,
         avatar: botSide === topSide ? (
           <BotAvatar rating={topPlayer.rating} className="size-8 rounded-lg" />
         ) : (
@@ -84,6 +86,7 @@ const ArchiveGameBoard = ({
       bottomPlayer={{
         name: bottomPlayer.username,
         startingRating: bottomPlayer.rating,
+        provisional: bottomPlayer.provisional,
         avatar: botSide === orientation ? (
           <BotAvatar rating={bottomPlayer.rating} className="size-8 rounded-lg" />
         ) : (

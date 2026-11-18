@@ -34,6 +34,8 @@ import { ChatSheetButton, UnreadBadge } from "@/features/game-chat/components/Ch
 import { GameSettingsButton } from "@/features/game-tools/GameSettingsButton";
 import { FocusModeButton } from "@/features/game-tools/FocusModeButton";
 import { useFocusMode } from "@/features/game-tools/useFocusMode";
+import { useTournament } from "@/features/tournaments/hooks/useTournament";
+import { TournamentPostGame, TournamentStrip } from "@/features/tournaments/components/TournamentGamePanel";
 
 type PanelView = "moves" | "chat";
 
@@ -78,6 +80,29 @@ export const MovesContainer = () => {
   const { id: viewerId } = useUser();
   // A series game shows the series score; the rematch becomes "Next game"
   const { series, seriesGame, rematchGameId } = useLiveSeries(game);
+  // A tournament game: the tournament pairs the next one, so there is no
+  // rematch, takeback or abort. Keeping its lobby connected from here is
+  // what lets the next game be paired without going back to the lobby.
+  const tournamentId = game.tournamentId ?? null;
+  const tournament = useTournament(tournamentId);
+  const postGame =
+    tournamentId !== null ? (
+      <TournamentPostGame
+        tournamentId={tournamentId}
+        gameId={game.id}
+        state={tournament.state}
+        isConnected={tournament.isConnected}
+      />
+    ) : (
+      <PostGameActions
+        rematch={rematch}
+        search={search}
+        gameId={game.id}
+        series={series}
+        viewerId={viewerId}
+        rematchGameId={rematchGameId}
+      />
+    );
   const { orientation, flipBoard } = useChessBoardContext();
   useFlipBoardKey(flipBoard);
 
@@ -156,7 +181,7 @@ export const MovesContainer = () => {
               <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                 <span className="tabular-nums">{formatGameTime(game)}</span>
                 <span className="truncate capitalize">
-                  · {hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
+                  · {tournamentId !== null ? "tournament" : hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
                 </span>
               </span>
             )
@@ -167,6 +192,9 @@ export const MovesContainer = () => {
 
       {!focus.active && series && (
         <SeriesStrip series={series} seriesGame={seriesGame} viewerId={viewerId} />
+      )}
+      {!focus.active && tournamentId !== null && (
+        <TournamentStrip tournamentId={tournamentId} state={tournament.state} />
       )}
 
       {focus.active ? null : hasTabs ? (
@@ -228,14 +256,7 @@ export const MovesContainer = () => {
                 )}
               </div>
             )}
-            <PostGameActions
-              rematch={rematch}
-              search={search}
-              gameId={game.id}
-              series={series}
-              viewerId={viewerId}
-              rematchGameId={rematchGameId}
-            />
+            {postGame}
           </div>
         ) : (
           <MatchActions
@@ -249,6 +270,7 @@ export const MovesContainer = () => {
             takebackRequested={takeback.takebackRequested}
             canRequestTakeback={takeback.canRequestTakeback}
             disabled={!isConnected}
+            tournament={tournamentId !== null}
           />
         )}
       </div>
@@ -259,14 +281,7 @@ export const MovesContainer = () => {
         title={finish?.title}
         description={finish?.description}
       >
-        <PostGameActions
-          rematch={rematch}
-          search={search}
-          gameId={game.id}
-          series={series}
-          viewerId={viewerId}
-          rematchGameId={rematchGameId}
-        />
+        {postGame}
       </GameResultDialog>
     </Tabs>
   );

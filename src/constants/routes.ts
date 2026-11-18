@@ -8,12 +8,16 @@ export const ROUTES = {
   SETTINGS: "/settings",
   GAME: "/game/:gameId",
   ARCHIVE_GAME: "/archive/:gameId",
+  /** A game someone shared: open to everyone, signed in or not */
+  SHARED_GAME: "/share/:token",
   WATCH: "/watch",
   LEADERBOARD: "/leaderboard",
   SERIES: "/series/:seriesId",
   REPERTOIRE: "/repertoire",
   STUDY: "/study",
   STUDY_ROOM: "/study/:roomId",
+  TOURNAMENTS: "/tournaments",
+  TOURNAMENT: "/tournaments/:tournamentId",
   ENDGAMES: "/endgames",
   ENDGAME_EXERCISE: "/endgames/:exerciseId",
   PROFILE: {
@@ -45,6 +49,8 @@ export const REVIEW_PARAM = "review";
 /** The archived game with the computer review started */
 export const getGameReviewRoute = (gameId: string | number) =>
   `/archive/${gameId}?${REVIEW_PARAM}=1`;
+export const getSharedGameRoute = (token: string) => `/share/${token}`;
+export const getTournamentRoute = (tournamentId: number) => `/tournaments/${tournamentId}`;
 export const getSeriesRoute = (seriesId: number) => `/series/${seriesId}`;
 export const getStudyRoomRoute = (roomId: number) => `/study/${roomId}`;
 export const getEndgameExerciseRoute = (exerciseId: string) => `/endgames/${exerciseId}`;

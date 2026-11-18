@@ -5,6 +5,8 @@ export type GamePlayerInfo = {
   id: number;
   username: string;
   rating: number;
+  /** The rating was still settling when the game started: shown as "1500?" */
+  provisional?: boolean;
   avatarUrl: string | null;
   ratingChange: number | null;
 };
@@ -37,6 +39,8 @@ export type Game = {
   /** The friend series this game belongs to, if any */
   seriesId?: number | null;
   seriesGame?: number | null;
+  /** The arena tournament that paired the game, if any */
+  tournamentId?: number | null;
 };
 
 /** A player in a stored game; the computer in a bot game has no id */

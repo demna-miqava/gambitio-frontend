@@ -1,3 +1,4 @@
+import { ProvisionalMark } from "@/components/ProvisionalMark";
 import { Link } from "react-router-dom";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Eye, Swords } from "lucide-react";
@@ -33,6 +34,7 @@ const PlayerLine = ({ player, side }: { player: LivePlayer; side: "white" | "bla
       </span>
       <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">
         {player.rating}
+        <ProvisionalMark provisional={player.provisional} />
       </span>
     </div>
   );

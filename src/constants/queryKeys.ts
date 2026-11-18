@@ -1,6 +1,10 @@
 export const QKEY_USER_PROFILE = "user-profile";
 export const QKEY_USER_GAMES = "user-games";
 export const QKEY_GAME_BY_ID = "game";
+/** A shared game, by its link's token (no sign-in) */
+export const QKEY_SHARED_GAME = "shared-game";
+/** A game's share link, for its players */
+export const QKEY_GAME_SHARE_LINK = "game-share-link";
 export const QKEY_USER_FRIENDS = "user-friends";
 export const QKEY_SUGGESTED_FRIENDS = "suggested-friends";
 export const QKEY_PENDING_FRIEND_REQUESTS = "pending-friend-requests";
@@ -20,6 +24,12 @@ export const QKEY_USER_STATS_SUMMARY = "user-stats-summary";
 export const QKEY_ACTIVE_GAME = "active-game";
 export const QKEY_LEADERBOARD = "leaderboard";
 export const QKEY_GAME_REVIEW = "game-review";
+/** The tournament lists (open, finished) */
+export const QKEY_TOURNAMENTS = "tournaments";
+/** One tournament's lobby: the tournament, standings, live games, own line */
+export const QKEY_TOURNAMENT = "tournament";
+/** A page of a tournament's standings past the first */
+export const QKEY_TOURNAMENT_STANDINGS = "tournament-standings";
 export const QKEY_LIVE_GAMES_FRIENDS = "live-games-friends";
 export const QKEY_LIVE_GAMES_TOP = "live-games-top";
 export const QKEY_SERIES = "series";

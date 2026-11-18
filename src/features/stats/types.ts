@@ -1,5 +1,7 @@
 export interface GameStats {
   rating: number;
+  /** Still settling: shown with a "?" */
+  provisional?: boolean;
   delta: number;
   highestRating: number;
   highestDate: string;

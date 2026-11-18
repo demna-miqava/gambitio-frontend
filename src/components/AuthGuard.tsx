@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, matchPath, useLocation } from "react-router-dom";
 import { useUser } from "@/hooks/useUser";
 import { FullScreenLoader } from "./FullScreenLoader";
 import { ROUTES } from "@/constants/routes";
@@ -11,9 +11,16 @@ const publicRoutes: string[] = [
   ROUTES.AUTH.SIGN_UP,
 ];
 
+/**
+ * Pages for everyone: shown to signed-out visitors like the public routes,
+ * but a signed-in user stays on them too instead of being sent home.
+ */
+const openRoutes: string[] = [ROUTES.SHARED_GAME];
+
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const isPublicRoute = publicRoutes.includes(location.pathname);
+  const isOpenRoute = openRoutes.some((pattern) => matchPath(pattern, location.pathname) !== null);
   const isProfileSetupRoute = location.pathname === ROUTES.AUTH.PROFILE_SETUP;
   const { isPending, isAuthenticated, hasProfile, isError, refetch } = useUser();
 
@@ -65,7 +72,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   } else {
     // User is not authenticated
     // Allow public routes
-    if (isPublicRoute) {
+    if (isPublicRoute || isOpenRoute) {
       return <>{children}</>;
     }
     // Redirect unauthenticated users to sign in, then back to this page

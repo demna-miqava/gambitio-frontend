@@ -10,6 +10,7 @@ import type { PlayerColor } from "../types/game.types";
 interface PlayerInfo {
   name: string;
   startingRating?: number;
+  provisional?: boolean;
   newRating?: number;
   ratingChange?: number;
   avatar?: ReactNode;

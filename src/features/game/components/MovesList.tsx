@@ -22,8 +22,14 @@ export const MovesList = () => {
   const { moves } = useChessBoardContext();
   const { currentIndex, goToMove } = useGameNavigation();
   return (
-    <MovesListView moves={moves} activeIndex={currentIndex - 1} onSelect={goToMove} />
+    <SettingsMovesListView moves={moves} activeIndex={currentIndex - 1} onSelect={goToMove} />
   );
+};
+
+/** MovesListView with the signed-in user's notation setting (inside the app shell). */
+export const SettingsMovesListView = (props: Omit<MovesListViewProps, "showIcons">) => {
+  const { settings } = useSettings();
+  return <MovesListView {...props} showIcons={settings?.pieceIconNotationEnabled ?? false} />;
 };
 
 interface MovesListViewProps {
@@ -32,6 +38,8 @@ interface MovesListViewProps {
   activeIndex: number;
   /** Called with the number of moves to show (index + 1) */
   onSelect: (moveCount: number) => void;
+  /** Figurines instead of piece letters (the account's notation setting) */
+  showIcons?: boolean;
 }
 
 /**
@@ -39,13 +47,14 @@ interface MovesListViewProps {
  * two-column score sheet. Tapping a move shows the position after it.
  * Only the one for the screen is rendered (read before the first paint), so
  * long games don't keep two copies of the list in the page.
+ *
+ * Reads no account settings itself, so it also works on pages without a
+ * signed-in user (a shared game); SettingsMovesListView adds them.
  */
-export const MovesListView = ({ moves, activeIndex, onSelect }: MovesListViewProps) => {
-  const { settings } = useSettings();
+export const MovesListView = ({ moves, activeIndex, onSelect, showIcons = false }: MovesListViewProps) => {
   const stripRef = useRef<HTMLOListElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const movePairs = groupMovesIntoPairs(moves);
-  const showIcons = settings?.pieceIconNotationEnabled ?? false;
   const showSheet = useMediaQuery(SHEET_QUERY);
 
   // Keep the newest / selected move in view

@@ -5,6 +5,7 @@ export type LivePlayer = {
   username: string;
   /** Rating when the game started */
   rating: number;
+  provisional?: boolean;
   avatarUrl: string | null;
 };
 

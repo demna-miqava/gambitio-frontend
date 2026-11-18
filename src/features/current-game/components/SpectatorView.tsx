@@ -87,6 +87,7 @@ const SpectatorBoard = ({ orientation }: { orientation: PlayerColor }) => {
     return {
       name: player.username,
       startingRating: player.rating,
+      provisional: player.provisional,
       newRating: newRating ?? player.rating,
       ratingChange: gameEnded ? change : undefined,
       avatar: (

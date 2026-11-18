@@ -34,6 +34,7 @@ Real-time online chess: play rated games against people or bots, review them wit
 - **Quick pairing** for bullet, blitz and rapid, or a custom game and direct challenges to friends
 - **Bots** from 300 to 2400 rating, for unrated practice, with an instant undo
 - **Series**: play a set of games against a friend with a running score
+- **Arena tournaments**: create one or join one, get paired again and again while the clock runs, and climb live standings (2 for a win, 1 for a draw, doubled on a streak)
 - **Watch** live games of other players
 - Draw offers, takeback requests, resignation, rematches, premoves and sound effects
 - **Player cards**: tap an opponent's avatar for their ratings, your head-to-head record and Add friend
@@ -49,6 +50,7 @@ Real-time online chess: play rated games against people or bots, review them wit
 - **Opening names** for every game
 - **Import a game** from a PGN to analyze games played elsewhere
 - **Share a game as a GIF**, rendered in your browser with your board and pieces
+- **Share a game with a link**: anyone can replay it, no account needed; signed-in players get the engine and the review too. Either player can turn the link off
 - **Study rooms**: a shared analysis board where friends add variations and comments together in real time, each with their own optional engine
 
 ### Train
@@ -60,6 +62,7 @@ Real-time online chess: play rated games against people or bots, review them wit
 ### Profile and social
 
 - Bullet, blitz, rapid and puzzle ratings, with rating history, rank and results
+- **Glicko-2 ratings**: new players reach their level in a handful of games, and a rating that is still settling is marked with a "?"
 - Full game history
 - Leaderboards per time control
 - Friends, online status and real-time notifications for challenges and friend requests
@@ -71,7 +74,7 @@ Real-time online chess: play rated games against people or bots, review them wit
 
 ### Upcoming
 
-- **Tournaments**
+- **Swiss tournaments**, and reminders before a tournament starts
 
 ## Tech Stack
 
@@ -207,9 +210,11 @@ src/
 │   ├── puzzles/       # Chess puzzles and training
 │   ├── repertoire/    # Opening repertoire practice
 │   ├── series/        # Game series between friends
+│   ├── shared-game/   # Share links and the public game page
 │   ├── settings/      # User settings
 │   ├── stats/         # Statistics and profiles
 │   ├── study/         # Shared study rooms
+│   ├── tournaments/   # Arena tournaments: list, lobby, live standings
 │   └── watch/         # Watching live games
 ├── hooks/             # Custom React hooks
 ├── contexts/          # React contexts

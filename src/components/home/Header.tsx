@@ -1,3 +1,4 @@
+import { ProvisionalMark } from "@/components/ProvisionalMark";
 import { Link } from "react-router-dom";
 import { useUser } from "@/hooks/useUser";
 import { getProfileStatsRoute } from "@/constants/routes";
@@ -20,9 +21,14 @@ const RATINGS = [
 ] as const;
 
 export const Header = () => {
-  const { id, username, bulletRating, blitzRating, rapidRating } = useUser();
+  const { id, username, bulletRating, blitzRating, rapidRating, chessProfile } = useUser();
   const { stats } = useGetStats();
   const ratings = { bullet: bulletRating, blitz: blitzRating, rapid: rapidRating };
+  const provisional = {
+    bullet: chessProfile?.bulletProvisional,
+    blitz: chessProfile?.blitzProvisional,
+    rapid: chessProfile?.rapidProvisional,
+  };
 
   return (
     <PageHeader
@@ -39,7 +45,7 @@ export const Header = () => {
               <Link
                 key={key}
                 to={`${getProfileStatsRoute(id || 0)}?variant=${key}`}
-                aria-label={`${label} rating ${ratings[key] ?? "unrated"}${
+                aria-label={`${label} rating ${ratings[key] ?? "unrated"}${provisional[key] ? " (provisional)" : ""}${
                   delta ? `, ${delta > 0 ? "up" : "down"} ${Math.abs(delta)} in the last 30 days` : ""
                 }, view stats`}
                 title={delta ? "Rating change in the last 30 days" : undefined}
@@ -49,6 +55,9 @@ export const Header = () => {
                 <span className="flex flex-wrap items-baseline gap-x-2">
                   <span className="font-display-num text-2xl leading-tight text-foreground sm:text-[1.75rem]">
                     {ratings[key] ?? "–"}
+                    {ratings[key] !== undefined && (
+                      <ProvisionalMark provisional={provisional[key]} className="text-xl" />
+                    )}
                   </span>
                   <RatingDelta delta={delta} className="text-xs" />
                 </span>

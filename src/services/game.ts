@@ -19,6 +19,27 @@ export const getGameById = async (gameId: number): Promise<StoredGame> => {
   return apiRequest<StoredGame>("get", `/games/${gameId}`);
 };
 
+/**
+ * A game someone shared, by the token in its link (GET /shared-games/:token).
+ * Needs no sign-in. 404 when the link was never made or has been turned off.
+ */
+export const getSharedGame = async (token: string): Promise<StoredGame> => {
+  return apiRequest<StoredGame>("get", `/shared-games/${encodeURIComponent(token)}`);
+};
+
+/**
+ * The share link's token for a finished game the user played, made on first
+ * use: the same one every time, for both players, until it's turned off.
+ */
+export const shareGame = async (gameId: number): Promise<{ token: string }> => {
+  return apiRequest<{ token: string }>("post", `/games/${gameId}/share`);
+};
+
+/** Turns the game's share link off: links already sent stop working. */
+export const unshareGame = async (gameId: number): Promise<void> => {
+  await apiRequest<void>("delete", `/games/${gameId}/share`);
+};
+
 /** The signed-in user's live game, or null when they aren't playing. */
 export const getActiveGame = async (): Promise<{ gameId: number | null }> => {
   return apiRequest<{ gameId: number | null }>("get", "/games/active");
