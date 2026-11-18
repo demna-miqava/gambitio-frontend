@@ -18,7 +18,12 @@ import {
 import { formatTimeControl } from "@/utils/timeControl";
 
 interface CustomProps {
-  /** Called once the time control is applied (default: back to the previous step) */
+  /**
+   * Shown inline in a form: each change applies at once, so the presets,
+   * odds and rating beside it follow the picker, and the button only closes
+   * it. Without it the picker is its own step: "Use this time control"
+   * applies the time and goes back.
+   */
   onDone?: () => void;
 }
 
@@ -26,10 +31,16 @@ interface CustomProps {
 export const Custom = ({ onDone }: CustomProps) => {
   const { timeControl, updateTimeControl, goBack } = useGameSetup();
   const [{ minutes, increment }, setValues] = useState(() => customPickerValues(timeControl));
-  const setMinutes = (next: number) => setValues((values) => ({ ...values, minutes: next }));
-  const setIncrement = (next: number) => setValues((values) => ({ ...values, increment: next }));
-  // Shown inline (onDone), the presets stay clickable: picking one moves the
-  // picker to it, so "Use this time control" can't switch back to an old value
+  const apply = (next: { minutes: number; increment: number }) =>
+    updateTimeControl(getTimeControlFormat(next.minutes * 60), next.minutes * 60, next.increment);
+  const change = (next: { minutes: number; increment: number }) => {
+    setValues(next);
+    if (onDone) apply(next);
+  };
+  const setMinutes = (next: number) => change({ minutes: next, increment });
+  const setIncrement = (next: number) => change({ minutes, increment: next });
+  // Picking a preset (still clickable beside the inline picker, or chosen
+  // before opening it) moves the picker to that time
   const [shownFor, setShownFor] = useState(timeControl);
   if (shownFor.time !== timeControl.time || shownFor.increment !== timeControl.increment) {
     setShownFor(timeControl);
@@ -86,11 +97,12 @@ export const Custom = ({ onDone }: CustomProps) => {
         size="xl"
         className="w-full"
         onClick={() => {
-          updateTimeControl(format, minutes * 60, increment);
-          (onDone ?? goBack)();
+          if (onDone) return onDone();
+          apply({ minutes, increment });
+          goBack();
         }}
       >
-        Use this time control
+        {onDone ? "Done" : "Use this time control"}
       </Button>
     </div>
   );
