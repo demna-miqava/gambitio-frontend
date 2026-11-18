@@ -136,7 +136,6 @@ interface TableSetupFormProps {
  */
 export const TableSetupForm = ({ myId, myName, onStart }: TableSetupFormProps) => {
   const ids = { odds: useId(), clockOnly: useId(), guest: useId(), minutes: useId(), increment: useId(), white: useId(), black: useId() };
-  const [preset, setPreset] = useState<number | "custom">(3);
   const [minutes, setMinutes] = useState("5");
   const [increment, setIncrement] = useState("3");
   const [odds, setOdds] = useState(false);
@@ -148,10 +147,13 @@ export const TableSetupForm = ({ myId, myName, onStart }: TableSetupFormProps) =
   const [friend, setFriend] = useState<Friend | null>(null);
   const [clockOnly, setClockOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The preset the typed time matches, so typing 3 and 2 selects 3+2
+  const preset = PRESETS.findIndex(
+    (option) => option.minutes === Number(minutes) && option.increment === Number(increment)
+  );
 
   const pick = (index: number) => {
     const chosen = PRESETS[index]!;
-    setPreset(index);
     setMinutes(String(chosen.minutes));
     setIncrement(String(chosen.increment));
     setWhiteMinutes(String(chosen.minutes));
@@ -221,7 +223,6 @@ export const TableSetupForm = ({ myId, myName, onStart }: TableSetupFormProps) =
               value={minutes}
               disabled={odds}
               onChange={(event) => {
-                setPreset("custom");
                 setMinutes(event.target.value);
                 setWhiteMinutes(event.target.value);
                 setBlackMinutes(event.target.value);
@@ -238,7 +239,6 @@ export const TableSetupForm = ({ myId, myName, onStart }: TableSetupFormProps) =
               max={MAX_INCREMENT}
               value={increment}
               onChange={(event) => {
-                setPreset("custom");
                 setIncrement(event.target.value);
               }}
             />
