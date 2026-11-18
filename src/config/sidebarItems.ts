@@ -60,6 +60,7 @@ export const getNavItems = (userId: number): NavItem[] => [
       ROUTES.PLAY,
       ROUTES.PLAY_BOTS,
       ROUTES.BOT_GAME,
+      ROUTES.TABLE,
       "/game/",
       // A series is played as games
       "/series/",
@@ -74,6 +75,7 @@ export const getNavItems = (userId: number): NavItem[] => [
         state: { section: "friends" },
       },
       { title: "Play the computer", url: ROUTES.PLAY_BOTS },
+      { title: "Table mode", url: ROUTES.TABLE },
       { title: "Game history", url: getProfileGamesRoute(userId) },
     ],
   },
@@ -103,6 +105,7 @@ export const getNavItems = (userId: number): NavItem[] => [
       { title: "Solve puzzles", url: getPuzzleModeRoute("infinite") },
       { title: "Puzzle Rush", url: getPuzzleModeRoute("rush") },
       { title: "Survival", url: getPuzzleModeRoute("survival") },
+      { title: "Calculate first", url: getPuzzleModeRoute("calculate") },
       { title: "Endgame lab", url: ROUTES.ENDGAMES },
       { title: "Conversion drills", url: ROUTES.CONVERSION_DRILLS },
     ],

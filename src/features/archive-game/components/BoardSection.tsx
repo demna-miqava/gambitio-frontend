@@ -14,6 +14,7 @@ const BoardSection = ({ gameData }: { gameData: StoredGame }) => {
         blackPlayer={gameData.blackPlayer}
         timeControl={gameData.time ?? undefined}
         gameId={gameData.id}
+        tableGame={gameData.tableGame === true}
         // In a bot game the computer is the side without a user id
         botSide={
           gameData.botId === null

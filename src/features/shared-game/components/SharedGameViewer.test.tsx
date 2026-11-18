@@ -99,6 +99,10 @@ describe("canShareGame", () => {
     expect(canShareGame({ ...game, result: "aborted" }, 1)).toBe(false);
   });
 
+  it("never for a table game (history and review only)", () => {
+    expect(canShareGame({ ...game, tableGame: true }, 1)).toBe(false);
+  });
+
   it("never matches the bot's empty side of a bot game", () => {
     const botGame = { ...game, botId: "casual-bot", whitePlayer: { ...game.whitePlayer, id: null } };
     expect(canShareGame(botGame, 2)).toBe(true);

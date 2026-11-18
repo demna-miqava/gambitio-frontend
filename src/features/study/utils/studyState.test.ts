@@ -7,6 +7,8 @@ import {
   mainLineAt,
   pathTo,
   sameShapes,
+  liveNodeOf,
+  protectedNodes,
   toAnalysisTree,
   toStudyPgn,
   toBoardShapes,
@@ -43,7 +45,7 @@ const tree = (): StudyState => ({
 });
 
 const snapshot = (version = 3): StudyRoomSnapshot => ({
-  room: { id: 1, name: "Room", ownerId: 1, createdAt: "", updatedAt: "", version },
+  room: { id: 1, name: "Room", ownerId: 1, gameId: null, createdAt: "", updatedAt: "", version },
   state: tree(),
   members: [],
   present: [1],
@@ -246,5 +248,63 @@ describe("activityMessage", () => {
     expect(
       activityMessage(before, { ...before, state: { ...before.state, cursor: "n3" } }, { type: "cursor", cursor: "n3", version: 4, by: 2 })
     ).toBe("bob went to 2. Nf3");
+  });
+});
+
+describe("a room watching a game", () => {
+  const watching = (version = 3): StudyRoomSnapshot => {
+    const base = snapshot(version);
+    return {
+      ...base,
+      room: { ...base.room, gameId: 7 },
+      state: { ...base.state, game: { line: ["n1", "n2"], over: false }, cursor: "n2" },
+      chat: { enabled: true, messages: [{ id: "1", userId: 2, text: "hi", at: 0 }] },
+    };
+  };
+
+  it("extends the line from the game, merging new and changed nodes", () => {
+    const n3 = node("n3", "n2", "Nf3", "g1f3", 3);
+    const next = applyStudyMessage(watching(), {
+      type: "game_line",
+      nodes: [n3, { ...node("n2", "n1", "e5", "e7e5", 2, ["n3"]) }],
+      game: { line: ["n1", "n2", "n3"], over: false },
+      cursor: "n3",
+      version: 4,
+      by: 2,
+    });
+    expect(next.needsSync).toBe(false);
+    expect(next.snapshot?.state.game?.line).toEqual(["n1", "n2", "n3"]);
+    expect(next.snapshot?.state.cursor).toBe("n3");
+    expect(liveNodeOf(next.snapshot!.state)).toBe("n3");
+  });
+
+  it("asks for the room when the line names a node it doesn't have", () => {
+    const next = applyStudyMessage(watching(), {
+      type: "game_line",
+      nodes: [],
+      game: { line: ["n1", "n2", "n9"], over: false },
+      cursor: "n2",
+      version: 4,
+      by: 2,
+    });
+    expect(next.needsSync).toBe(true);
+  });
+
+  it("protects the game's moves only while it is played", () => {
+    const state = watching().state;
+    expect([...protectedNodes(state)]).toEqual(["n1", "n2"]);
+    expect(protectedNodes({ ...state, game: { line: ["n1"], over: true } }).size).toBe(0);
+    expect(protectedNodes(tree()).size).toBe(0);
+    expect(liveNodeOf(tree())).toBeNull();
+    expect(liveNodeOf({ ...state, game: { line: [], over: false } })).toBe("root");
+  });
+
+  it("adds chat messages once, and only where the room has chat", () => {
+    const message = { id: "2", userId: 1, text: "Nice", at: 1 };
+    const next = applyStudyMessage(watching(), { type: "chat", data: message });
+    expect(next.snapshot?.chat?.messages.map((m) => m.text)).toEqual(["hi", "Nice"]);
+    expect(applyStudyMessage(next.snapshot, { type: "chat", data: message }).snapshot).toBe(next.snapshot);
+    const plain = snapshot();
+    expect(applyStudyMessage(plain, { type: "chat", data: message }).snapshot).toBe(plain);
   });
 });

@@ -23,6 +23,7 @@ import { OpeningName } from "@/features/openings";
 import { useShownLine } from "@/features/game/hooks/useShownLine";
 import { useLiveSeries } from "@/features/series/hooks/useLiveSeries";
 import { SeriesStrip } from "@/features/series/components/SeriesStrip";
+import { WatchTogetherButton } from "@/features/study/components/WatchTogetherButton";
 
 // Widgets where "f" is typing, not a shortcut
 
@@ -211,6 +212,14 @@ const SpectatorPanel = ({
                 Review game
               </Link>
             </Button>
+          )}
+          {!gameEnded && (
+            <WatchTogetherButton
+              gameId={game.id}
+              white={game.whitePlayer.username}
+              black={game.blackPlayer.username}
+              className="w-full"
+            />
           )}
           <Button
             type="button"

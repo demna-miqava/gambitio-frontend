@@ -214,6 +214,13 @@ export const useBasePuzzleSession = (
     baseRestart,
     /** Resets the board to the start of the current puzzle (no game-over check) */
     resetCurrentPuzzle: loader.retryPuzzle,
+    /**
+     * Records a result decided outside the board's own move checks (Calculate
+     * first judges a whole entered line): marks a solve, counts the session
+     * result and calls onPuzzleSolved / onPuzzleFailed
+     */
+    recordSolve: onSolve,
+    recordFail: onFail,
     // For extending
     setSessionStats,
     puzzleState,

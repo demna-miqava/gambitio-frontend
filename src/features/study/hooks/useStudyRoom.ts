@@ -39,6 +39,11 @@ export const useStudyRoom = (roomId: number) => {
   // Latest change made by someone else, read out politely
   const [activity, setActivity] = useState("");
   const syncPending = useRef(false);
+  // A room watching a game asks for the game's moves once per connection
+  // (then whenever the game socket delivers a move: syncGame)
+  const gameSyncedThisConnection = useRef(false);
+  /** Why the last chat message was refused, shown in the chat panel */
+  const [chatError, setChatError] = useState<string | null>(null);
   const syncTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(syncTimer.current), []);
   const leaving = useRef(false);
@@ -70,6 +75,7 @@ export const useStudyRoom = (roomId: number) => {
     // The server sends the whole room on every connect
     onOpen: () => {
       syncPending.current = false;
+      gameSyncedThisConnection.current = false;
     },
     onMessage: (event) => {
       const message = parseWebSocketMessage<StudyServerMessage>(event);
@@ -87,6 +93,10 @@ export const useStudyRoom = (roomId: number) => {
             return;
           }
           if (code === "STUDY_NOT_FOUND") return leave("You're no longer in this study room");
+          // Chat problems belong to the chat panel; the board is fine
+          if (code?.startsWith("CHAT_")) return setChatError(text || "Couldn't send that message");
+          // The game's line will come with the next sync; nothing to show
+          if (code === "STUDY_NOT_LINKED") return;
           toast.error(text || "Something went wrong", { id: "study-error" });
           // A refused move or a change to a deleted position: back to what the room shows
           setBoardResetKey((k) => k + 1);
@@ -107,7 +117,13 @@ export const useStudyRoom = (roomId: number) => {
 
       const before = snapshotRef.current;
       const { snapshot: next, needsSync } = applyStudyMessage(before, message);
-      if (message.type === "study_state") syncPending.current = false;
+      if (message.type === "study_state") {
+        syncPending.current = false;
+        if (message.room.gameId !== null && !gameSyncedThisConnection.current) {
+          gameSyncedThisConnection.current = true;
+          send({ type: "sync_game" });
+        }
+      }
       if (next !== before) {
         update(next);
         if (next && before && "by" in message && message.by !== myId) {
@@ -144,6 +160,19 @@ export const useStudyRoom = (roomId: number) => {
     [send, update]
   );
 
+  /** A room watching a game: the game socket delivered a move (or the game ended). */
+  const syncGame = useCallback(() => {
+    if (snapshotRef.current?.room.gameId != null) send({ type: "sync_game" });
+  }, [send]);
+
+  const sendChat = useCallback(
+    (text: string) => {
+      setChatError(null);
+      send({ type: "chat", text });
+    },
+    [send]
+  );
+
   /**
    * We're leaving or deleting the room ourselves: the server's notice needs
    * no toast. Called with false when that failed, so the room works again
@@ -162,5 +191,8 @@ export const useStudyRoom = (roomId: number) => {
     goTo,
     boardResetKey,
     activity,
+    syncGame,
+    sendChat,
+    chatError,
   };
 };

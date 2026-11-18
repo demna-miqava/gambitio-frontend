@@ -33,6 +33,7 @@ Real-time online chess: play rated games against people or bots, review them wit
 - **Real-time multiplayer** over WebSockets, with the server validating every move and running the clocks
 - **Quick pairing** for bullet, blitz and rapid, or a custom game and direct challenges to friends
 - **Bots** from 300 to 2400 rating, for unrated practice, with an instant undo
+- **Table mode**: playing at a real board? One phone lying between you is the chess clock (time odds allowed, the far half turned to face your opponent, the screen kept awake) and records the moves; the game is saved, unrated, for review. Play a guest by name or a friend, who confirms the game from their inbox. A clock-only switch hides the board, and a game that couldn't be saved stays on the phone to retry
 - **Series**: play a set of games against a friend with a running score
 - **Arena tournaments**: create one or join one, get paired again and again while the clock runs, and climb live standings (2 for a win, 1 for a draw, doubled on a streak)
 - **Watch** live games of other players
@@ -52,10 +53,12 @@ Real-time online chess: play rated games against people or bots, review them wit
 - **Share a game as a GIF**, rendered in your browser with your board and pieces
 - **Share a game with a link**: anyone can replay it, no account needed; signed-in players get the engine and the review too. Either player can turn the link off
 - **Study rooms**: a shared analysis board where friends add variations and comments together in real time, each with their own optional engine
+- **Watch together**: while watching a live game (tournament games too), open a private study room that follows it move by move: the players and clocks, a "Live" button back to the latest move, your own variations and comments, and a room chat. The players can't see or join it until their game is over
 
 ### Train
 
 - **Puzzles**: rated puzzles at your level, Puzzle Rush (as many as you can in 3 minutes) and Survival (three lives)
+- **Calculate first**: a puzzle mode where you enter the whole line, your moves and the replies you expect, before any piece moves; the line is checked and played out once you submit (three lives, best score kept)
 - **Endgame lab**: 45 positions, from basic mates to pawn endgames, each with a clear goal, played against the engine at full strength
 - **Opening repertoire**: save lines from the analysis board, practise them with spaced repetition and see where your games leave your preparation
 

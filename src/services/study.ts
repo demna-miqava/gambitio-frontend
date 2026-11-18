@@ -12,6 +12,8 @@ export interface CreateStudyRoomBody {
   fen?: string;
   /** Moves in SAN from that position, e.g. a game to review */
   moves?: string[];
+  /** Watch together: a live game the room follows (instead of fen / moves) */
+  gameId?: number;
 }
 
 /** Rooms the signed-in player is in, recently changed first. */

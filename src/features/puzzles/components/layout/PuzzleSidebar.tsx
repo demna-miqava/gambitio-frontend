@@ -3,6 +3,7 @@ import { usePuzzle } from "../../contexts";
 import { PuzzleRushSidebar } from "../modes/PuzzleRushSidebar";
 import { PuzzleSurvivalSidebar } from "../modes/PuzzleSurvivalSidebar";
 import { PuzzleInfiniteSidebar } from "../modes/PuzzleInfiniteSidebar";
+import { PuzzleCalculateSidebar } from "../modes/PuzzleCalculateSidebar";
 import { PuzzleGameOverDialog } from "../shared/PuzzleGameOverDialog";
 
 export const PuzzleSidebar = () => {
@@ -10,8 +11,8 @@ export const PuzzleSidebar = () => {
   const { sessionStats, restart, mode, isGameOver } = context;
   const [showGameOverDialog, setShowGameOverDialog] = useState(false);
 
-  const isPuzzleGameOver =
-    (mode === "rush" || mode === "survival") && isGameOver;
+  const hasRuns = mode === "rush" || mode === "survival" || mode === "calculate";
+  const isPuzzleGameOver = hasRuns && isGameOver;
 
   useEffect(() => {
     if (isPuzzleGameOver) {
@@ -33,14 +34,22 @@ export const PuzzleSidebar = () => {
       {mode === "infinite" && <PuzzleInfiniteSidebar />}
       {mode === "rush" && <PuzzleRushSidebar />}
       {mode === "survival" && <PuzzleSurvivalSidebar />}
-      {(mode === "rush" || mode === "survival") && (
+      {mode === "calculate" && <PuzzleCalculateSidebar />}
+      {hasRuns && (
         <PuzzleGameOverDialog
           isOpen={showGameOverDialog}
-          score={mode === "rush" ? context.score : sessionStats.solved}
+          score={
+            mode === "rush"
+              ? context.score
+              : mode === "calculate"
+                ? context.history.filter(Boolean).length
+                : sessionStats.solved
+          }
           mode={mode}
           {...(mode === "rush"
             ? { reason: context.endReason, best: context.best, isNewBest: context.isNewBest }
             : {})}
+          {...(mode === "calculate" ? { best: context.best, isNewBest: context.isNewBest } : {})}
           onRestart={handleRestart}
           onClose={handleGameOverDialogClose}
         />

@@ -17,7 +17,7 @@ export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListI
     minSize: 90,
     maxSize: 120,
     cell: ({ row }) => {
-      const { type, time, increment, whiteTime, blackTime, rated } = row.original;
+      const { type, time, increment, whiteTime, blackTime, rated, tableGame } = row.original;
       return (
         <TimeControlCell
           type={type}
@@ -26,6 +26,7 @@ export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListI
           whiteTime={whiteTime}
           blackTime={blackTime}
           rated={rated}
+          tableGame={tableGame}
         />
       );
     },
@@ -35,14 +36,19 @@ export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListI
     accessorKey: "Players",
     header: "Players",
     cell: ({ row }) => {
-      const { id, blackPlayer, whitePlayer, botId } = row.original;
+      const { id, blackPlayer, whitePlayer, botId, tableGame } = row.original;
       return (
         <Link
           to={getArchiveGameRoute(id)}
           className="block rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
         >
           <span className="sr-only">Review game: </span>
-          <PlayerCell white={whitePlayer} black={blackPlayer} isBotGame={botId !== null} />
+          <PlayerCell
+            white={whitePlayer}
+            black={blackPlayer}
+            isBotGame={botId !== null}
+            hideRatings={tableGame === true}
+          />
         </Link>
       );
     },

@@ -5,6 +5,9 @@ export const ROUTES = {
   PLAY: "/play",
   PLAY_BOTS: "/play-bots",
   BOT_GAME: "/bot-game",
+  /** Table mode: set up a game at a real board, and play it */
+  TABLE: "/table",
+  TABLE_GAME: "/table/play",
   SETTINGS: "/settings",
   GAME: "/game/:gameId",
   ARCHIVE_GAME: "/archive/:gameId",
@@ -42,7 +45,7 @@ export const ROUTES = {
 } as const;
 
 // Helper functions for dynamic routes
-export const getPuzzleModeRoute = (mode: "infinite" | "rush" | "survival") =>
+export const getPuzzleModeRoute = (mode: "infinite" | "rush" | "survival" | "calculate") =>
   `/puzzles/${mode}`;
 export const getGameRoute = (gameId: string | number) => `/game/${gameId}`;
 export const getArchiveGameRoute = (gameId: string | number) => `/archive/${gameId}`;

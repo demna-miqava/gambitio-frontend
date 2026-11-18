@@ -22,6 +22,10 @@ export enum NOTIFICATION_MESSAGE_TYPES {
   STUDY_INVITE = "study_invite",
   /** A friend request or friendship with someone changed: { event, user } */
   FRIENDS_UPDATED = "friends_updated",
+  /** A friend saved a table game naming you: confirm or decline it (TableGameRequest) */
+  TABLE_GAME_REQUEST = "table_game_request",
+  /** A table game request was confirmed or declined: { gameId, confirmed } */
+  TABLE_GAME_ANSWERED = "table_game_answered",
   /** The player blocked or unblocked someone (in any tab): refresh the lists */
   BLOCKS_UPDATED = "blocks_updated",
   ERROR = "error",

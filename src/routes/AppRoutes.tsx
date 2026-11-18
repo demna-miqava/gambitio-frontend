@@ -6,6 +6,8 @@ import {
   AnalysisBoard,
   ArchiveGame,
   BotGame,
+  TableMode,
+  TableGame,
   CurrentGame,
   EndgameExercise,
   EndgameLab,
@@ -65,6 +67,9 @@ export const AppRoutes = () => {
         {/* Engine, analysis and opening preparation: closed while you're in a live game */}
         <Route element={<FairPlayGate />}>
           <Route path={ROUTES.BOT_GAME} element={<BotGame />} />
+          {/* Like bots: no table games while you have a live one */}
+          <Route path={ROUTES.TABLE} element={<TableMode />} />
+          <Route path={ROUTES.TABLE_GAME} element={<TableGame />} />
           <Route path={ROUTES.ARCHIVE_GAME} element={<ArchiveGame />} />
           <Route path={ROUTES.PUZZLE_MODE} element={<PuzzleModePage />} />
           <Route path={ROUTES.TOOLS.IMPORT_GAME} element={<ImportGame />} />

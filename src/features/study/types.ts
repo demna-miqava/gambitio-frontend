@@ -1,3 +1,5 @@
+import type { ChatMessage } from "@/features/game-chat/types";
+
 /**
  * Study rooms, as the server sends them (backend src/game/studyState.ts and
  * src/services/studyService.ts).
@@ -28,11 +30,21 @@ export interface StudyNode {
   shapes: StudyShape[];
 }
 
+/** A room watching a game (Watch together): the game's moves in the tree */
+export interface StudyGameLine {
+  /** Ids of the nodes of the game's moves, in order; the last is the latest move ("Live") */
+  line: string[];
+  /** The game has ended: the room is an ordinary study room from now on */
+  over: boolean;
+}
+
 export interface StudyState {
   nodes: Record<string, StudyNode>;
   /** The node everyone is looking at */
   cursor: string;
   nextId: number;
+  /** Only in a room watching a game */
+  game?: StudyGameLine;
 }
 
 export const STUDY_ROOT_ID = "root";
@@ -48,6 +60,8 @@ export interface StudyRoomMeta {
   id: number;
   name: string;
   ownerId: number;
+  /** The live game the room watches (Watch together), null for an ordinary room */
+  gameId: number | null;
   createdAt: string;
   updatedAt: string;
   version: number;
@@ -66,6 +80,17 @@ export interface StudyRoomSnapshot {
   members: StudyMember[];
   /** Users with the room open */
   present: number[];
+  /**
+   * Room chat, only in a room watching a game (and never for the game's own
+   * players once they are invited after it)
+   */
+  chat?: StudyChatState;
+}
+
+export interface StudyChatState {
+  /** False once the chat has closed (a while after the game ended) */
+  enabled: boolean;
+  messages: ChatMessage[];
 }
 
 /** Messages the room socket sends. */
@@ -76,6 +101,9 @@ export type StudyServerMessage =
   | { type: "children"; parentId: string; children: string[]; version: number; by: number }
   | { type: "cursor"; cursor: string; version: number; by: number }
   | { type: "node"; node: StudyNode; version: number; by: number }
+  /** The watched game's line changed: new and reordered nodes, the line, and the cursor */
+  | { type: "game_line"; nodes: StudyNode[]; game: StudyGameLine; cursor: string; version: number; by: number }
+  | { type: "chat"; data: ChatMessage }
   | { type: "presence"; userIds: number[] }
   | { type: "members"; members: StudyMember[] }
   | { type: "room_renamed"; name: string }
@@ -91,4 +119,7 @@ export type StudyClientMessage =
   | { type: "shapes"; nodeId: string; shapes: StudyShape[] }
   | { type: "delete"; nodeId: string }
   | { type: "promote"; nodeId: string }
-  | { type: "sync" };
+  | { type: "sync" }
+  /** A room watching a game: bring its main line up to the game's moves */
+  | { type: "sync_game" }
+  | { type: "chat"; text: string };

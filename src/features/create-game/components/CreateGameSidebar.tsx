@@ -38,6 +38,16 @@ const PlayComputerLink = () => (
   </Link>
 );
 
+const TableModeLink = () => (
+  <Link
+    to={ROUTES.TABLE}
+    className="rounded-xl bg-background p-3.5 text-sm transition-colors hover:bg-accent"
+  >
+    <span className="block font-medium">Table mode</span>
+    <span className="block text-xs text-muted-foreground">A clock and recorder for a real board</span>
+  </Link>
+);
+
 export const CreateGameSidebar = () => {
   const { activeSection, setActiveSection, canGoBack, goBack, isSearching } =
     useGameSetup();
@@ -95,6 +105,7 @@ export const CreateGameSidebar = () => {
       </Tabs>
 
       {!isSearching && <PlayComputerLink />}
+      {!isSearching && <TableModeLink />}
     </aside>
   );
 };

@@ -46,6 +46,8 @@ interface ArchiveGameBoardProps {
   botSide?: "white" | "black";
   /** The stored game's id (not for imported games) */
   gameId?: number;
+  /** Played at a real board (table mode): no ratings, and nothing to report */
+  tableGame?: boolean;
 }
 
 const ArchiveGameBoard = ({
@@ -53,11 +55,12 @@ const ArchiveGameBoard = ({
   blackPlayer,
   botSide,
   gameId,
+  tableGame = false,
 }: ArchiveGameBoardProps) => {
   // A report can carry the game only when the viewer played in it
   const { id: viewerId } = useUser();
   const ownGameId =
-    viewerId != null && (whitePlayer.id === viewerId || blackPlayer.id === viewerId)
+    !tableGame && viewerId != null && (whitePlayer.id === viewerId || blackPlayer.id === viewerId)
       ? gameId
       : undefined;
   // Rows follow the board when it's flipped
@@ -75,8 +78,8 @@ const ArchiveGameBoard = ({
       material={{ fen: currentNode.fen, bottom: orientation }}
       topPlayer={{
         name: topPlayer.username,
-        startingRating: topPlayer.rating,
-        provisional: topPlayer.provisional,
+        startingRating: tableGame ? undefined : topPlayer.rating,
+        provisional: !tableGame && topPlayer.provisional,
         avatar: botSide === topSide ? (
           <BotAvatar rating={topPlayer.rating} className="size-8 rounded-lg" />
         ) : (
@@ -85,8 +88,8 @@ const ArchiveGameBoard = ({
       }}
       bottomPlayer={{
         name: bottomPlayer.username,
-        startingRating: bottomPlayer.rating,
-        provisional: bottomPlayer.provisional,
+        startingRating: tableGame ? undefined : bottomPlayer.rating,
+        provisional: !tableGame && bottomPlayer.provisional,
         avatar: botSide === orientation ? (
           <BotAvatar rating={bottomPlayer.rating} className="size-8 rounded-lg" />
         ) : (

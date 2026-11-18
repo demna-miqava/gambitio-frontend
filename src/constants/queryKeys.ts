@@ -44,3 +44,6 @@ export const QKEY_ENDGAME_PROGRESS = "endgame-progress";
 export const QKEY_ENDGAME_TABLEBASE = "endgame-tablebase";
 export const QKEY_STARTING_OPENINGS = "starting-openings";
 export const QKEY_CONVERSION_DRILLS = "conversion-drills";
+
+/** Friends' table games waiting for the signed-in player to confirm */
+export const QKEY_TABLE_GAME_REQUESTS = "table-game-requests";

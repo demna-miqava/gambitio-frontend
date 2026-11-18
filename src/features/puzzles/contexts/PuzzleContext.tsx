@@ -2,6 +2,15 @@ import { createContext, useContext } from "react";
 import type { Puzzle, PuzzleStatus, SessionStats, WrongMove } from "../types/puzzle.types";
 import type { PuzzleAttemptState } from "../hooks/useBasePuzzleSession";
 import type { RushEndReason, RushPhase } from "../utils/rushRun";
+import type { Chess } from "chess.js";
+import type { CalculateAttempt } from "../utils/calculateAttempt";
+
+/** A move entered on the Calculate-first board or typed */
+export interface EnteredMove {
+  from: string;
+  to: string;
+  promotion?: string;
+}
 
 export interface PuzzleFeedState {
   isPending: boolean;
@@ -66,10 +75,44 @@ interface PuzzleContextSurvival extends PuzzleContextBase {
   isGameOver: boolean;
 }
 
+interface PuzzleContextCalculate extends PuzzleContextBase {
+  mode: "calculate";
+  lives: number;
+  history: boolean[];
+  isGameOver: boolean;
+  /** Best score on this device */
+  best: number;
+  /** The run that just ended beat the previous best */
+  isNewBest: boolean;
+  attempt: CalculateAttempt;
+  /** The entered line in SAN */
+  enteredSan: string[];
+  /** The solution in SAN, shown once the line has been judged */
+  solutionSan: string[];
+  /** Moves of the player's own the line needs */
+  requiredMoves: number;
+  /** The hidden position the entered line has reached (null without a puzzle) */
+  position: Chess | null;
+  /** The player's last move is in, so the line can be submitted */
+  canSubmit: boolean;
+  /** Why the last entered move was refused, until the next one goes in */
+  entryError: string | null;
+  /** Adds a move to the line; returns why it was refused, or null */
+  addMove: (move: EnteredMove) => string | null;
+  /** Adds a typed move ("Nf3", "g1f3"); returns why it was refused, or null */
+  addTypedMove: (text: string) => string | null;
+  removeLast: () => void;
+  clearLine: () => void;
+  submit: () => void;
+  /** The submitted line is still being played out on the board */
+  isReplaying: boolean;
+}
+
 export type PuzzleContextType =
   | PuzzleContextInfinite
   | PuzzleContextRush
-  | PuzzleContextSurvival;
+  | PuzzleContextSurvival
+  | PuzzleContextCalculate;
 
 export const PuzzleContext = createContext<PuzzleContextType | null>(null);
 
@@ -102,6 +145,14 @@ export const useSurvivalMode = () => {
   const context = usePuzzle();
   if (context.mode !== "survival") {
     throw new Error("useSurvivalMode must be used when mode is 'survival'");
+  }
+  return context;
+};
+
+export const useCalculateMode = () => {
+  const context = usePuzzle();
+  if (context.mode !== "calculate") {
+    throw new Error("useCalculateMode must be used when mode is 'calculate'");
   }
   return context;
 };

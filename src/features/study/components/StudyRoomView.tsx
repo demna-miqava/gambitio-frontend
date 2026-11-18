@@ -11,7 +11,10 @@ import { EvaluationBar, useAnalysis } from "@/features/engine-analysis";
 import { describeMove } from "@/features/game/utils/describeMove";
 import type { StudyClientMessage, StudyRoomSnapshot } from "../types";
 import { useStudyBoard } from "../hooks/useStudyBoard";
-import { nodeOf, pathTo, rootOf, toStudyPgn } from "../utils/studyState";
+import { liveNodeOf, nodeOf, pathTo, rootOf, toStudyPgn } from "../utils/studyState";
+import { useWatchedGame } from "../hooks/useWatchedGame";
+import { StudyLiveGame } from "./StudyLiveGame";
+import { StudyChat } from "./StudyChat";
 import { studyMoveLabel } from "../utils/activity";
 import { StudyRoomHeader } from "./StudyRoomHeader";
 import { StudyPeople } from "./StudyPeople";
@@ -30,6 +33,10 @@ interface StudyRoomViewProps {
   /** Latest change by someone else, e.g. "bob played 3. Bb5" */
   activity: string;
   onExit: (expected?: boolean) => void;
+  /** A room watching a game: the game socket delivered a move or the end */
+  onGameChange: () => void;
+  sendChat: (text: string) => void;
+  chatError: string | null;
 }
 
 /** A study room: the shared board and the panel beside it. */
@@ -42,8 +49,13 @@ export const StudyRoomView = ({
   boardResetKey,
   activity,
   onExit,
+  onGameChange,
+  sendChat,
+  chatError,
 }: StudyRoomViewProps) => {
-  const { room, state, members, present } = snapshot;
+  const { room, state, members, present, chat } = snapshot;
+  const watched = useWatchedGame(room.gameId, onGameChange);
+  const live = liveNodeOf(state);
   const { boardRef, orientation, flipBoard: flip } = useChessBoardContext();
   useFlipBoardKey(flip);
   const node = nodeOf(state, state.cursor) ?? rootOf(state);
@@ -113,6 +125,18 @@ export const StudyRoomView = ({
         className="order-1"
       />
 
+      {room.gameId !== null && (
+        <div className="order-2 lg:shrink-0 lg:border-b lg:border-border lg:px-4 lg:py-3">
+          <StudyLiveGame
+            game={watched.game}
+            status={watched.status}
+            atLive={live !== null && state.cursor === live}
+            canGoLive={live !== null}
+            onGoLive={() => live !== null && goTo(live)}
+          />
+        </div>
+      )}
+
       {/* Phones: right under the board */}
       <div className="order-2 space-y-2 lg:order-6 lg:shrink-0 lg:border-t lg:border-border lg:p-3">
         <StudyControls state={state} onGoTo={goTo} send={send} />
@@ -145,6 +169,19 @@ export const StudyRoomView = ({
       <div className="order-4 lg:order-5 lg:shrink-0 lg:border-t lg:border-border lg:px-3 lg:py-2.5">
         <StudyComment node={node} send={send} />
       </div>
+
+      {chat && (
+        <div className="order-5 lg:order-5 lg:shrink-0 lg:border-t lg:border-border lg:px-4 lg:py-2.5">
+          <StudyChat
+            chat={chat}
+            members={members}
+            myId={myId}
+            connected={connected}
+            onSend={sendChat}
+            error={chatError}
+          />
+        </div>
+      )}
 
       {/* What others do, read out; also shown as a quiet line */}
       <p

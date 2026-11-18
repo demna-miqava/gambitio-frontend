@@ -69,6 +69,11 @@ export type StoredGame = Omit<Game, "time" | "type" | "whitePlayer" | "blackPlay
   rated: boolean;
   /** The computer opponent (play-bots BOTS id) in a bot game */
   botId: string | null;
+  /**
+   * Played at a real board with the app as the clock (table mode): unrated,
+   * shown in history and review only. A guest's side has no user id.
+   */
+  tableGame?: boolean;
   /** The friend series this game belongs to (see features/series) */
   seriesId?: number | null;
   /** 1-based number of the game in its series */

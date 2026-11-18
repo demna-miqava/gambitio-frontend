@@ -26,6 +26,8 @@ import {
   useSuggestedFriends,
 } from "../suggestions/hooks/useSuggestedFriends";
 import { OnlineNow } from "../status/OnlineNow";
+import { useTableGameRequests } from "@/features/table-mode/hooks/useTableGameRequests";
+import { formatGameTime } from "@/utils/timeControl";
 
 const SectionTitle = ({ children, count }: { children: ReactNode; count?: number }) => (
   <h3 className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
@@ -187,7 +189,8 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
   const answer = (action: "accept" | "decline") => (request: FriendRequest) =>
     requestAction.mutate({ requestId: `${request.id}`, action });
 
-  const waiting = challenges.length + receivedRequests.length;
+  const tableGames = useTableGameRequests();
+  const waiting = challenges.length + receivedRequests.length + tableGames.requests.length;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -257,6 +260,47 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
                   </Button>
                 </Row>
               ))}
+            </ul>
+          </section>
+        )}
+
+        {tableGames.requests.length > 0 && (
+          <section className="space-y-3 p-4" aria-labelledby="inbox-table-games">
+            <SectionTitle count={tableGames.requests.length}>
+              <span id="inbox-table-games">Table games to confirm</span>
+            </SectionTitle>
+            <ul className="space-y-2.5">
+              {tableGames.requests.map((request) => {
+                const mine = request.result === `${request.color}_win`;
+                const outcome = request.result === "draw" ? "drew" : mine ? "won" : "lost";
+                return (
+                  <Row
+                    key={request.gameId}
+                    userId={request.from.id}
+                    username={request.from.username}
+                    avatarUrl={request.from.avatarUrl}
+                    detail={`You ${outcome} with ${request.color} · ${formatGameTime(request)} · ${formatShortDate(request.createdAt)}`}
+                  >
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      disabled={tableGames.answer.isPending}
+                      onClick={() => tableGames.answer.mutate({ gameId: request.gameId, action: "decline" })}
+                      aria-label={`Decline the table game ${request.from.username} saved`}
+                    >
+                      <X aria-hidden="true" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={tableGames.answer.isPending}
+                      onClick={() => tableGames.answer.mutate({ gameId: request.gameId, action: "confirm" })}
+                      aria-label={`Confirm the table game ${request.from.username} saved`}
+                    >
+                      Confirm
+                    </Button>
+                  </Row>
+                );
+              })}
             </ul>
           </section>
         )}

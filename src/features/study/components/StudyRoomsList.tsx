@@ -35,6 +35,7 @@ const RoomRow = ({
       </Link>
       <p className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
         <span>{isOwner ? "Yours" : `By ${room.ownerUsername}`}</span>
+        {room.gameId !== null && <span>Watching a game</span>}
         <span className="inline-flex items-center gap-1">
           <UsersRound className="size-3" aria-hidden="true" />
           {plural(room.memberCount, "member")}

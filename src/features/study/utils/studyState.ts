@@ -36,9 +36,17 @@ export function applyStudyMessage(
   const keep = { snapshot, needsSync: false };
   switch (message.type) {
     case "study_state": {
-      const { room, state, members, present } = message;
-      return { snapshot: { room, state, members, present }, needsSync: false };
+      const { room, state, members, present, chat } = message;
+      return { snapshot: { room, state, members, present, ...(chat && { chat }) }, needsSync: false };
     }
+    case "chat": {
+      if (!snapshot?.chat) return keep;
+      const { messages } = snapshot.chat;
+      if (messages.some((m) => m.id === message.data.id)) return keep;
+      const chat = { ...snapshot.chat, messages: [...messages, message.data].slice(-MAX_CHAT_MESSAGES) };
+      return { snapshot: { ...snapshot, chat }, needsSync: false };
+    }
+    case "game_line":
     case "cursor":
     case "node":
     case "node_added":
@@ -76,6 +84,17 @@ function applyChange(
   switch (message.type) {
     case "cursor":
       return { ...state, cursor: message.cursor };
+    case "game_line": {
+      const nodes = { ...state.nodes };
+      let added = 0;
+      for (const node of message.nodes) {
+        if (!Object.hasOwn(nodes, node.id)) added++;
+        nodes[node.id] = node;
+      }
+      // Every node of the line must be in our tree now
+      if (!message.game.line.every((id) => Object.hasOwn(nodes, id))) return null;
+      return { ...state, nodes, game: message.game, cursor: message.cursor, nextId: state.nextId + added };
+    }
     case "node":
       return { ...state, nodes: { ...state.nodes, [message.node.id]: message.node } };
     case "node_added": {
@@ -115,6 +134,35 @@ function applyChange(
       return { ...state, nodes: { ...state.nodes, [parent.id]: { ...parent, children: message.children } } };
     }
   }
+}
+
+/** Room chat kept in memory (the server sends the last 50 on connect) */
+const MAX_CHAT_MESSAGES = 200;
+
+/** The node of the watched game's latest move ("Live"); null in an ordinary room. */
+export function liveNodeOf(state: StudyState): string | null {
+  if (!state.game) return null;
+  return state.game.line.at(-1) ?? STUDY_ROOT_ID;
+}
+
+/**
+ * Nodes that can't be deleted or pushed out of the main line: the watched
+ * game's moves while it is being played (the server refuses it too).
+ */
+export function protectedNodes(state: StudyState): ReadonlySet<string> {
+  return new Set(state.game && !state.game.over ? state.game.line : []);
+}
+
+/** The main-line node that promoting `id`'s variation would push aside, if any. */
+export function demotedBy(state: StudyState, id: string): string | null {
+  let child = nodeOf(state, id);
+  while (child && child.parentId !== null) {
+    const parent = nodeOf(state, child.parentId);
+    if (!parent) return null;
+    if (parent.children[0] !== child.id) return parent.children[0] ?? null;
+    child = parent;
+  }
+  return null;
 }
 
 export function nodeOf(state: StudyState, id: string): StudyNode | undefined {

@@ -4,6 +4,7 @@ import {
   InfinitePuzzleProvider,
   RushPuzzleProvider,
   SurvivalPuzzleProvider,
+  CalculatePuzzleProvider,
 } from "@/features/puzzles/contexts";
 import { PuzzleBoard } from "@/features/puzzles/components/layout/PuzzleBoard";
 import { GameLayout } from "@/features/game/components/GameLayout";
@@ -34,12 +35,14 @@ const PROVIDERS: Record<
   infinite: InfiniteWithTheme,
   rush: RushPuzzleProvider,
   survival: SurvivalPuzzleProvider,
+  calculate: CalculatePuzzleProvider,
 };
 
 const MODE_TITLES: Record<PuzzleMode, string> = {
   infinite: "Puzzles",
   rush: "Puzzle Rush",
   survival: "Survival",
+  calculate: "Calculate first",
 };
 
 const VALID_MODES = Object.keys(MODE_TITLES) as PuzzleMode[];

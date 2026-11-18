@@ -10,6 +10,8 @@ interface TimeControlCellProps {
   blackTime?: number | null;
   /** False for a game that changed no ratings (casual, time odds, bots) */
   rated?: boolean;
+  /** Played at a real board with the app as the clock (unrated) */
+  tableGame?: boolean;
 }
 
 export const TimeControlCell = ({
@@ -19,7 +21,9 @@ export const TimeControlCell = ({
   whiteTime,
   blackTime,
   rated,
+  tableGame = false,
 }: TimeControlCellProps) => {
+  const unrated = tableGame ? "Table game" : "Unrated";
   // Bot games have no clock and don't count for rating
   if (type === null || time === null) {
     return (
@@ -35,7 +39,7 @@ export const TimeControlCell = ({
         <span className="tabular-nums text-foreground">
           {formatTimeOdds(odds[0], odds[1], increment)}
         </span>{" "}
-        Unrated
+        {unrated}
       </span>
     );
   }
@@ -45,7 +49,7 @@ export const TimeControlCell = ({
   return (
     <span className="whitespace-nowrap text-xs text-muted-foreground">
       <span className="tabular-nums text-foreground">{formatTimeControl(time, increment)}</span>{" "}
-      {rated === false ? "Unrated" : <span className="capitalize">{type}</span>}
+      {rated === false ? unrated : <span className="capitalize">{type}</span>}
     </span>
   );
 };

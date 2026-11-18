@@ -1,6 +1,6 @@
 export type PuzzleStatus = "solving" | "success" | "failed";
 
-export type PuzzleMode = "infinite" | "rush" | "survival";
+export type PuzzleMode = "infinite" | "rush" | "survival" | "calculate";
 
 export interface Puzzle {
   id: string;

@@ -10,7 +10,12 @@ export const isBotPlayer = (game: StoredGameListItem, player: StoredGamePlayer):
 /** A timed game between two players: one that can be opened as a live game */
 export const isPlayerGame = <G extends StoredGameListItem>(game: G): game is G & Game =>
   game.botId === null &&
+  // Table games are only ever stored finished: review, never a live game page
+  !game.tableGame &&
   game.time !== null &&
   game.type !== null &&
   game.whitePlayer.id !== null &&
   game.blackPlayer.id !== null;
+
+/** A game played at a real board with the app as the clock (table mode) */
+export const isTableGame = (game: StoredGameListItem): boolean => game.tableGame === true;

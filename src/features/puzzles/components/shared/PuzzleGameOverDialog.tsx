@@ -7,18 +7,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Clock, Skull, Trophy, XCircle } from "lucide-react";
+import { Brain, Clock, Skull, Trophy, XCircle } from "lucide-react";
 import type { RushEndReason } from "../../utils/rushRun";
 
 interface PuzzleGameOverDialogProps {
   isOpen: boolean;
   score: number;
-  mode: "rush" | "survival";
+  mode: "rush" | "survival" | "calculate";
   onRestart: () => void;
   onClose: () => void;
   /** Rush: what ended the run */
   reason?: RushEndReason | null;
-  /** Rush: best score on this device */
+  /** Rush, Calculate first: best score on this device */
   best?: number;
   isNewBest?: boolean;
 }
@@ -44,6 +44,7 @@ export const PuzzleGameOverDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center justify-center gap-2 font-display text-2xl">
             {mode === "survival" && <Skull className="size-6 text-loss" aria-hidden="true" />}
+            {mode === "calculate" && <Brain className="size-6 text-rapid" aria-hidden="true" />}
             {mode === "rush" &&
               (strikesOut ? (
                 <XCircle className="size-6 text-loss" aria-hidden="true" />
@@ -60,7 +61,7 @@ export const PuzzleGameOverDialog = ({
             {score === 1 ? "puzzle" : "puzzles"}
           </DialogDescription>
         </DialogHeader>
-        {mode === "rush" && best !== undefined && (
+        {mode !== "survival" && best !== undefined && (
           <p
             className={
               isNewBest

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { BaseMoveControls, type MoveControl } from "@/features/game/components/BaseMoveControls";
 import { useArrowKeyNavigation } from "@/features/game/hooks/useArrowKeyNavigation";
 import type { StudyClientMessage, StudyState } from "../types";
-import { endOfLine, isInVariation, mainLineAt, nodeOf } from "../utils/studyState";
+import { demotedBy, endOfLine, isInVariation, mainLineAt, nodeOf, protectedNodes } from "../utils/studyState";
 import { STUDY_ROOT_ID } from "../types";
 
 /**
@@ -32,6 +32,11 @@ export const StudyControls = ({
   const isAtStart = !current?.parentId;
   const next = current?.children[0];
   const inVariation = isInVariation(state, state.cursor);
+  // A watched game's moves stay the main line while it is being played
+  const guarded = protectedNodes(state);
+  const isGameMove = guarded.has(state.cursor);
+  const demoted = inVariation ? demotedBy(state, state.cursor) : null;
+  const canPromote = !(demoted && guarded.has(demoted));
 
   const goToStart = () => onGoTo(STUDY_ROOT_ID);
   const goBack = () => current?.parentId && onGoTo(current.parentId);
@@ -66,17 +71,19 @@ export const StudyControls = ({
             <CornerUpLeft className="size-4" aria-hidden="true" />
             Main line
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => send({ type: "promote", nodeId: state.cursor })}
-            title="Make this variation the main continuation"
-            className="min-w-0 flex-[1.3]"
-          >
-            <ArrowUpToLine className="size-4" aria-hidden="true" />
-            Make main line
-          </Button>
+          {canPromote && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => send({ type: "promote", nodeId: state.cursor })}
+              title="Make this variation the main continuation"
+              className="min-w-0 flex-[1.3]"
+            >
+              <ArrowUpToLine className="size-4" aria-hidden="true" />
+              Make main line
+            </Button>
+          )}
         </div>
       )}
       <div className="flex gap-1.5">
@@ -85,10 +92,10 @@ export const StudyControls = ({
           type="button"
           variant="secondary"
           size="icon-lg"
-          disabled={isAtStart}
+          disabled={isAtStart || isGameMove}
           onClick={() => send({ type: "delete", nodeId: state.cursor })}
-          aria-label="Delete this move and the moves after it"
-          title="Delete from here (for everyone)"
+          aria-label={isGameMove ? "The game's moves can't be deleted while it is played" : "Delete this move and the moves after it"}
+          title={isGameMove ? "The game's moves stay while it is played" : "Delete from here (for everyone)"}
           className="shrink-0 text-muted-foreground hover:text-destructive"
         >
           <Trash2 className="size-5" aria-hidden="true" />

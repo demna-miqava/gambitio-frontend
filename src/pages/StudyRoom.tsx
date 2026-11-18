@@ -66,6 +66,9 @@ const StudyRoomPage = ({ roomId }: { roomId: string | undefined }) => {
           boardResetKey={room.boardResetKey}
           activity={room.activity}
           onExit={room.expectExit}
+          onGameChange={room.syncGame}
+          sendChat={room.sendChat}
+          chatError={room.chatError}
         />
       </EngineAnalysisProvider>
     </ChessBoardProvider>

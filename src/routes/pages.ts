@@ -25,6 +25,8 @@ export const Settings = page(() => import("@/pages/Settings"));
 export const Play = page(() => import("@/pages/CreateGame"));
 export const PlayBots = page(() => import("@/pages/PlayBots"));
 export const BotGame = page(() => import("@/pages/BotGame"));
+export const TableMode = page(() => import("@/pages/TableMode"));
+export const TableGame = page(() => import("@/pages/TableGame"));
 export const CurrentGame = page(() => import("@/pages/CurrentGame"));
 export const ArchiveGame = page(() => import("@/pages/ArchiveGame"));
 export const Watch = page(() => import("@/pages/Watch"));
@@ -129,6 +131,8 @@ const ROUTE_PAGES: [pattern: string, pages: Page[]][] = [
   [ROUTES.PLAY, [Play]],
   [ROUTES.PLAY_BOTS, [PlayBots]],
   [ROUTES.BOT_GAME, [BotGame]],
+  [ROUTES.TABLE, [TableMode]],
+  [ROUTES.TABLE_GAME, [TableGame]],
   [ROUTES.GAME, [CurrentGame]],
   [ROUTES.ARCHIVE_GAME, [ArchiveGame]],
   [ROUTES.WATCH, [Watch]],

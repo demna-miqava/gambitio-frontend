@@ -29,10 +29,11 @@ const ShareLinkContext = createContext<ShareLinkContextValue | null>(null);
 /**
  * Whether the viewer may share the game: they played it, and it was played
  * to an end (the server checks the same; an aborted game was never a game).
+ * Table games show in history and review only, so they have no link.
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export const canShareGame = (
-  game: Pick<StoredGame, "status" | "result"> & {
+  game: Pick<StoredGame, "status" | "result" | "tableGame"> & {
     whitePlayer: { id: number | null };
     blackPlayer: { id: number | null };
   },
@@ -41,7 +42,8 @@ export const canShareGame = (
   viewerId != null &&
   (game.whitePlayer.id === viewerId || game.blackPlayer.id === viewerId) &&
   game.status === "finished" &&
-  game.result !== "aborted";
+  game.result !== "aborted" &&
+  !game.tableGame;
 
 /** How long "Copied" stays on the button */
 const COPIED_MS = 2_000;

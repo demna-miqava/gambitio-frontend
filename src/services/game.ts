@@ -1,3 +1,4 @@
+import type { SaveTableGameBody } from "@/features/table-mode/utils/tableStorage";
 import { apiRequest } from ".";
 import type { PaginatedGamesResponse, GetUserGamesParams, StoredGame } from "@/types";
 import { getUserGames as getUserGamesAPI } from "./user";
@@ -65,4 +66,35 @@ export interface SaveBotGameBody {
  */
 export const saveBotGame = async (body: SaveBotGameBody): Promise<StoredGame> => {
   return apiRequest<StoredGame>("post", "/games/bot", { data: body });
+};
+
+/**
+ * Stores a finished table-mode game (unrated). The server replays the moves
+ * and checks the result against them; it returns the stored game.
+ */
+export const saveTableGame = async (body: SaveTableGameBody): Promise<StoredGame> =>
+  apiRequest<StoredGame>("post", "/games/table", { data: body });
+
+/** A friend's table game waiting for the signed-in player to confirm */
+export interface TableGameRequest {
+  gameId: number;
+  createdAt: string;
+  from: { id: number; username: string; avatarUrl: string | null };
+  /** The signed-in player's side of the board */
+  color: "white" | "black";
+  time: number;
+  increment: number;
+  whiteTime: number | null;
+  blackTime: number | null;
+  result: "white_win" | "black_win" | "draw";
+  endReason: string;
+  numMoves: number;
+}
+
+export const getTableGameRequests = async (): Promise<TableGameRequest[]> =>
+  (await apiRequest<{ requests: TableGameRequest[] }>("get", "/games/table/requests")).requests;
+
+/** Confirm (it then shows in your history) or decline a friend's table game. */
+export const answerTableGameRequest = async (gameId: number, action: "confirm" | "decline"): Promise<void> => {
+  await apiRequest<void>("post", `/games/table/requests/${gameId}/${action}`);
 };

@@ -13,6 +13,16 @@ export const PUZZLE_CONFIG = {
   SURVIVAL: {
     INITIAL_LIVES: 3,
   },
+  CALCULATE: {
+    /** Survival's rules: three lives, no clock */
+    INITIAL_LIVES: 3,
+    /** localStorage key of the best score */
+    BEST_STORAGE_KEY: "gambitio:puzzle-calculate-best",
+    /** Between moves when a submitted line is played out on the board */
+    REPLAY_MOVE_MS: 550,
+    /** After a solved line has played out, before the next puzzle */
+    NEXT_AFTER_SOLVE_MS: 900,
+  },
   /**
    * Timed modes: how long a wrong move stays marked on the board before the
    * next puzzle loads

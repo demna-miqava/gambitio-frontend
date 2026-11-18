@@ -70,6 +70,7 @@ export const GameList = ({ games, userId, isLoading, rows, emptyState }: GameLis
                   whiteTime={game.whiteTime}
                   blackTime={game.blackTime}
                   rated={game.rated}
+                  tableGame={game.tableGame}
                 />
                 <span aria-hidden="true">·</span>
                 <span className="tabular-nums">{fullMoves(game.numMoves ?? 0)} moves</span>

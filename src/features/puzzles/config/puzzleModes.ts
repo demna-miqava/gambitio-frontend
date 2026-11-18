@@ -1,4 +1,4 @@
-import { Zap, Target, Skull, type LucideIcon } from "lucide-react";
+import { Zap, Target, Skull, Brain, type LucideIcon } from "lucide-react";
 import type { PuzzleMode } from "../types/puzzle.types";
 
 export interface PuzzleModeConfig {
@@ -31,5 +31,12 @@ export const PUZZLE_MODES: PuzzleModeConfig[] = [
     icon: Skull,
     iconColor: "text-loss",
     url: "survival",
+  },
+  {
+    title: "Calculate first",
+    description: "Enter the whole line before a piece moves. Three lives",
+    icon: Brain,
+    iconColor: "text-rapid",
+    url: "calculate",
   },
 ];
