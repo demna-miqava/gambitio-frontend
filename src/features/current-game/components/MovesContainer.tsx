@@ -256,19 +256,23 @@ export const MovesContainer = () => {
         )}
         <TypeMoveInput />
         {gameEnded ? (
-          <div className="space-y-3 pt-1">
-            {finish && (
-              <div className="text-center">
-                <p className="font-display text-lg text-foreground">
-                  {finish.title}
-                </p>
-                {finish.description && (
-                  <p className="text-sm text-muted-foreground">{finish.description}</p>
-                )}
-              </div>
-            )}
-            {postGame}
-          </div>
+          // While the result dialog is open it carries the result and the
+          // buttons; the panel shows them once it's closed
+          !openGameResultDialog && (
+            <div className="space-y-3 pt-1">
+              {finish && (
+                <div className="text-center">
+                  <p className="font-display text-lg text-foreground">
+                    {finish.title}
+                  </p>
+                  {finish.description && (
+                    <p className="text-sm text-muted-foreground">{finish.description}</p>
+                  )}
+                </div>
+              )}
+              {postGame}
+            </div>
+          )
         ) : (
           <MatchActions
             hasMoves={hasMoves}

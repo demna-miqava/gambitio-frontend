@@ -18,8 +18,9 @@ type GameResultDialogProps = {
 /**
  * The result, shown when the game ends here. Non-modal (no dimmed backdrop),
  * so the final position stays visible; Escape, the close button or a click
- * outside closes it, and the same actions stay in the side panel. On phones
- * it's a sheet along the bottom edge, below the board's top half.
+ * outside closes it, and the side panel shows the same actions once it is
+ * closed. On phones it's a sheet along the bottom edge, below the board's top
+ * half.
  */
 const GameResultDialog = ({
   open,
