@@ -1,13 +1,21 @@
 import type { PlayerColorOption } from "@/types/game.types";
 import { formatClock, formatTimeControl, timeOdds } from "@/utils/timeControl";
-import { bestOfLabel, isMirrorMatch } from "@/features/series/utils/seriesFormat";
+import { bestOfLabel, isMirrorMatch, timedMatchLabel } from "@/features/series/utils/seriesFormat";
 
 /**
  * "Best of 3" or "Mirror match" for a series challenge, "Game 2 of 3" (or
- * "Mirror match, game 2") for one that continues a series; null for a
- * single game.
+ * "Mirror match, game 2") for one that continues a series, "15-minute timed
+ * match" for a timed match; null for a single game.
  */
-export const describeMatchFormat = (bestOf: number | undefined, seriesGame?: number | null): string | null => {
+export const describeMatchFormat = (
+  bestOf: number | undefined,
+  seriesGame?: number | null,
+  matchMinutes?: number | null
+): string | null => {
+  if (matchMinutes != null) {
+    const label = timedMatchLabel(matchMinutes);
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  }
   if (!bestOf || bestOf <= 1) return null;
   if (!seriesGame) return bestOfLabel(bestOf);
   return isMirrorMatch(bestOf) ? `Mirror match, game ${seriesGame}` : `Game ${seriesGame} of ${bestOf}`;

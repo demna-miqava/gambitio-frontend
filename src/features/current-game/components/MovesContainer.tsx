@@ -282,6 +282,7 @@ export const MovesContainer = () => {
             canRequestTakeback={takeback.canRequestTakeback}
             disabled={!isConnected}
             tournament={tournamentId !== null}
+            noAbort={series?.matchMinutes != null && series.status === "active"}
           />
         )}
       </div>

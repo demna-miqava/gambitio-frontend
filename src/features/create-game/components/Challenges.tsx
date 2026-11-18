@@ -4,6 +4,7 @@ import { useIncomingChallenges } from "@/features/notifications/hooks/useIncomin
 import {
   describeChallengeColor,
   describeChallengeTime,
+  describeMatchFormat,
 } from "@/features/notifications/utils/challengeLabels";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDistance } from "date-fns";
@@ -74,6 +75,8 @@ export const Challenges = ({ className }: ChallengesProps) => {
                   )}
                 </p>
                 <p className="text-xs text-muted-foreground">
+                  {describeMatchFormat(challenge.bestOf, challenge.seriesGame, challenge.matchMinutes) &&
+                    `${describeMatchFormat(challenge.bestOf, challenge.seriesGame, challenge.matchMinutes)} · `}
                   <span className="tabular-nums">
                     {describeChallengeTime(challenge, challenge.username)}
                   </span>

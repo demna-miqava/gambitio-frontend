@@ -101,6 +101,7 @@ export const useChallengeMessageHandlers = ({
         bestOf: message.data.bestOf,
         rated: message.data.rated,
         opening: message.data.opening ?? null,
+        matchMinutes: message.data.matchMinutes ?? null,
         version: message.data.version,
       };
 

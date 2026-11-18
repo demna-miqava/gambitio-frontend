@@ -15,12 +15,21 @@ import type { SeriesDetail, SeriesSummary } from "../types";
 
 export const seriesKey = (seriesId: number) => [QKEY_SERIES, seriesId] as const;
 
+/** How often the page of a timed match in progress refreshes: its games come one after another */
+const TIMED_MATCH_REFRESH_MS = 5_000;
+
 /** A series with its games. */
 export const useSeries = (seriesId: number | null | undefined) =>
   useQuery({
     queryKey: seriesKey(seriesId ?? 0),
     queryFn: () => getSeries(seriesId!),
     enabled: !!seriesId,
+    refetchInterval: (query) => {
+      const series = query.state.data?.series;
+      return series && series.matchMinutes != null && series.status === "active"
+        ? TIMED_MATCH_REFRESH_MS
+        : false;
+    },
   });
 
 /** A player's series, newest first. */

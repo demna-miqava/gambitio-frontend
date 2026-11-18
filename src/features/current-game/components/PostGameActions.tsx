@@ -67,7 +67,10 @@ const PostGameActions = ({
   const rematchOffered = offered && started === null;
   const rematchRequested = requested && started === null;
   const { isSearching, isConnecting, setShouldConnect } = search;
-  const nextGame = series?.status === "active" && started === null ? series.next : null;
+  // A timed match starts its next game by itself: no rematch, and no new
+  // game that would take a player out of the match
+  const timedMatchOn = series?.matchMinutes != null && series.status === "active";
+  const nextGame = series?.status === "active" && started === null && !timedMatchOn ? series.next : null;
   const rematchLabel = nextGame ? `Next game (${nextGame.number} of ${series!.bestOf})` : "Rematch";
   // Leave the queue first, or matchmaking could pair us into a second game
   const acceptRematchAndStopSearch = () => {
@@ -113,7 +116,12 @@ const PostGameActions = ({
           Cancel search
         </Button>
       )}
-      {!rematchOffered && !rematchRequested && (
+      {timedMatchOn && started !== null && (
+        <Button size="md" asChild className="w-full">
+          <Link to={getGameRoute(started)}>Go to next game</Link>
+        </Button>
+      )}
+      {!rematchOffered && !rematchRequested && !timedMatchOn && (
         <div className="flex w-full gap-2">
           <Button size="md"
             variant={isSearching ? "outline" : "secondary"}

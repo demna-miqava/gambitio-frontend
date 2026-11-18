@@ -2,31 +2,43 @@ import type { StoredGameListItem } from "@/types";
 import type { OpeningSummary } from "@/features/openings/startingOpenings";
 
 /**
- * A friend series (best of 3 or 5, or a mirror match: two games, one with
- * each colour), as the server sends it (SeriesSummary in the backend's
+ * A friend series (best of 3 or 5, a mirror match: two games, one with each
+ * colour, or a timed match: as many games as fit in a fixed time, scored like
+ * an arena), as the server sends it (SeriesSummary in the backend's
  * services/seriesService.ts).
  */
 export type SeriesStatus = "active" | "finished";
 /**
  * "played_out": decided by the games; "resignation": a player gave it up;
- * "expired": nobody played on for a week, so it ended on points
+ * "expired": nobody played on for a week, so it ended on points. A timed
+ * match: "time_up", decided on points when the time ran out; "abandoned",
+ * on points after the players kept not making their first move
  */
-export type SeriesEndReason = "played_out" | "resignation" | "expired";
+export type SeriesEndReason = "played_out" | "resignation" | "expired" | "time_up" | "abandoned";
 
 export interface SeriesPlayer {
   id: number;
   username: string;
   avatarUrl: string | null;
-  /** Points; a draw is half a point */
+  /** Points; a draw is half a point. In a timed match, arena points (2 a win, 1 a draw) */
   score: number;
   /** Their starting clock in seconds when the series has time odds; null otherwise */
   time?: number | null;
+  /** Wins in a row: in a timed match, from TIMED_STREAK_AFTER on points count double */
+  streak?: number;
 }
 
 export interface SeriesSummary {
   id: number;
   createdAt: string;
+  /** 0 for a timed match */
   bestOf: number;
+  /** A timed match's length in minutes; null or missing for a best-of series */
+  matchMinutes?: number | null;
+  /** When a timed match's time is up */
+  endsAt?: string | null;
+  /** After this no new game of a timed match starts (the one being played still counts) */
+  lastGameStartsBy?: string | null;
   /** The longer clock when the series has time odds (see SeriesPlayer.time) */
   time: number;
   increment: number;

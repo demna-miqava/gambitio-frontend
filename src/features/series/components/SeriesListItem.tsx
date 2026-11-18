@@ -4,7 +4,7 @@ import { getSeriesRoute } from "@/constants/routes";
 import { cn } from "@/lib/utils";
 import type { SeriesSummary } from "../types";
 import {
-  bestOfLabel,
+  seriesFormatLabel,
   formatScoreline,
   playersFor,
   seriesOutcomeFor,
@@ -60,7 +60,7 @@ export const SeriesListItem = ({
             {left.username} <span className="text-muted-foreground">vs</span> {right.username}
           </span>
           <span className="block truncate text-xs text-muted-foreground">
-            {bestOfLabel(series.bestOf)} · {seriesStatusLabel(series, viewerId)}
+            {seriesFormatLabel(series)} · {seriesStatusLabel(series, viewerId)}
           </span>
         </span>
         <span className="shrink-0 font-medium tabular-nums">

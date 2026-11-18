@@ -5,10 +5,13 @@ import { cn } from "@/lib/utils";
 import type { SeriesSummary } from "../types";
 import {
   formatScoreline,
+  isTimedMatch,
   playersFor,
+  seriesNoun,
   seriesOutcomeFor,
   seriesStatusLabel,
 } from "../utils/seriesFormat";
+import { MatchClock } from "./MatchClock";
 
 /**
  * After a series game: the series result when it's over, or the score and
@@ -26,6 +29,8 @@ export const SeriesResultNote = ({
   const [left, right] = playersFor(series, viewerId);
   const outcome = seriesOutcomeFor(series, viewerId);
   const over = series.status === "finished";
+  const timed = isTimedMatch(series);
+  const noun = seriesNoun(series);
 
   return (
     <div
@@ -40,14 +45,21 @@ export const SeriesResultNote = ({
     >
       <p className="flex items-center gap-1.5 text-sm font-medium">
         {over && <Trophy className="size-4" aria-hidden="true" />}
-        {over ? seriesStatusLabel(series, viewerId) : `Series score ${formatScoreline(left, right)}`}
+        {over
+          ? seriesStatusLabel(series, viewerId)
+          : `${timed ? "Match" : "Series"} score ${formatScoreline(left, right)}`}
         {over && <span className="tabular-nums">({formatScoreline(left, right)})</span>}
       </p>
+      {timed && !over && (
+        <p className="text-xs text-muted-foreground">
+          The next game starts in a moment · <MatchClock series={series} />
+        </p>
+      )}
       <Link
         to={getSeriesRoute(series.id)}
         className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
       >
-        View series
+        View {noun}
       </Link>
     </div>
   );

@@ -24,7 +24,7 @@ const ChallengeNotification = ({
   onDecline,
 }: ChallengeNotificationProps) => {
   const { challengerId, username, avatarUrl, color, rating, bestOf, seriesGame } = challenge;
-  const format = describeMatchFormat(bestOf, seriesGame);
+  const format = describeMatchFormat(bestOf, seriesGame, challenge.matchMinutes);
   const opening = describeChallengeOpening(challenge.opening);
 
   return (

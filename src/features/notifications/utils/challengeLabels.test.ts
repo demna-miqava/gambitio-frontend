@@ -64,6 +64,7 @@ describe("mirror matches and openings", () => {
   it("names a mirror match and the game a continued one goes on with", () => {
     expect(describeMatchFormat(2)).toBe("Mirror match");
     expect(describeMatchFormat(2, 2)).toBe("Mirror match, game 2");
+    expect(describeMatchFormat(1, null, 15)).toBe("15-minute timed match");
   });
 
   it("names the opening a challenge starts from", () => {

@@ -8,6 +8,9 @@ import {
   playersFor,
   seriesOutcomeFor,
   seriesStatusLabel,
+  seriesFormatLabel,
+  gameFitsMatch,
+  matchPhase,
 } from "./seriesFormat";
 
 const series = (overrides: Partial<SeriesSummary> = {}): SeriesSummary => ({
@@ -108,5 +111,52 @@ describe("mirror matches", () => {
     expect(seriesStatusLabel(series({ ...finished, winnerId: null }))).toBe("Drawn match");
     expect(seriesStatusLabel(series({ ...finished, winnerId: 1 }), 1)).toBe("You won the match");
     expect(seriesStatusLabel(series({ bestOf: 2 }))).toBe("Game 2 of 2");
+  });
+});
+
+describe("timed matches", () => {
+  const timed = (overrides: Partial<SeriesSummary> = {}) =>
+    series({
+      bestOf: 0,
+      matchMinutes: 15,
+      playerOne: { id: 1, username: "alice", avatarUrl: null, score: 6, streak: 3 },
+      playerTwo: { id: 2, username: "bobby", avatarUrl: null, score: 2, streak: 0 },
+      next: { number: 4, whiteId: 2, blackId: 1 },
+      ...overrides,
+    });
+
+  it("names the format and has no game count", () => {
+    expect(seriesFormatLabel(timed())).toBe("15-minute timed match");
+    expect(seriesFormatLabel(series())).toBe("Best of 3");
+    expect(seriesStatusLabel(timed(), 1)).toBe("Game 4");
+    expect(formatScoreline(timed().playerOne, timed().playerTwo)).toBe("6–2");
+  });
+
+  it("says match, and how it ended", () => {
+    const over = { status: "finished" as const, next: null, winnerId: 1 };
+    expect(seriesStatusLabel(timed({ ...over, endReason: "time_up" }), 2)).toBe("alice won the match");
+    expect(seriesStatusLabel(timed({ ...over, endReason: "abandoned" }), 1)).toBe("You won the match (abandoned)");
+    expect(seriesStatusLabel(timed({ ...over, winnerId: null, endReason: "time_up" }))).toBe("Drawn match");
+  });
+
+  it("checks that a game fits in the match", () => {
+    expect(gameFitsMatch(180, 2, 15)).toBe(true);
+    expect(gameFitsMatch(600, 0, 15)).toBe(false);
+    expect(gameFitsMatch(60, 0, 5)).toBe(true);
+  });
+});
+
+describe("matchPhase", () => {
+  const at = (iso: string) => new Date(iso).getTime();
+  const s = series({
+    matchMinutes: 15,
+    endsAt: "2026-11-18T12:15:00Z",
+    lastGameStartsBy: "2026-11-18T12:14:00Z",
+  });
+  it("counts down, then the last game, then time's up", () => {
+    expect(matchPhase(s, at("2026-11-18T12:10:00Z"))).toEqual({ kind: "running", msLeft: 300_000 });
+    expect(matchPhase(s, at("2026-11-18T12:14:30Z"))).toEqual({ kind: "last-game", msLeft: 30_000 });
+    expect(matchPhase(s, at("2026-11-18T12:15:01Z"))).toEqual({ kind: "over" });
+    expect(matchPhase({ ...s, status: "finished" }, at("2026-11-18T12:10:00Z"))).toEqual({ kind: "over" });
   });
 });

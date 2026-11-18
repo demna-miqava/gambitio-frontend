@@ -82,6 +82,7 @@ export const useManageChallenge = (
           bestOf: sent.bestOf,
           rated: sent.rated !== false,
           opening: sent.opening ?? null,
+          matchMinutes: sent.matchMinutes ?? null,
           ...(sent.seriesId ? { seriesId: sent.seriesId } : {}),
           ...(sent.seriesGame ? { seriesGame: sent.seriesGame } : {}),
           sentAt: new Date(sent.createdAt).getTime(),

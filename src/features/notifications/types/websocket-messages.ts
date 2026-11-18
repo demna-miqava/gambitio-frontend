@@ -39,6 +39,11 @@ export type SendChallengeMessage = {
      * length and colours from it, and the challenged player must be the opponent
      */
     seriesId?: number;
+    /**
+     * A timed match of this many minutes (MATCH_MINUTES) instead of one
+     * game: as many games as fit, arena scoring. Only with bestOf 1
+     */
+    matchMinutes?: number;
   };
 };
 
@@ -94,6 +99,8 @@ export type ChallengeReceivedNotification = {
     rated?: boolean;
     /** The opening the game starts from; null for the initial position */
     opening?: OpeningSummary | null;
+    /** A timed match of this many minutes; null for a single game or a best-of */
+    matchMinutes?: number | null;
     /** Changes whenever the challenger changes the terms; sent back when accepting */
     version?: number;
   };
@@ -182,6 +189,8 @@ export type Challenge = {
   rated?: boolean;
   /** The opening the game starts from; null or missing for the initial position */
   opening?: OpeningSummary | null;
+  /** A timed match of this many minutes; null or missing otherwise */
+  matchMinutes?: number | null;
   /**
    * Changes whenever the challenger changes the terms (REST and socket);
    * sent back when accepting, so the player only accepts what they saw
@@ -210,6 +219,8 @@ export type OutgoingChallenge = {
   rated?: boolean;
   /** The opening the game starts from; null or missing for the initial position */
   opening?: OpeningSummary | null;
+  /** A timed match of this many minutes; null or missing otherwise */
+  matchMinutes?: number | null;
   /** Set when it continues a series: the game it would start */
   seriesId?: number;
   seriesGame?: number;

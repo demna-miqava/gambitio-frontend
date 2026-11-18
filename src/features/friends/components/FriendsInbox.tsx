@@ -15,6 +15,7 @@ import { useIncomingChallenges } from "@/features/notifications/hooks/useIncomin
 import {
   describeChallengeColor,
   describeChallengeTime,
+  describeMatchFormat,
 } from "@/features/notifications/utils/challengeLabels";
 import type { FriendRequest } from "../types";
 import { usePendingFriendRequests } from "../requests/hooks/usePendingFriendRequests";
@@ -231,7 +232,13 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
                   userId={challenge.challengerId}
                   username={challenge.username}
                   avatarUrl={challenge.avatarUrl}
-                  detail={`${describeChallengeTime(challenge, challenge.username)} · ${describeChallengeColor(challenge.color)}`}
+                  detail={[
+                    describeMatchFormat(challenge.bestOf, challenge.seriesGame, challenge.matchMinutes),
+                    describeChallengeTime(challenge, challenge.username),
+                    describeChallengeColor(challenge.color),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 >
                   <Button
                     size="icon"

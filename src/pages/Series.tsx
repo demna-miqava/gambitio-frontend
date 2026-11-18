@@ -18,7 +18,13 @@ import { getGameRoute } from "@/constants/routes";
 import { SeriesScoreboard } from "@/features/series/components/SeriesScoreboard";
 import { SeriesGamesList } from "@/features/series/components/SeriesGamesList";
 import { useResignSeries, useSeries } from "@/features/series/hooks/useSeries";
-import { bestOfLabel, isMirrorMatch, nextGameLabel } from "@/features/series/utils/seriesFormat";
+import {
+  isMirrorMatch,
+  isTimedMatch,
+  nextGameLabel,
+  seriesFormatLabel,
+  seriesNoun,
+} from "@/features/series/utils/seriesFormat";
 import { parsePositiveId } from "@/utils/ids";
 
 const SeriesSkeleton = () => (
@@ -42,7 +48,7 @@ const Series = () => {
 
   const series = data?.series;
   useDocumentTitle(
-    series ? `${series.playerOne.username} vs ${series.playerTwo.username} · ${bestOfLabel(series.bestOf)}` : "Series"
+    series ? `${series.playerOne.username} vs ${series.playerTwo.username} · ${seriesFormatLabel(series)}` : "Series"
   );
 
   const notFound = !validId || (isAxiosError(error) && error.response?.status === 404);
@@ -63,6 +69,8 @@ const Series = () => {
   const isPlayer =
     !!series && (viewerId === series.playerOne.id || viewerId === series.playerTwo.id);
   const active = series?.status === "active";
+  const timed = !!series && isTimedMatch(series);
+  const noun = series ? seriesNoun(series) : "series";
   const liveGameId = data?.liveGameId ?? null;
   const next = series ? nextGameLabel(series, viewerId) : null;
   const opponent =
@@ -94,13 +102,15 @@ const Series = () => {
   return (
     <PageContainer className="max-w-3xl space-y-6">
       <PageHeader
-        title="Series"
+        title={timed ? "Timed match" : "Series"}
         description={
           series
-            ? `${series.playerOne.username} challenged ${series.playerTwo.username} to a ${bestOfLabel(series.bestOf).toLowerCase()}${series.opening ? ` from the ${series.opening.name}` : ""}. ${
-                isMirrorMatch(series.bestOf)
-                  ? "Each plays it once with each colour, scored as a pair."
-                  : "Colours alternate every game."
+            ? `${series.playerOne.username} challenged ${series.playerTwo.username} to a ${seriesFormatLabel(series).toLowerCase()}${series.opening ? ` from the ${series.opening.name}` : ""}. ${
+                timed
+                  ? "As many games as fit in the time, colours swapping every game; most points wins."
+                  : isMirrorMatch(series.bestOf)
+                    ? "Each plays it once with each colour, scored as a pair."
+                    : "Colours alternate every game."
               }`
             : undefined
         }
@@ -118,9 +128,11 @@ const Series = () => {
                 <p className="flex-1 text-sm">
                   {liveGameId
                     ? `Game ${series.next?.number ?? ""} is being played.`
-                    : next
-                      ? `${next}.${isPlayer && opponent ? ` Challenge ${opponent.username} when you're both ready.` : ""}`
-                      : null}
+                    : timed
+                      ? "The next game starts in a moment."
+                      : next
+                        ? `${next}.${isPlayer && opponent ? ` Challenge ${opponent.username} when you're both ready.` : ""}`
+                        : null}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {liveGameId ? (
@@ -132,24 +144,33 @@ const Series = () => {
                   ) : (
                     isPlayer &&
                     opponent &&
-                    !waiting && (
+                    !waiting &&
+                    !timed && (
                       <Button size="md" onClick={continueSeries}>
                         <Swords aria-hidden="true" /> Play game {series.next?.number}
                       </Button>
                     )
                   )}
-                  {isPlayer && !liveGameId && (
+                  {isPlayer && (!liveGameId || timed) && (
                     <Button size="md" variant="outline" onClick={() => setConfirmResign(true)}>
-                      <Flag aria-hidden="true" /> Resign series
+                      <Flag aria-hidden="true" /> Resign {noun}
                     </Button>
                   )}
                 </div>
               </div>
               {waiting && !liveGameId && <OutgoingChallengeCard />}
-              {!liveGameId && (
+              {timed ? (
                 <p className="text-xs text-muted-foreground">
-                  A series with no game for a week ends on points: the leader wins, or it's drawn.
+                  No new game starts in the last minute; a game still going when the time is up is
+                  played out and counts. Not making your first move loses the game, and two such
+                  games in a row end the match.
                 </p>
+              ) : (
+                !liveGameId && (
+                  <p className="text-xs text-muted-foreground">
+                    A series with no game for a week ends on points: the leader wins, or it's drawn.
+                  </p>
+                )
               )}
             </section>
           )}
@@ -166,9 +187,13 @@ const Series = () => {
           <ConfirmDialog
             open={confirmResign}
             onOpenChange={setConfirmResign}
-            title="Resign this series?"
-            description="Your opponent wins the series. The games already played keep their results."
-            confirmLabel="Resign series"
+            title={`Resign this ${noun}?`}
+            description={
+              timed && liveGameId
+                ? "You resign the game being played, and your opponent wins the match."
+                : `Your opponent wins the ${noun}. The games already played keep their results.`
+            }
+            confirmLabel={`Resign ${noun}`}
             destructive
             isPending={resign.isPending}
             onConfirm={() =>

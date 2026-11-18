@@ -18,7 +18,7 @@ export const OutgoingChallengeCard = ({ className }: { className?: string }) => 
   const { outgoingChallenge, cancelChallenge } = useChallenges();
   if (!outgoingChallenge) return null;
   const { username, color, bestOf, seriesGame } = outgoingChallenge;
-  const format = describeMatchFormat(bestOf, seriesGame);
+  const format = describeMatchFormat(bestOf, seriesGame, outgoingChallenge.matchMinutes);
   const opening = describeChallengeOpening(outgoingChallenge.opening);
 
   return (

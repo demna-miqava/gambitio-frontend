@@ -23,6 +23,8 @@ export type SentChallenge = {
   rated?: boolean;
   /** The opening the game starts from; null for the initial position */
   opening?: OpeningSummary | null;
+  /** A timed match of this many minutes; null otherwise */
+  matchMinutes?: number | null;
 };
 
 export const getChallenges = async (): Promise<Challenge[]> => {

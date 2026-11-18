@@ -28,6 +28,8 @@ interface MatchActionsProps {
    * the first move) and has no takebacks
    */
   tournament?: boolean;
+  /** A timed match game: every game counts, so it can't be aborted either (takebacks are fine) */
+  noAbort?: boolean;
 }
 
 /** Abort, or Resign, Offer draw and Takeback, while the game is on. */
@@ -43,11 +45,12 @@ const MatchActions = ({
   canRequestTakeback,
   disabled,
   tournament = false,
+  noAbort = false,
 }: MatchActionsProps) => {
   const { settings } = useSettings();
   const confirmDrawResignationEnabled = settings?.confirmDrawResignationEnabled;
 
-  if (!hasMoves && !tournament) {
+  if (!hasMoves && !tournament && !noAbort) {
     return (
       <ActionButton
         variant="abort"
