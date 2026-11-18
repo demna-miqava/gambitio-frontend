@@ -228,7 +228,7 @@ export const FriendInviteOptions = () => {
 
           <Button
             size="xl"
-            className="w-full"
+            className="h-auto min-h-12 w-full whitespace-normal py-2.5"
             onClick={() =>
               sendChallenge(
                 {
@@ -244,14 +244,25 @@ export const FriendInviteOptions = () => {
               )
             }
           >
-            Send{" "}
-            <span className="tabular-nums">
-              {hasOdds
-                ? formatTimeOdds(ownTime, friendTime)
-                : formatTimeControl(timeControl.time, timeControl.increment)}
-            </span>{" "}
-            {isUnrated && "unrated "}
-            {bestOf > 1 ? `best-of-${bestOf} challenge` : "challenge"}
+            {/*
+              Two parts that never break inside, so a long label (time odds
+              and a series) wraps between them on a narrow screen. Each is
+              one element: the button is a flex row with a gap, which would
+              space loose text nodes apart
+            */}
+            <span className="flex flex-wrap justify-center gap-x-1.5">
+              <span className="whitespace-nowrap">
+                Send {isUnrated && "unrated "}
+                {bestOf > 1 && `best-of-${bestOf} `}challenge
+              </span>
+              <span className="whitespace-nowrap tabular-nums opacity-80">
+                (
+                {hasOdds
+                  ? formatTimeOdds(ownTime, friendTime)
+                  : formatTimeControl(timeControl.time, timeControl.increment)}
+                )
+              </span>
+            </span>
           </Button>
           {outgoingChallenge && (
             <p className="-mt-3 text-center text-xs text-muted-foreground">

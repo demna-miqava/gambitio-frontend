@@ -52,6 +52,22 @@ export const formatTimeOdds = (
   `${formatClock(first)} vs ${formatClock(second)}${increment ? `, +${increment} sec` : ""}`;
 
 /**
+ * A shorter time label for tight spaces: "5+0", or with time odds both
+ * clocks in the same notation, white's first: "10+0 vs 2+0".
+ */
+export const formatCompactGameTime = (game: {
+  time: number;
+  increment?: number | null;
+  whiteTime?: number | null;
+  blackTime?: number | null;
+}): string => {
+  const odds = timeOdds(game.whiteTime, game.blackTime);
+  return odds
+    ? `${formatTimeControl(odds[0], game.increment)} vs ${formatTimeControl(odds[1], game.increment)}`
+    : formatTimeControl(game.time, game.increment);
+};
+
+/**
  * The time label of a game: "5+0", or both clocks (white's first) when the
  * game has time odds.
  */

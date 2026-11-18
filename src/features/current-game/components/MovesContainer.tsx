@@ -14,7 +14,7 @@ import { useDrawOffer } from "../hooks/useDrawOffer";
 import { useTakeback } from "../hooks/useTakeback";
 import { useGameActions } from "../hooks/useGameActions";
 import { useRematch } from "../hooks/useRematch";
-import { formatGameTime, hasTimeOdds } from "@/utils/timeControl";
+import { formatCompactGameTime, formatGameTime, hasTimeOdds } from "@/utils/timeControl";
 import { OpeningName } from "@/features/openings";
 import { useShownLine } from "@/features/game/hooks/useShownLine";
 import { useLiveSeries } from "@/features/series/hooks/useLiveSeries";
@@ -115,6 +115,9 @@ export const MovesContainer = () => {
   const hasTabs = isLarge && chat.available && !focus.active;
   const showChat = hasTabs && view === "chat";
   const chatOffByOpponent = chat.offReason === "off_by_opponent";
+  const hasOdds = hasTimeOdds(game.whiteTime, game.blackTime);
+  const gameKind =
+    tournamentId !== null ? "tournament" : game.rated === false || hasOdds ? "unrated" : game.type;
 
   const tools = (
     <div className="flex items-center gap-0.5">
@@ -178,11 +181,19 @@ export const MovesContainer = () => {
             <ChatMuteButton />
           ) : (
             !focus.active && (
-              <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="tabular-nums">{formatGameTime(game)}</span>
-                <span className="truncate capitalize">
-                  · {tournamentId !== null ? "tournament" : game.rated === false || hasTimeOdds(game.whiteTime, game.blackTime) ? "unrated" : game.type}
-                </span>
+              // Shares a row with the tabs and tools. The compact clocks never
+              // wrap; with time odds (two clocks) the kind of game goes under
+              // them instead of beside, so neither is cut off
+              <span
+                className={cn(
+                  "flex min-w-0 whitespace-nowrap text-xs text-muted-foreground",
+                  hasOdds ? "flex-col items-end leading-tight" : "items-center gap-1"
+                )}
+                title={`${formatGameTime(game)} · ${gameKind}`}
+              >
+                <span className="shrink-0 tabular-nums">{formatCompactGameTime(game)}</span>
+                {!hasOdds && <span aria-hidden="true">·</span>}
+                <span className="truncate capitalize">{gameKind}</span>
               </span>
             )
           )}

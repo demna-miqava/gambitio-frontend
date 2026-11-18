@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatClock,
+  formatCompactGameTime,
   formatGameTime,
   formatTimeControl,
   formatTimeOdds,
@@ -61,6 +62,18 @@ describe("time odds", () => {
     expect(formatGameTime({ time: 300, increment: 0, whiteTime: null, blackTime: null })).toBe("5+0");
     expect(formatGameTime({ time: 300, increment: 2, whiteTime: 60, blackTime: 300 })).toBe(
       "1 min vs 5 min, +2 sec"
+    );
+  });
+});
+
+describe("formatCompactGameTime", () => {
+  it("writes both clocks in minutes+increment, white's first", () => {
+    expect(formatCompactGameTime({ time: 300, increment: 0 })).toBe("5+0");
+    expect(formatCompactGameTime({ time: 600, increment: 0, whiteTime: 600, blackTime: 120 })).toBe(
+      "10+0 vs 2+0"
+    );
+    expect(formatCompactGameTime({ time: 180, increment: 2, whiteTime: 30, blackTime: 180 })).toBe(
+      "½+2 vs 3+2"
     );
   });
 });
