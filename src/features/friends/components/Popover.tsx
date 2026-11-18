@@ -25,9 +25,15 @@ const FriendPopover = ({
   data,
   canChallenge = true,
   presence,
+  onNavigate,
 }: {
   children: React.ReactNode;
   data: Friend;
+  /**
+   * Called as Profile, Watch or Challenge is followed, e.g. to close the
+   * popover this one sits in: the link may keep the path (/play to /play)
+   */
+  onNavigate?: () => void;
   /** Off on other players' profiles: their friends may not be yours */
   canChallenge?: boolean;
   /** Known for your own friends: online, playing (with the game), or null */
@@ -61,19 +67,25 @@ const FriendPopover = ({
         </div>
         <div className={canChallenge || watchGameId !== null ? "grid grid-cols-2 gap-2" : "grid"}>
           <Button asChild variant="outline" size="sm">
-            <Link to={getProfileRoute(id)}>
+            <Link to={getProfileRoute(id)} onClick={onNavigate}>
               <UserRound aria-hidden="true" /> Profile
             </Link>
           </Button>
           {watchGameId !== null ? (
             <Button asChild size="sm">
-              <Link to={getGameRoute(watchGameId)}>
+              <Link to={getGameRoute(watchGameId)} onClick={onNavigate}>
                 <Eye aria-hidden="true" /> Watch
               </Link>
             </Button>
           ) : (
             canChallenge && (
-              <Button size="sm" onClick={() => onChallenge(data)}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  onNavigate?.();
+                  onChallenge(data);
+                }}
+              >
                 <Swords aria-hidden="true" /> Challenge
               </Button>
             )

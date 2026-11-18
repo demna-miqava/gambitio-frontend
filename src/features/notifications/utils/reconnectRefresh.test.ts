@@ -5,6 +5,7 @@ import {
   QKEY_FRIEND_STATUSES,
   QKEY_GAME_BY_ID,
   QKEY_PENDING_FRIEND_REQUESTS,
+  QKEY_TABLE_GAME_REQUESTS,
   QKEY_USER_FRIENDS,
 } from "@/constants/queryKeys";
 import { mayBeStaleAfterReconnect } from "./reconnectRefresh";
@@ -17,6 +18,10 @@ describe("mayBeStaleAfterReconnect", () => {
 
   it("refreshes which friends are online", () => {
     expect(mayBeStaleAfterReconnect([QKEY_FRIEND_STATUSES], 7)).toBe(true);
+  });
+
+  it("refreshes table games waiting to be confirmed (a request may have come while offline)", () => {
+    expect(mayBeStaleAfterReconnect([QKEY_TABLE_GAME_REQUESTS], 7)).toBe(true);
   });
 
   it("refreshes only the signed-in player's own friend lists", () => {

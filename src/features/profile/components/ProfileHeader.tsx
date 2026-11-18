@@ -4,20 +4,21 @@ import { ProfileActions } from "./ProfileActions";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfileUserId } from "@/hooks/useProfileUserId";
-import { useUser } from "@/hooks/useUser";
 import { useAvatarSrc } from "@/hooks/useAvatarSrc";
 import { useFriendStatuses } from "@/features/friends/status/useFriendStatuses";
 import { AvatarWithPresence } from "@/features/friends/status/Presence";
+import { isFriendship, useFriendship } from "../hooks/useFriendship";
 
 /** Avatar, name and join date, with the actions for this player beside them. */
 const ProfileHeader = () => {
   const { profile, isPending } = useUserProfile();
   const profileUserId = useProfileUserId();
-  const { id: currentUserId } = useUser();
-  const isOwnProfile = profileUserId === currentUserId;
   const avatarSrc = useAvatarSrc();
-  // Known only for the signed-in user's friends
-  const presence = useFriendStatuses({ enabled: !isOwnProfile }).byId.get(profileUserId);
+  // Known only for the signed-in user's friends: polled only on a friend's
+  // profile (the same lookup ProfileActions makes, so no extra request)
+  const isFriend = isFriendship(useFriendship(profile));
+  const statuses = useFriendStatuses({ enabled: isFriend });
+  const presence = isFriend ? statuses.byId.get(profileUserId) : undefined;
   const liveGameId = presence?.gameId ?? undefined;
 
   // Same boxes as the loaded header (avatar, name and meta lines, the action
@@ -49,7 +50,7 @@ const ProfileHeader = () => {
     <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <div className="flex min-w-0 items-center gap-4 sm:gap-6">
         <AvatarWithPresence
-          presence={isOwnProfile ? null : presence}
+          presence={presence}
           dotClassName="-right-1 -bottom-1 size-4 ring-[3px] ring-background sm:size-5"
         >
           <UserAvatar

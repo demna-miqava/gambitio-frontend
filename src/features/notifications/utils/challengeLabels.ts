@@ -35,6 +35,59 @@ export const isCasualChallenge = (challenge: {
   opponentTime?: number | null;
 }): boolean => challenge.rated === false && !timeOdds(challenge.ownTime, challenge.opponentTime);
 
+/** A challenge's terms, as the toast, the inbox, the challenges list and the "waiting" card show them */
+export interface ChallengeTerms {
+  /** "Best of 3", "Mirror match, game 2", "15-minute timed match"; null for a single game */
+  format: string | null;
+  /** "5+0", or "Time odds: you 5 min, alice 1 min" */
+  time: string;
+  /** Unrated without time odds (the odds already say so) */
+  unrated: boolean;
+  /** "You play white", or "You play white first" for a new match */
+  color: string;
+  /** "From the Sicilian Defense"; null for the initial position */
+  opening: string | null;
+}
+
+type ChallengeLike = {
+  time: number;
+  increment: number;
+  ownTime?: number | null;
+  opponentTime?: number | null;
+  color: PlayerColorOption;
+  bestOf?: number;
+  seriesGame?: number | null;
+  matchMinutes?: number | null;
+  rated?: boolean;
+  opening?: { name: string } | null;
+};
+
+/**
+ * Everything a challenge's summary says, piece by piece, so each place can
+ * style the pieces its own way. `opponent` is the other player's name;
+ * `firstColor` says "first" after the colour of a new match (off for the
+ * sender's own card).
+ */
+export const describeChallengeTerms = (
+  challenge: ChallengeLike,
+  opponent: string,
+  { firstColor = true }: { firstColor?: boolean } = {}
+): ChallengeTerms => {
+  const format = describeMatchFormat(challenge.bestOf, challenge.seriesGame, challenge.matchMinutes);
+  const color = describeChallengeColor(challenge.color);
+  return {
+    format,
+    time: describeChallengeTime(challenge, opponent),
+    unrated: isCasualChallenge(challenge),
+    color: firstColor && format && !challenge.seriesGame ? `${color} first` : color,
+    opening: describeChallengeOpening(challenge.opening),
+  };
+};
+
+/** The terms but the opening on one line: "Best of 3 · 5+0 · Unrated · You play white first" */
+export const challengeTermsLine = ({ format, time, unrated, color }: ChallengeTerms): string =>
+  [format, time, unrated && "Unrated", color].filter(Boolean).join(" · ");
+
 /** "You play white" / "You play black" / "Random colors", from the receiver's side. */
 export const describeChallengeColor = (color: PlayerColorOption): string => {
   switch (color) {

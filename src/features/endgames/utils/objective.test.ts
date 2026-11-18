@@ -5,6 +5,7 @@ import {
   countPlayerMoves,
   evaluateObjective,
   formatAdvantage,
+  hasSlipped,
   isHanging,
   objectiveLabel,
 } from "./objective";
@@ -199,6 +200,18 @@ describe("conversions", () => {
       1
     );
     expect(result.status).toBe("failure");
+  });
+
+  it("tells when the lead has dipped, before the attempt fails", () => {
+    expect(hasSlipped(null)).toBe(false);
+    expect(hasSlipped(cp(-400))).toBe(false);
+    expect(hasSlipped(cp(-150))).toBe(false);
+    expect(hasSlipped(cp(-149))).toBe(true);
+    expect(hasSlipped(cp(80))).toBe(true);
+    expect(hasSlipped(mate(-4))).toBe(false);
+    expect(hasSlipped(mate(4))).toBe(true);
+    // One dip alone doesn't fail it
+    expect(conversionVerdict([cp(-400), cp(-100)])).toBeNull();
   });
 
   it("reads advantages from the player's side", () => {

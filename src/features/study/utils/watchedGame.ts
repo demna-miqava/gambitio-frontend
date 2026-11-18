@@ -121,6 +121,38 @@ export function applyWatchedGameMessage(
   }
 }
 
+/**
+ * How the room's connection to the game stands:
+ * - connecting: not open yet; reconnecting: was open, dropped, retrying
+ * - open: connected; ended: the game is over, so the socket no longer matters
+ * - refused: the server wouldn't open the game (an error before its state);
+ *   retrying on its own would only be refused again
+ * - lost: gave up retrying (Retry starts again)
+ */
+export type WatchedGameStatus = "connecting" | "open" | "reconnecting" | "ended" | "refused" | "lost";
+
+export function watchedGameStatus(socket: {
+  game: Pick<WatchedGame, "inProgress"> | null;
+  open: boolean;
+  hasOpened: boolean;
+  refused: boolean;
+  gaveUp: boolean;
+}): WatchedGameStatus {
+  if (socket.game && !socket.game.inProgress) return "ended";
+  if (socket.refused) return "refused";
+  if (socket.open) return "open";
+  if (socket.gaveUp) return "lost";
+  return socket.hasOpened ? "reconnecting" : "connecting";
+}
+
+/**
+ * Whether the game socket should reconnect after it closed: not once the
+ * game is over (a finished game sends nothing more), nor after the server
+ * refused it.
+ */
+export const shouldReconnectToGame = (game: Pick<WatchedGame, "inProgress"> | null, refused: boolean): boolean =>
+  !refused && game?.inProgress !== false;
+
 const REASONS: Record<GameEndReason, string> = {
   resignation: "by resignation",
   draw_agreement: "by agreement",

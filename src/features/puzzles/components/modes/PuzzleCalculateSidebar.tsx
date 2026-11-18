@@ -12,6 +12,7 @@ import { useCalculateMode } from "../../contexts";
 import { PuzzleFeedNotice } from "../shared/PuzzleFeedNotice";
 import { PuzzleThemes } from "../shared/PuzzleThemes";
 import { isPlayerIndex, moveLabels } from "../../utils/calculateLine";
+import { movesToEnter } from "../../utils/calculateAttempt";
 import { PUZZLE_CONFIG } from "../../constants/puzzle.constants";
 
 const LIVES = PUZZLE_CONFIG.CALCULATE.INITIAL_LIVES;
@@ -22,12 +23,15 @@ const LineSlots = ({
   fen,
   sans,
   length,
+  played = 0,
   mark,
   label,
 }: {
   fen: string;
   sans: string[];
   length: number;
+  /** Moves at the start already played on the board (after a reply predicted differently) */
+  played?: number;
   /** Index of the move to mark wrong (red) or as the reply that differed (amber) */
   mark?: { index: number; kind: "wrong" | "differs" };
   label: string;
@@ -39,12 +43,14 @@ const LineSlots = ({
         const san = sans[i];
         const own = isPlayerIndex(i);
         const marked = mark?.index === i ? mark.kind : null;
+        const isPlayed = i < played;
         return (
           <li
             key={i}
             className={cn(
               "flex min-h-9 items-center gap-1.5 rounded-lg px-2.5",
               own ? "bg-muted" : "bg-muted/50",
+              isPlayed && "opacity-60",
               marked === "wrong" && "bg-loss-bg text-loss",
               marked === "differs" && "text-blitz ring-1 ring-blitz ring-inset"
             )}
@@ -59,6 +65,7 @@ const LineSlots = ({
             )}
             <span className="sr-only">
               {own ? " (your move)" : " (reply)"}
+              {isPlayed && ", played"}
               {marked === "wrong" && ", wrong"}
               {marked === "differs" && ", not what was played"}
             </span>
@@ -73,14 +80,15 @@ export const PuzzleCalculateSidebar = () => {
   const context = useCalculateMode();
   const {
     puzzle,
-    status,
     lives,
     history,
     isGameOver,
+    runFinished,
     restart,
     attempt,
     enteredSan,
     solutionSan,
+    differed,
     requiredMoves,
     canSubmit,
     entryError,
@@ -90,14 +98,14 @@ export const PuzzleCalculateSidebar = () => {
     submit,
     isReplaying,
     onNextPuzzle,
-    wrongMove,
     best,
   } = context;
   const { orientation, flipBoard } = useChessBoardContext();
   useFlipBoardKey(flipBoard);
 
   const entering = attempt.phase === "entering" && !isGameOver;
-  useShortcutKey("Backspace", removeLast, entering && attempt.entered.length > 0);
+  const canRemove = attempt.entered.length > attempt.fixed;
+  useShortcutKey("Backspace", removeLast, entering && canRemove);
 
   const nextRef = useRef<HTMLButtonElement>(null);
   const missedAfterReplay = attempt.phase === "done" && attempt.verdict?.result === "failed" && !isGameOver;
@@ -140,7 +148,8 @@ export const PuzzleCalculateSidebar = () => {
     </div>
   );
 
-  if (isGameOver) {
+  // Once the last line (after a miss, the solution) has played out
+  if (runFinished) {
     return (
       <div className="space-y-3">
         {livesRow}
@@ -167,7 +176,10 @@ export const PuzzleCalculateSidebar = () => {
   const side = puzzle.fen.split(" ")[1] === "b" ? "black" : "white";
   const opponent = side === "white" ? "black" : "white";
   const verdict = attempt.verdict;
-  const replies = puzzle.moves.length - requiredMoves;
+  const left = movesToEnter(puzzle.moves.length, attempt.fixed);
+  const own = attempt.fixed > 0 ? left.own : requiredMoves;
+  const replies = left.replies;
+  const asked = `${own} ${attempt.fixed > 0 ? "more " : ""}${own === 1 ? "move" : "moves"} of yours`;
 
   let header: React.ReactNode;
   let tone: "neutral" | "success" | "loss" = "neutral";
@@ -176,7 +188,10 @@ export const PuzzleCalculateSidebar = () => {
       <>
         <SideDot side={side} className="size-3" />
         <span>
-          {`${sideName(side)} to play. Enter ${requiredMoves} ${requiredMoves === 1 ? "move" : "moves"} of yours`}
+          {differed && `${sideName(opponent)} played ${differed.real}, not ${differed.predicted}. No penalty: `}
+          {differed
+            ? `enter the rest of the line from here, ${asked}`
+            : `${sideName(side)} to play. Enter ${asked}`}
           {replies > 0 && ` and ${sideName(opponent)}'s ${replies === 1 ? "reply" : `${replies} replies`}`}
           {"."}
         </span>
@@ -187,7 +202,7 @@ export const PuzzleCalculateSidebar = () => {
     header = (
       <>
         <CheckCircle2 className="size-5 shrink-0" aria-hidden="true" />
-        <span>Solved: you saw the whole line.</span>
+        <span>{attempt.differed ? "Solved." : "Solved: you saw the whole line."}</span>
       </>
     );
   } else if (verdict?.result === "failed") {
@@ -199,33 +214,8 @@ export const PuzzleCalculateSidebar = () => {
       </>
     );
   } else if (verdict?.result === "reply-differs") {
-    const real = solutionSan[verdict.index];
-    const predicted = enteredSan[verdict.index];
-    if (status === "success") {
-      tone = "success";
-      header = (
-        <>
-          <CheckCircle2 className="size-5 shrink-0" aria-hidden="true" />
-          <span>Solved.</span>
-        </>
-      );
-    } else if (status === "failed") {
-      tone = "loss";
-      header = (
-        <>
-          <XCircle className="size-5 shrink-0" aria-hidden="true" />
-          <span>{wrongMove ? `${wrongMove.san} isn't the move.` : "Not quite."}</span>
-        </>
-      );
-    } else {
-      header = (
-        <span>
-          {isReplaying
-            ? "Your moves were right so far. Playing the line…"
-            : `${sideName(opponent)} played ${real} instead of ${predicted}. No penalty: play on, move by move.`}
-        </span>
-      );
-    }
+    // Only while the line plays up to the real reply; then the rest is entered
+    header = <span>Your moves were right so far. Playing the line…</span>;
   }
 
   return (
@@ -259,7 +249,13 @@ export const PuzzleCalculateSidebar = () => {
               The board stays put. Tap a piece, then its square, or type the moves. Nothing tells you
               whether a move is right until you submit.
             </p>
-            <LineSlots fen={puzzle.fen} sans={enteredSan} length={puzzle.moves.length} label="Your line" />
+            <LineSlots
+              fen={puzzle.fen}
+              sans={enteredSan}
+              length={puzzle.moves.length}
+              played={attempt.fixed}
+              label="Your line"
+            />
             {entryError && (
               <p role="alert" className="text-xs text-loss">
                 {entryError}
@@ -276,13 +272,13 @@ export const PuzzleCalculateSidebar = () => {
                 variant="outline"
                 className="flex-1"
                 onClick={removeLast}
-                disabled={attempt.entered.length === 0}
+                disabled={!canRemove}
                 aria-keyshortcuts="Backspace"
               >
                 <Delete aria-hidden="true" />
                 Remove last
               </Button>
-              <Button variant="ghost" onClick={clearLine} disabled={attempt.entered.length === 0}>
+              <Button variant="ghost" onClick={clearLine} disabled={!canRemove}>
                 Clear
               </Button>
             </div>
@@ -301,6 +297,7 @@ export const PuzzleCalculateSidebar = () => {
                 fen={puzzle.fen}
                 sans={enteredSan}
                 length={attempt.entered.length}
+                played={attempt.fixed}
                 label="Your line"
                 mark={
                   verdict.result === "failed"
@@ -316,8 +313,8 @@ export const PuzzleCalculateSidebar = () => {
                 <div className="mb-1 text-xs font-medium text-muted-foreground">Solution</div>
                 <LineSlots
                   fen={puzzle.fen}
-                  sans={verdict.result === "failed" || status !== "solving" ? solutionSan : solutionSan.slice(0, verdict.index + 1)}
-                  length={verdict.result === "failed" || status !== "solving" ? solutionSan.length : verdict.index + 1}
+                  sans={verdict.result === "failed" ? solutionSan : solutionSan.slice(0, verdict.index + 1)}
+                  length={verdict.result === "failed" ? solutionSan.length : verdict.index + 1}
                   label="Solution"
                 />
               </div>
@@ -340,7 +337,7 @@ export const PuzzleCalculateSidebar = () => {
         )}
 
         {/* Themes are hints, so not before the puzzle is over */}
-        {(attempt.phase === "done" || (attempt.phase === "finishing" && status !== "solving")) && (
+        {attempt.phase === "done" && (
           <PuzzleThemes themes={puzzle.themes} />
         )}
       </section>

@@ -13,9 +13,8 @@ import { getProfileFriendsRoute, getProfileRoute } from "@/constants/routes";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
 import { useIncomingChallenges } from "@/features/notifications/hooks/useIncomingChallenges";
 import {
-  describeChallengeColor,
-  describeChallengeTime,
-  describeMatchFormat,
+  challengeTermsLine,
+  describeChallengeTerms,
 } from "@/features/notifications/utils/challengeLabels";
 import type { FriendRequest } from "../types";
 import { usePendingFriendRequests } from "../requests/hooks/usePendingFriendRequests";
@@ -42,12 +41,15 @@ const Row = ({
   username,
   avatarUrl,
   detail,
+  note,
   children,
 }: {
   userId: number;
   username: string;
   avatarUrl?: string | null;
   detail?: ReactNode;
+  /** A second line under `detail`, e.g. the opening a challenge starts from */
+  note?: ReactNode;
   children: ReactNode;
 }) => (
   <li className="flex items-center justify-between gap-3">
@@ -59,6 +61,7 @@ const Row = ({
       <span className="min-w-0 leading-tight">
         <span className="block truncate text-sm font-medium text-foreground">{username}</span>
         {detail && <span className="block truncate text-xs text-muted-foreground">{detail}</span>}
+        {note && <span className="block truncate text-xs text-muted-foreground">{note}</span>}
       </span>
     </Link>
     <span className="flex shrink-0 items-center gap-1.5">{children}</span>
@@ -229,19 +232,16 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
               <span id="inbox-challenges">Challenges</span>
             </SectionTitle>
             <ul className="space-y-2.5">
-              {challenges.map((challenge) => (
+              {challenges.map((challenge) => {
+                const terms = describeChallengeTerms(challenge, challenge.username);
+                return (
                 <Row
                   key={challenge.id}
                   userId={challenge.challengerId}
                   username={challenge.username}
                   avatarUrl={challenge.avatarUrl}
-                  detail={[
-                    describeMatchFormat(challenge.bestOf, challenge.seriesGame, challenge.matchMinutes),
-                    describeChallengeTime(challenge, challenge.username),
-                    describeChallengeColor(challenge.color),
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
+                  detail={challengeTermsLine(terms)}
+                  note={terms.opening}
                 >
                   <Button
                     size="icon"
@@ -259,7 +259,8 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
                     Accept
                   </Button>
                 </Row>
-              ))}
+                );
+              })}
             </ul>
           </section>
         )}

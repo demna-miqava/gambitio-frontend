@@ -47,3 +47,5 @@ export const QKEY_CONVERSION_DRILLS = "conversion-drills";
 
 /** Friends' table games waiting for the signed-in player to confirm */
 export const QKEY_TABLE_GAME_REQUESTS = "table-game-requests";
+/** Table mode's friend picker: [key, userId, search] */
+export const QKEY_TABLE_FRIEND_PICKER = "table-friend-picker";

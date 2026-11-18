@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
 import { useIncomingChallenges } from "@/features/notifications/hooks/useIncomingChallenges";
-import {
-  describeChallengeColor,
-  describeChallengeTime,
-  describeMatchFormat,
-} from "@/features/notifications/utils/challengeLabels";
+import { describeChallengeTerms } from "@/features/notifications/utils/challengeLabels";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDistance } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -53,7 +49,9 @@ export const Challenges = ({ className }: ChallengesProps) => {
         Challenges for you
       </h2>
       <ul className="space-y-3">
-        {challenges.map((challenge) => (
+        {challenges.map((challenge) => {
+          const terms = describeChallengeTerms(challenge, challenge.username);
+          return (
           <li
             key={challenge.id}
             className="flex flex-col gap-3 rounded-xl bg-card px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
@@ -75,18 +73,19 @@ export const Challenges = ({ className }: ChallengesProps) => {
                   )}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {describeMatchFormat(challenge.bestOf, challenge.seriesGame, challenge.matchMinutes) &&
-                    `${describeMatchFormat(challenge.bestOf, challenge.seriesGame, challenge.matchMinutes)} · `}
-                  <span className="tabular-nums">
-                    {describeChallengeTime(challenge, challenge.username)}
-                  </span>
+                  {terms.format && `${terms.format} · `}
+                  <span className="tabular-nums">{terms.time}</span>
+                  {terms.unrated && " · Unrated"}
                   {" · "}
-                  {describeChallengeColor(challenge.color)}
+                  {terms.color}
                   {" · "}
                   {formatDistance(new Date(challenge.createdAt), now, {
                     addSuffix: true,
                   })}
                 </p>
+                {terms.opening && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">{terms.opening}</p>
+                )}
               </div>
             </div>
             <div className="grid shrink-0 grid-cols-2 gap-2">
@@ -105,7 +104,8 @@ export const Challenges = ({ className }: ChallengesProps) => {
               </Button>
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </section>
   );

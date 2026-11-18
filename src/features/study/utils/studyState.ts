@@ -1,10 +1,12 @@
 import { DEFAULT_POSITION, type Square } from "chess.js";
 import { isAxiosError } from "axios";
 import type { AnalysisNode } from "@/features/archive-game/types/analysis.types";
+import { appendMessage } from "@/features/game-chat/utils/chat";
 import {
   STUDY_BRUSHES,
   STUDY_ROOT_ID,
   type StudyBrush,
+  type StudyChatState,
   type StudyNode,
   type StudyRoomSnapshot,
   type StudyServerMessage,
@@ -36,15 +38,8 @@ export function applyStudyMessage(
   const keep = { snapshot, needsSync: false };
   switch (message.type) {
     case "study_state": {
-      const { room, state, members, present, chat } = message;
-      return { snapshot: { room, state, members, present, ...(chat && { chat }) }, needsSync: false };
-    }
-    case "chat": {
-      if (!snapshot?.chat) return keep;
-      const { messages } = snapshot.chat;
-      if (messages.some((m) => m.id === message.data.id)) return keep;
-      const chat = { ...snapshot.chat, messages: [...messages, message.data].slice(-MAX_CHAT_MESSAGES) };
-      return { snapshot: { ...snapshot, chat }, needsSync: false };
+      const { room, state, members, present } = message;
+      return { snapshot: { room, state, members, present }, needsSync: false };
     }
     case "game_line":
     case "cursor":
@@ -119,7 +114,12 @@ function applyChange(
       for (const id of removed) for (const child of nodeOf(state, id)?.children ?? []) removed.add(child);
       const nodes = Object.fromEntries(Object.entries(state.nodes).filter(([id]) => !removed.has(id)));
       nodes[parent.id] = { ...parent, children: parent.children.filter((id) => id !== message.nodeId) };
-      return { ...state, nodes, cursor: message.cursor };
+      // After the game, its moves can be deleted: the line ends before them
+      // (as the server's does), so it never names a node we no longer have
+      const game = state.game && state.game.line.some((id) => removed.has(id))
+        ? { ...state.game, line: state.game.line.filter((id) => !removed.has(id)) }
+        : state.game;
+      return { ...state, nodes, cursor: message.cursor, ...(game && { game }) };
     }
     case "children": {
       const parent = nodeOf(state, message.parentId);
@@ -137,12 +137,76 @@ function applyChange(
 }
 
 /** Room chat kept in memory (the server sends the last 50 on connect) */
-const MAX_CHAT_MESSAGES = 200;
+export const MAX_CHAT_MESSAGES = 200;
 
-/** The node of the watched game's latest move ("Live"); null in an ordinary room. */
+/**
+ * The room's chat after a socket message: the chat the room's state brings
+ * (none when this member has no chat), plus each new message once. Null:
+ * no chat panel at all.
+ */
+export function applyStudyChat(
+  chat: StudyChatState | null,
+  message: StudyServerMessage
+): StudyChatState | null {
+  switch (message.type) {
+    case "study_state":
+      // Chat turned off in their own settings: no panel, as with no chat here
+      return message.chat && message.chat.reason !== "off_by_you" ? message.chat : null;
+    case "chat": {
+      if (!chat) return chat;
+      const messages = appendMessage(chat.messages, message.data);
+      if (messages === chat.messages) return chat;
+      return { ...chat, messages: messages.slice(-MAX_CHAT_MESSAGES) };
+    }
+    default:
+      return chat;
+  }
+}
+
+/**
+ * The chat after the server refused a message: "closed" disables it (the
+ * panel then says why), "unavailable" or "disabled" means this member has
+ * no chat here.
+ * Null for other refusals, which the panel shows as they are.
+ */
+export function chatAfterRefusal(
+  chat: StudyChatState | null,
+  code: string | undefined
+): { chat: StudyChatState | null } | null {
+  if (code === "CHAT_CLOSED") return { chat: chat && (chat.enabled ? { ...chat, enabled: false } : chat) };
+  // No chat here, or this member has chat turned off in their settings
+  if (code === "CHAT_UNAVAILABLE" || code === "CHAT_DISABLED") return { chat: null };
+  return null;
+}
+
+/**
+ * Whether to ask the server to bring the room's line up to the game
+ * (sync_game): only in a room watching a game that isn't over in the room
+ * yet. Once it is, the server leaves the room alone (its game moves may
+ * even have been deleted), so asking would do nothing.
+ */
+export function wantsGameSync(snapshot: Pick<StudyRoomSnapshot, "room" | "state"> | null): boolean {
+  return snapshot?.room.gameId != null && snapshot.state.game?.over !== true;
+}
+
+/**
+ * Whether the room's state, just received, should be followed by a
+ * sync_game: once per connection (the game socket asks again on every
+ * move), and only while wantsGameSync.
+ */
+export const gameSyncOnConnect = (
+  snapshot: Pick<StudyRoomSnapshot, "room" | "state"> | null,
+  alreadySynced: boolean
+): boolean => !alreadySynced && wantsGameSync(snapshot);
+
+/**
+ * The node of the watched game's latest move ("Live"); null in an ordinary
+ * room, and in one whose game is over and whose game moves were all deleted
+ * since. Before the game's first move it is the starting position.
+ */
 export function liveNodeOf(state: StudyState): string | null {
   if (!state.game) return null;
-  return state.game.line.at(-1) ?? STUDY_ROOT_ID;
+  return state.game.line.at(-1) ?? (state.game.over ? null : STUDY_ROOT_ID);
 }
 
 /**

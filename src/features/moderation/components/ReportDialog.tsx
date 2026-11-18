@@ -19,16 +19,24 @@ interface ReportDialogProps {
   player: { id: number; username: string };
   /** The game the two are playing or played, so its chat goes with the report */
   gameId?: number;
+  /** Instead of a game: the study room whose chat it happened in */
+  studyRoomId?: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+/** The report's context: a game, or else a study room (never both) */
+// eslint-disable-next-line react-refresh/only-export-components
+export const reportContext = ({ gameId, studyRoomId }: { gameId?: number; studyRoomId?: number }) =>
+  gameId !== undefined ? { gameId } : studyRoomId !== undefined ? { studyRoomId } : {};
 
 /**
  * Reports a player to the moderators: a reason, optional details, and the
  * choice to block them as well. Mounted only while open, so it always
  * starts empty.
  */
-const ReportForm = ({ player, gameId, onOpenChange }: Omit<ReportDialogProps, "open">) => {
+const ReportForm = ({ player, gameId, studyRoomId, onOpenChange }: Omit<ReportDialogProps, "open">) => {
+  const context = reportContext({ gameId, studyRoomId });
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [details, setDetails] = useState("");
   const [alsoBlock, setAlsoBlock] = useState(false);
@@ -47,7 +55,7 @@ const ReportForm = ({ player, gameId, onOpenChange }: Omit<ReportDialogProps, "o
         reportedId: player.id,
         reason,
         ...(trimmed && { details: trimmed }),
-        ...(gameId !== undefined && { gameId }),
+        ...context,
       },
       {
         onSuccess: () => {
@@ -114,11 +122,15 @@ const ReportForm = ({ player, gameId, onOpenChange }: Omit<ReportDialogProps, "o
           placeholder="What happened, and in which game?"
           className="max-h-40"
         />
-        {gameId !== undefined && (
+        {"gameId" in context ? (
           <p className="text-xs text-muted-foreground">
             This game and its chat are sent with the report.
           </p>
-        )}
+        ) : "studyRoomId" in context ? (
+          <p className="text-xs text-muted-foreground">
+            This room's chat is sent with the report.
+          </p>
+        ) : null}
       </div>
 
       {!isBlocked && (

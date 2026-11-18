@@ -61,7 +61,7 @@ export interface StudyRoomMeta {
   name: string;
   ownerId: number;
   /** The live game the room watches (Watch together), null for an ordinary room */
-  gameId: number | null;
+  gameId?: number | null;
   createdAt: string;
   updatedAt: string;
   version: number;
@@ -80,22 +80,29 @@ export interface StudyRoomSnapshot {
   members: StudyMember[];
   /** Users with the room open */
   present: number[];
-  /**
-   * Room chat, only in a room watching a game (and never for the game's own
-   * players once they are invited after it)
-   */
-  chat?: StudyChatState;
 }
 
+/**
+ * Room chat, only in a room watching a game, and never for the game's own
+ * players (even once they are invited after it) or a member whose game chat
+ * setting is "nobody". Kept apart from the snapshot (see applyStudyChat), so
+ * a message re-renders the chat, not the board.
+ */
 export interface StudyChatState {
   /** False once the chat has closed (a while after the game ended) */
   enabled: boolean;
+  /**
+   * Why it isn't enabled: "closed" after the game, or "off_by_you" when this
+   * member's game chat setting is "nobody" (they then get no chat panel at
+   * all: see applyStudyChat). Null while it is open.
+   */
+  reason?: "off_by_you" | "closed" | null;
   messages: ChatMessage[];
 }
 
 /** Messages the room socket sends. */
 export type StudyServerMessage =
-  | ({ type: "study_state" } & StudyRoomSnapshot)
+  | ({ type: "study_state"; chat?: StudyChatState } & StudyRoomSnapshot)
   | { type: "node_added"; node: StudyNode; cursor: string; version: number; by: number }
   | { type: "node_deleted"; nodeId: string; parentId: string; cursor: string; version: number; by: number }
   | { type: "children"; parentId: string; children: string[]; version: number; by: number }

@@ -3,15 +3,18 @@ import { cn } from "@/lib/utils";
 import type { FriendStatus } from "@/types";
 import { presenceLabel, type Presence } from "./presenceLabel";
 
-/** Green for online (free to challenge), gold for playing (busy). */
-const dotColor = (status: FriendStatus["status"]) =>
-  status === "online" ? "bg-success" : "bg-gold";
+/**
+ * Online (free to challenge): a filled green dot. Playing (busy): a gold
+ * ring. They differ in shape too, not only in colour.
+ */
+const dotStyle = (status: FriendStatus["status"]) =>
+  status === "online" ? "bg-success" : "border-[3px] border-gold bg-card";
 
 /**
  * An avatar with a status dot on its corner when the friend is online or
- * playing; no dot when they're offline. The dot is the only status shown
- * on friend lists and profiles, so it carries the words too ("Online",
- * "Playing blitz") as its accessible name and a hover tooltip.
+ * playing; no dot when they're offline. Where no text says the status, the
+ * dot carries the words ("Online", "Playing blitz") as its accessible name
+ * and a hover tooltip.
  */
 export const AvatarWithPresence = ({
   presence,
@@ -37,7 +40,7 @@ export const AvatarWithPresence = ({
           : { "aria-hidden": true })}
         className={cn(
           "absolute -right-0.5 -bottom-0.5 size-3 rounded-full ring-2 ring-card",
-          dotColor(presence.status),
+          dotStyle(presence.status),
           dotClassName
         )}
       />

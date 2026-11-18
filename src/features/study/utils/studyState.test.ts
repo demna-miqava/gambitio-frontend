@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { StudyNode, StudyRoomSnapshot, StudyState } from "../types";
+import type { StudyChatState, StudyNode, StudyRoomSnapshot, StudyState } from "../types";
 import {
+  applyStudyChat,
   applyStudyMessage,
+  chatAfterRefusal,
+  gameSyncOnConnect,
+  MAX_CHAT_MESSAGES,
+  wantsGameSync,
   endOfLine,
   isInVariation,
   mainLineAt,
@@ -258,9 +263,9 @@ describe("a room watching a game", () => {
       ...base,
       room: { ...base.room, gameId: 7 },
       state: { ...base.state, game: { line: ["n1", "n2"], over: false }, cursor: "n2" },
-      chat: { enabled: true, messages: [{ id: "1", userId: 2, text: "hi", at: 0 }] },
     };
   };
+  const chat = (): StudyChatState => ({ enabled: true, messages: [{ id: "1", userId: 2, text: "hi", at: 0 }] });
 
   it("extends the line from the game, merging new and changed nodes", () => {
     const n3 = node("n3", "n2", "Nf3", "g1f3", 3);
@@ -301,10 +306,120 @@ describe("a room watching a game", () => {
 
   it("adds chat messages once, and only where the room has chat", () => {
     const message = { id: "2", userId: 1, text: "Nice", at: 1 };
-    const next = applyStudyMessage(watching(), { type: "chat", data: message });
-    expect(next.snapshot?.chat?.messages.map((m) => m.text)).toEqual(["hi", "Nice"]);
-    expect(applyStudyMessage(next.snapshot, { type: "chat", data: message }).snapshot).toBe(next.snapshot);
-    const plain = snapshot();
-    expect(applyStudyMessage(plain, { type: "chat", data: message }).snapshot).toBe(plain);
+    const next = applyStudyChat(chat(), { type: "chat", data: message });
+    expect(next?.messages.map((m) => m.text)).toEqual(["hi", "Nice"]);
+    expect(applyStudyChat(next, { type: "chat", data: message })).toBe(next);
+    expect(applyStudyChat(null, { type: "chat", data: message })).toBeNull();
+    // A chat message leaves the room itself alone (the board doesn't re-render)
+    const room = watching();
+    expect(applyStudyMessage(room, { type: "chat", data: message }).snapshot).toBe(room);
+  });
+
+  it("keeps the chat apart from the room's state, and none when the state brings none", () => {
+    const base = watching();
+    const withChat = { type: "study_state" as const, ...base, chat: chat() };
+    expect(applyStudyChat(null, withChat)).toEqual(chat());
+    expect(applyStudyMessage(null, withChat).snapshot).not.toHaveProperty("chat");
+    // A room with no chat for this member
+    expect(applyStudyChat(chat(), { type: "study_state", ...base })).toBeNull();
+    // A member whose game chat setting is "nobody": the server says so, and there is no panel
+    const off = { enabled: false, reason: "off_by_you" as const, messages: [] };
+    expect(applyStudyChat(chat(), { type: "study_state", ...base, chat: off })).toBeNull();
+    // Closed after the game: the panel stays, without its input
+    const closed = { enabled: false, reason: "closed" as const, messages: [] };
+    expect(applyStudyChat(null, { type: "study_state", ...base, chat: closed })).toEqual(closed);
+    // Other messages don't touch it
+    const current = chat();
+    expect(applyStudyChat(current, { type: "presence", userIds: [1] })).toBe(current);
+  });
+
+  it("follows the newest message at the cap", () => {
+    let current: StudyChatState | null = { enabled: true, messages: [] };
+    for (let i = 1; i <= MAX_CHAT_MESSAGES + 5; i++) {
+      current = applyStudyChat(current, { type: "chat", data: { id: String(i), userId: 2, text: `m${i}`, at: i } });
+    }
+    expect(current?.messages).toHaveLength(MAX_CHAT_MESSAGES);
+    expect(current?.messages.at(-1)?.id).toBe(String(MAX_CHAT_MESSAGES + 5));
+  });
+
+  it("closes the chat, or drops it, when the server says so", () => {
+    expect(chatAfterRefusal(chat(), "CHAT_CLOSED")).toEqual({ chat: { ...chat(), enabled: false } });
+    expect(chatAfterRefusal(chat(), "CHAT_UNAVAILABLE")).toEqual({ chat: null });
+    expect(chatAfterRefusal(chat(), "CHAT_DISABLED")).toEqual({ chat: null });
+    expect(chatAfterRefusal(chat(), "CHAT_RATE_LIMITED")).toBeNull();
+    expect(chatAfterRefusal(null, "CHAT_CLOSED")).toEqual({ chat: null });
+  });
+
+  it("asks for the game's moves only while the room's game isn't over", () => {
+    const room = watching();
+    expect(wantsGameSync(room)).toBe(true);
+    expect(wantsGameSync({ ...room, state: { ...room.state, game: { line: ["n1"], over: true } } })).toBe(false);
+    // Over, and its moves deleted since: still nothing to ask
+    expect(wantsGameSync({ ...room, state: { ...room.state, game: { line: [], over: true } } })).toBe(false);
+    expect(wantsGameSync(snapshot())).toBe(false);
+    expect(wantsGameSync({ ...snapshot(), room: { ...snapshot().room, gameId: undefined } })).toBe(false);
+    expect(wantsGameSync(null)).toBe(false);
+    // A linked room whose state has no line yet: ask
+    expect(wantsGameSync({ ...room, state: tree() })).toBe(true);
+  });
+
+  it("asks once per connection, when the room's state arrives", () => {
+    const room = watching();
+    expect(gameSyncOnConnect(room, false)).toBe(true);
+    expect(gameSyncOnConnect(room, true)).toBe(false);
+    expect(gameSyncOnConnect({ ...room, state: { ...room.state, game: { line: [], over: true } } }, false)).toBe(false);
+  });
+
+  it("drops deleted game moves from the line after the game, and doesn't protect them", () => {
+    const over = watching();
+    over.state = { ...over.state, game: { line: ["n1", "n2", "n3"], over: true }, cursor: "n1" };
+    const next = applyStudyMessage(over, {
+      type: "node_deleted",
+      nodeId: "n2",
+      parentId: "n1",
+      cursor: "n1",
+      version: 4,
+      by: 2,
+    });
+    expect(next.needsSync).toBe(false);
+    expect(next.snapshot?.state.game).toEqual({ line: ["n1"], over: true });
+    expect(liveNodeOf(next.snapshot!.state)).toBe("n1");
+    expect(protectedNodes(next.snapshot!.state).size).toBe(0);
+    // All of them deleted: no "Live" node any more
+    const empty = applyStudyMessage(next.snapshot, {
+      type: "node_deleted",
+      nodeId: "n1",
+      parentId: "root",
+      cursor: "root",
+      version: 5,
+      by: 2,
+    });
+    expect(empty.snapshot?.state.game).toEqual({ line: [], over: true });
+    expect(liveNodeOf(empty.snapshot!.state)).toBeNull();
+    // Deleting a variation leaves the line as it is
+    const variation = applyStudyMessage(over, {
+      type: "node_deleted",
+      nodeId: "n4",
+      parentId: "root",
+      cursor: "n1",
+      version: 4,
+      by: 2,
+    });
+    expect(variation.snapshot?.state.game).toBe(over.state.game);
+  });
+
+  it("accepts a line shorter than before without asking for the room again", () => {
+    const over = watching();
+    over.state = { ...over.state, game: { line: ["n1", "n2"], over: true } };
+    const next = applyStudyMessage(over, {
+      type: "game_line",
+      nodes: [],
+      game: { line: ["n1"], over: true },
+      cursor: "n1",
+      version: 4,
+      by: 2,
+    });
+    expect(next.needsSync).toBe(false);
+    expect(next.snapshot?.state.game?.line).toEqual(["n1"]);
   });
 });

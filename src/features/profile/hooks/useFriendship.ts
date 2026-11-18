@@ -14,6 +14,12 @@ export type FriendshipStatus =
   | { kind: "request-received"; request: FriendRequest };
 
 /**
+ * Whether the player is a friend: only then is their online status known,
+ * and worth polling for (not while loading, nor for a stranger or yourself).
+ */
+export const isFriendship = (status: FriendshipStatus): boolean => status.kind === "friends";
+
+/**
  * How the signed-in user relates to another player. There's no endpoint for
  * this, so it's read from the user's own friend list (searched by the
  * player's name) and their pending requests. The lookup's key starts with

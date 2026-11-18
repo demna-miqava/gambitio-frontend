@@ -6,7 +6,7 @@ import { useAvatarSrc } from "@/hooks/useAvatarSrc";
 import FriendPopover from "../components/Popover";
 import { useFriendStatuses } from "./useFriendStatuses";
 import { AvatarWithPresence } from "./Presence";
-import { presenceLabel } from "./presenceLabel";
+import { presenceLabel, statusWord } from "./presenceLabel";
 import { getOnlineFriendsRoute } from "./onlineFilter";
 
 /** Avatars in the row; with more online the last place says "+N" (one row in the 23rem popover) */
@@ -72,8 +72,13 @@ export const OnlineNow = ({
           {shown.map((friend) => {
             const label = `${friend.username}, ${presenceLabel(friend).toLowerCase()}`;
             return (
-              <li key={friend.id}>
-                <FriendPopover data={friend} presence={friend} canChallenge={friend.status === "online"}>
+              <li key={friend.id} className="flex flex-col items-center gap-1">
+                <FriendPopover
+                  data={friend}
+                  presence={friend}
+                  canChallenge={friend.status === "online"}
+                  onNavigate={onNavigate}
+                >
                   <button type="button" aria-label={label} title={label} className={avatarButton}>
                     <AvatarWithPresence presence={friend} dotClassName="size-2.5 ring-popover" announce={false}>
                       <UserAvatar
@@ -84,6 +89,10 @@ export const OnlineNow = ({
                     </AvatarWithPresence>
                   </button>
                 </FriendPopover>
+                {/* In words too, not only the dot; the button's name already says it */}
+                <span aria-hidden="true" className="text-[0.625rem] leading-none text-muted-foreground">
+                  {statusWord(friend.status)}
+                </span>
               </li>
             );
           })}

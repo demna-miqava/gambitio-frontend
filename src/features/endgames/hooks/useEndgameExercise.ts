@@ -13,7 +13,7 @@ import { useSettings } from "@/features/settings/SettingsContext";
 import { BotEngine, type EngineScore } from "@/features/play-bots/services/botEngine";
 import { BOARD_SETTING_DEFAULTS } from "@/features/play-bots/hooks/useBotGame";
 import type { ObjectiveEvaluation, PracticePosition } from "../types";
-import { conversionVerdict, countPlayerMoves, evaluateObjective } from "../utils/objective";
+import { conversionVerdict, countPlayerMoves, evaluateObjective, hasSlipped } from "../utils/objective";
 import { useBoardOrientation } from "@/features/game/hooks/useBoardOrientation";
 
 /** Full strength: the engine always finds the toughest defence (or attack). */
@@ -378,6 +378,8 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
      * before its first search, and for other objectives)
      */
     engineScore,
+    /** A conversion still going on whose lead has already dipped once (hasSlipped) */
+    slipped: converting && evaluation.status === "playing" && hasSlipped(engineScore),
     isPlayerTurn:
       evaluation.status === "playing" && !thinking && chessRef.current.turn() === playerCode,
   };

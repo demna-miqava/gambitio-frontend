@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  challengeTermsLine,
   describeChallengeColor,
   describeChallengeOpening,
+  describeChallengeTerms,
   describeChallengeTime,
   describeMatchFormat,
   isCasualChallenge,
@@ -71,5 +73,40 @@ describe("mirror matches and openings", () => {
     expect(describeChallengeOpening({ name: "Queen's Gambit" })).toBe("From the Queen's Gambit");
     expect(describeChallengeOpening(null)).toBeNull();
     expect(describeChallengeOpening(undefined)).toBeNull();
+  });
+});
+
+describe("describeChallengeTerms", () => {
+  const base = { time: 180, increment: 2, color: "white" as const };
+
+  it("says the format, clocks, colour, and that it's unrated, on one line", () => {
+    const terms = describeChallengeTerms({ ...base, bestOf: 3, rated: false }, "alice");
+    expect(terms).toEqual({
+      format: "Best of 3",
+      time: "3+2",
+      unrated: true,
+      color: "You play white first",
+      opening: null,
+    });
+    expect(challengeTermsLine(terms)).toBe("Best of 3 · 3+2 · Unrated · You play white first");
+  });
+
+  it("names the opening apart from the line", () => {
+    const terms = describeChallengeTerms({ ...base, opening: { name: "Sicilian Defense" } }, "alice");
+    expect(terms.opening).toBe("From the Sicilian Defense");
+    expect(challengeTermsLine(terms)).toBe("3+2 · You play white");
+  });
+
+  it("says 'first' only for a new match, and not on the sender's card", () => {
+    expect(describeChallengeTerms({ ...base, bestOf: 2, seriesGame: 2 }, "alice").color).toBe("You play white");
+    expect(describeChallengeTerms({ ...base, bestOf: 2 }, "alice", { firstColor: false }).color).toBe(
+      "You play white"
+    );
+  });
+
+  it("leaves 'Unrated' to the clocks with time odds", () => {
+    const terms = describeChallengeTerms({ ...base, ownTime: 60, opponentTime: 180, rated: false }, "alice");
+    expect(terms.unrated).toBe(false);
+    expect(challengeTermsLine(terms)).toBe("Time odds: you 1 min, alice 3 min, +2 sec · You play white");
   });
 });

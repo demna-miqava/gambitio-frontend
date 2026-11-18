@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { toast } from "sonner";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { GameLayout } from "@/features/game/components/GameLayout";
@@ -12,7 +12,6 @@ import { describeMove } from "@/features/game/utils/describeMove";
 import type { StudyClientMessage, StudyRoomSnapshot } from "../types";
 import { useStudyBoard } from "../hooks/useStudyBoard";
 import { liveNodeOf, nodeOf, pathTo, rootOf, toStudyPgn } from "../utils/studyState";
-import { useWatchedGame } from "../hooks/useWatchedGame";
 import { StudyLiveGame } from "./StudyLiveGame";
 import { StudyChat } from "./StudyChat";
 import { studyMoveLabel } from "../utils/activity";
@@ -35,12 +34,16 @@ interface StudyRoomViewProps {
   onExit: (expected?: boolean) => void;
   /** A room watching a game: the game socket delivered a move or the end */
   onGameChange: () => void;
-  sendChat: (text: string) => void;
-  chatError: string | null;
 }
 
-/** A study room: the shared board and the panel beside it. */
-export const StudyRoomView = ({
+/**
+ * A study room: the shared board and the panel beside it. Memoised: the
+ * watched game (StudyLiveGame) and the chat (StudyChatContext) update
+ * themselves, so a move in the game, a clock or a chat message doesn't
+ * re-render the board, the engine or the moves list. Only a change to the
+ * room does.
+ */
+export const StudyRoomView = memo(function StudyRoomView({
   snapshot,
   myId,
   connected,
@@ -50,12 +53,12 @@ export const StudyRoomView = ({
   activity,
   onExit,
   onGameChange,
-  sendChat,
-  chatError,
-}: StudyRoomViewProps) => {
-  const { room, state, members, present, chat } = snapshot;
-  const watched = useWatchedGame(room.gameId, onGameChange);
+}: StudyRoomViewProps) {
+  const { room, state, members, present } = snapshot;
   const live = liveNodeOf(state);
+  const goLive = useCallback(() => {
+    if (live !== null) goTo(live);
+  }, [goTo, live]);
   const { boardRef, orientation, flipBoard: flip } = useChessBoardContext();
   useFlipBoardKey(flip);
   const node = nodeOf(state, state.cursor) ?? rootOf(state);
@@ -125,14 +128,15 @@ export const StudyRoomView = ({
         className="order-1"
       />
 
-      {room.gameId !== null && (
+      {room.gameId != null && (
         <div className="order-2 lg:shrink-0 lg:border-b lg:border-border lg:px-4 lg:py-3">
           <StudyLiveGame
-            game={watched.game}
-            status={watched.status}
+            gameId={room.gameId}
+            onGameChange={onGameChange}
             atLive={live !== null && state.cursor === live}
             canGoLive={live !== null}
-            onGoLive={() => live !== null && goTo(live)}
+            onGoLive={goLive}
+            roomLiveLabel={live !== null && live !== rootOf(state).id ? studyMoveLabel(nodeOf(state, live)) : null}
           />
         </div>
       )}
@@ -170,18 +174,14 @@ export const StudyRoomView = ({
         <StudyComment node={node} send={send} />
       </div>
 
-      {chat && (
-        <div className="order-5 lg:order-5 lg:shrink-0 lg:border-t lg:border-border lg:px-4 lg:py-2.5">
-          <StudyChat
-            chat={chat}
-            members={members}
-            myId={myId}
-            connected={connected}
-            onSend={sendChat}
-            error={chatError}
-          />
-        </div>
-      )}
+      {/* Renders nothing when this member has no chat here */}
+      <StudyChat
+        roomId={room.id}
+        members={members}
+        myId={myId}
+        connected={connected}
+        className="order-5 lg:order-5 lg:shrink-0 lg:border-t lg:border-border lg:px-4 lg:py-2.5"
+      />
 
       {/* What others do, read out; also shown as a quiet line */}
       <p
@@ -195,4 +195,4 @@ export const StudyRoomView = ({
   );
 
   return <GameLayout board={board} sidebar={sidebar} bareBoard fitPanel />;
-};
+});

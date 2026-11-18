@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AvatarWithPresence } from "./Presence";
-import { presenceLabel } from "./presenceLabel";
+import { presenceLabel, statusWord } from "./presenceLabel";
 
 describe("presenceLabel", () => {
   it("names the time control of a friend's game", () => {
     expect(presenceLabel({ status: "online", gameType: null })).toBe("Online");
     expect(presenceLabel({ status: "playing", gameType: "blitz" })).toBe("Playing blitz");
     expect(presenceLabel({ status: "playing", gameType: null })).toBe("Playing");
+  });
+
+  it("has one word for under a small avatar", () => {
+    expect(statusWord("online")).toBe("Online");
+    expect(statusWord("playing")).toBe("Playing");
   });
 });
 
@@ -19,9 +24,14 @@ describe("AvatarWithPresence", () => {
       </AvatarWithPresence>
     );
 
-  it("marks online green and playing gold, and offline not at all", () => {
-    expect(dots({ status: "online", gameType: null })).toContain("bg-success");
-    expect(dots({ status: "playing", gameType: "bullet" })).toContain("bg-gold");
+  it("marks online with a filled green dot, playing with a gold ring, and offline not at all", () => {
+    const online = dots({ status: "online", gameType: null });
+    const playing = dots({ status: "playing", gameType: "bullet" });
+    expect(online).toContain("bg-success");
+    expect(online).not.toContain("border-gold");
+    // A different shape, not only a different colour
+    expect(playing).toContain("border-gold");
+    expect(playing).not.toContain("bg-success");
     expect(dots(null)).not.toContain("rounded-full");
   });
 

@@ -1,10 +1,26 @@
 import { useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { saveTableGame } from "@/services/game";
 import { QKEY_GAME_BY_ID, QKEY_USER_GAMES } from "@/constants/queryKeys";
-import { removeUnsaved, type UnsavedTableGame } from "../utils/tableStorage";
+import type { UnsavedTableGame } from "../utils/tableStorage";
+import { saveUnsavedTableGame } from "../utils/tableSave";
 
 export type TableSaveStatus = "idle" | "saving" | "saved" | "error";
+
+/**
+ * A mutation that saves a finished table game (saveUnsavedTableGame) and
+ * puts the stored game in the cache. Shared by the play screen and the
+ * "Not saved yet" list, so both go through the same path.
+ */
+export const useTableGameSaver = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: saveUnsavedTableGame,
+    onSuccess: (saved) => {
+      queryClient.setQueryData([QKEY_GAME_BY_ID, String(saved.id)], saved);
+      void queryClient.invalidateQueries({ queryKey: [QKEY_USER_GAMES] });
+    },
+  });
+};
 
 /**
  * Saves a finished table game once, as soon as `game` is set. It is already
@@ -13,17 +29,8 @@ export type TableSaveStatus = "idle" | "saving" | "saved" | "error";
  * there for a retry, here or later from the table mode page.
  */
 export const useSaveTableGame = (game: UnsavedTableGame | null) => {
-  const queryClient = useQueryClient();
   const startedRef = useRef<string | null>(null);
-
-  const mutation = useMutation({
-    mutationFn: (item: UnsavedTableGame) => saveTableGame(item.body),
-    onSuccess: (saved, item) => {
-      removeUnsaved(item.id);
-      queryClient.setQueryData([QKEY_GAME_BY_ID, String(saved.id)], saved);
-      void queryClient.invalidateQueries({ queryKey: [QKEY_USER_GAMES] });
-    },
-  });
+  const mutation = useTableGameSaver();
   const { mutate } = mutation;
 
   useEffect(() => {

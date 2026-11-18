@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Flag, Handshake, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Side, TableGameState } from "../utils/tableGame";
+import { timeLeft, type Side, type TableGameState } from "../utils/tableGame";
+import { useNow } from "../hooks/useTableGame";
 import { formatTableClock } from "../utils/formatTableClock";
 
 /** Under this a clock shows tenths and turns red */
@@ -13,7 +14,6 @@ const RESIGN_CONFIRM_MS = 3_000;
 interface ClockHalfProps {
   side: Side;
   name: string;
-  timeMs: number;
   state: TableGameState;
   /** The far half is turned to face the player across the table */
   flipped: boolean;
@@ -32,7 +32,6 @@ interface ClockHalfProps {
 export const ClockHalf = ({
   side,
   name,
-  timeMs,
   state,
   flipped,
   onTap,
@@ -50,6 +49,9 @@ export const ClockHalf = ({
 
   const { status, turn, drawOffer, setup, result } = state;
   const active = status === "running" && turn === side;
+  // Only the running clock ticks, and only this half re-renders for it
+  const now = useNow(active);
+  const timeMs = timeLeft(state, side, now);
   const low = timeMs < LOW_TIME_MS;
   const live = status === "running" || status === "paused";
   const sideLabel = side === "white" ? "White" : "Black";

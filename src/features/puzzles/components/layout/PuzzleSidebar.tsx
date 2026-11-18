@@ -12,7 +12,8 @@ export const PuzzleSidebar = () => {
   const [showGameOverDialog, setShowGameOverDialog] = useState(false);
 
   const hasRuns = mode === "rush" || mode === "survival" || mode === "calculate";
-  const isPuzzleGameOver = hasRuns && isGameOver;
+  // Calculate first: not before the missed line's solution has played out
+  const isPuzzleGameOver = hasRuns && (mode === "calculate" ? context.runFinished : isGameOver);
 
   useEffect(() => {
     if (isPuzzleGameOver) {

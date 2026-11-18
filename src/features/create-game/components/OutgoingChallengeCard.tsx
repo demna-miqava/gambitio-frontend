@@ -1,13 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
-import {
-  describeChallengeColor,
-  describeChallengeOpening,
-  describeChallengeTime,
-  describeMatchFormat,
-  isCasualChallenge,
-} from "@/features/notifications/utils/challengeLabels";
+import { describeChallengeTerms } from "@/features/notifications/utils/challengeLabels";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,9 +11,8 @@ import { cn } from "@/lib/utils";
 export const OutgoingChallengeCard = ({ className }: { className?: string }) => {
   const { outgoingChallenge, cancelChallenge } = useChallenges();
   if (!outgoingChallenge) return null;
-  const { username, color, bestOf, seriesGame } = outgoingChallenge;
-  const format = describeMatchFormat(bestOf, seriesGame, outgoingChallenge.matchMinutes);
-  const opening = describeChallengeOpening(outgoingChallenge.opening);
+  const { username } = outgoingChallenge;
+  const terms = describeChallengeTerms(outgoingChallenge, username, { firstColor: false });
 
   return (
     <div
@@ -34,13 +27,13 @@ export const OutgoingChallengeCard = ({ className }: { className?: string }) => 
       <div className="min-w-0 max-w-full">
         <p className="truncate font-medium">Waiting for {username}…</p>
         <p className="text-sm text-muted-foreground">
-          {format && `${format} · `}
-          <span className="tabular-nums">{describeChallengeTime(outgoingChallenge, username)}</span>
-          {isCasualChallenge(outgoingChallenge) && " · Unrated"}
+          {terms.format && `${terms.format} · `}
+          <span className="tabular-nums">{terms.time}</span>
+          {terms.unrated && " · Unrated"}
           {" · "}
-          {describeChallengeColor(color)}
+          {terms.color}
         </p>
-        {opening && <p className="text-sm text-muted-foreground">{opening}</p>}
+        {terms.opening && <p className="text-sm text-muted-foreground">{terms.opening}</p>}
       </div>
       <Button size="lg" variant="outline" onClick={cancelChallenge}>
         Cancel challenge

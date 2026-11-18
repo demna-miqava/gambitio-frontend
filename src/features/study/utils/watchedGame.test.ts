@@ -1,6 +1,46 @@
 import { describe, expect, it } from "vitest";
 import type { GameWebSocketMessage, InitialGameStateMessage } from "@/features/game/types/websocket-messages";
-import { applyWatchedGameMessage, describeWatchedResult } from "./watchedGame";
+import {
+  applyWatchedGameMessage,
+  describeWatchedResult,
+  shouldReconnectToGame,
+  watchedGameStatus,
+} from "./watchedGame";
+
+describe("watchedGameStatus", () => {
+  const playing = { inProgress: true };
+  const socket = (over: Partial<Parameters<typeof watchedGameStatus>[0]> = {}) =>
+    watchedGameStatus({ game: playing, open: false, hasOpened: false, refused: false, gaveUp: false, ...over });
+
+  it("connects, is open, and reconnects after a drop", () => {
+    expect(socket({ game: null })).toBe("connecting");
+    expect(socket({ open: true, hasOpened: true })).toBe("open");
+    expect(socket({ hasOpened: true })).toBe("reconnecting");
+  });
+
+  it("says the connection is lost once the attempts run out", () => {
+    expect(socket({ hasOpened: true, gaveUp: true })).toBe("lost");
+    expect(socket({ game: null, gaveUp: true })).toBe("lost");
+  });
+
+  it("stays refused when the server won't open the game, even while a socket opens", () => {
+    expect(socket({ game: null, refused: true })).toBe("refused");
+    expect(socket({ game: null, refused: true, open: true, hasOpened: true })).toBe("refused");
+  });
+
+  it("never shows reconnecting next to a game that has ended", () => {
+    const ended = { inProgress: false };
+    expect(socket({ game: ended, hasOpened: true })).toBe("ended");
+    expect(socket({ game: ended, hasOpened: true, gaveUp: true })).toBe("ended");
+  });
+
+  it("doesn't reconnect to a finished or refused game", () => {
+    expect(shouldReconnectToGame(null, false)).toBe(true);
+    expect(shouldReconnectToGame(playing, false)).toBe(true);
+    expect(shouldReconnectToGame({ inProgress: false }, false)).toBe(false);
+    expect(shouldReconnectToGame(null, true)).toBe(false);
+  });
+});
 
 const player = (id: number, username: string) => ({ id, username, rating: 1500, avatarUrl: null });
 const initial = (overrides: Partial<InitialGameStateMessage["data"]> = {}) =>

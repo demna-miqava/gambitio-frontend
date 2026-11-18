@@ -12,6 +12,7 @@ import { useGameSetup } from "../../GameSetupContext";
 import {
   CUSTOM_INCREMENTS,
   CUSTOM_MINUTES,
+  customPickerValues,
   getTimeControlFormat,
 } from "../../constants/timeControls";
 import { formatTimeControl } from "@/utils/timeControl";
@@ -24,12 +25,16 @@ interface CustomProps {
 /** Pick any minutes + increment combination. */
 export const Custom = ({ onDone }: CustomProps) => {
   const { timeControl, updateTimeControl, goBack } = useGameSetup();
-  const [minutes, setMinutes] = useState(
-    CUSTOM_MINUTES.includes(timeControl.time / 60) ? timeControl.time / 60 : 10
-  );
-  const [increment, setIncrement] = useState(
-    CUSTOM_INCREMENTS.includes(timeControl.increment) ? timeControl.increment : 0
-  );
+  const [{ minutes, increment }, setValues] = useState(() => customPickerValues(timeControl));
+  const setMinutes = (next: number) => setValues((values) => ({ ...values, minutes: next }));
+  const setIncrement = (next: number) => setValues((values) => ({ ...values, increment: next }));
+  // Shown inline (onDone), the presets stay clickable: picking one moves the
+  // picker to it, so "Use this time control" can't switch back to an old value
+  const [shownFor, setShownFor] = useState(timeControl);
+  if (shownFor.time !== timeControl.time || shownFor.increment !== timeControl.increment) {
+    setShownFor(timeControl);
+    setValues(customPickerValues(timeControl));
+  }
   const format = getTimeControlFormat(minutes * 60);
 
   return (

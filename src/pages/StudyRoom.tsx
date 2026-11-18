@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BookX } from "lucide-react";
 import { ChessBoardProvider } from "@/features/game/contexts/ChessBoardContext";
@@ -12,6 +13,7 @@ import { useUser } from "@/hooks/useUser";
 import { parsePositiveId } from "@/utils/ids";
 import { useStudyRoom } from "@/features/study/hooks/useStudyRoom";
 import { StudyRoomView } from "@/features/study/components/StudyRoomView";
+import { StudyChatContext } from "@/features/study/hooks/useStudyChat";
 
 /**
  * A shared study room: everyone in it sees and moves the same board. Keyed
@@ -29,6 +31,8 @@ const StudyRoomPage = ({ roomId }: { roomId: string | undefined }) => {
   const { id: myId } = useUser();
   const room = useStudyRoom(id);
   useDocumentTitle(room.snapshot ? room.snapshot.room.name : "Study room");
+  const { chat, chatError, sendChat } = room;
+  const chatValue = useMemo(() => ({ chat, error: chatError, send: sendChat }), [chat, chatError, sendChat]);
 
   if (room.status === "not_found" || !Number.isSafeInteger(id) || id <= 0) {
     return (
@@ -57,19 +61,20 @@ const StudyRoomPage = ({ roomId }: { roomId: string | undefined }) => {
       <h1 className="sr-only">Study room: {room.snapshot.room.name}</h1>
       {/* Each person's own engine, off until they switch it on */}
       <EngineAnalysisProvider>
-        <StudyRoomView
-          snapshot={room.snapshot}
-          myId={myId}
-          connected={room.connected}
-          send={room.send}
-          goTo={room.goTo}
-          boardResetKey={room.boardResetKey}
-          activity={room.activity}
-          onExit={room.expectExit}
-          onGameChange={room.syncGame}
-          sendChat={room.sendChat}
-          chatError={room.chatError}
-        />
+        {/* The chat apart from the room: a message re-renders the chat panel only */}
+        <StudyChatContext.Provider value={chatValue}>
+          <StudyRoomView
+            snapshot={room.snapshot}
+            myId={myId}
+            connected={room.connected}
+            send={room.send}
+            goTo={room.goTo}
+            boardResetKey={room.boardResetKey}
+            activity={room.activity}
+            onExit={room.expectExit}
+            onGameChange={room.syncGame}
+          />
+        </StudyChatContext.Provider>
       </EngineAnalysisProvider>
     </ChessBoardProvider>
   );

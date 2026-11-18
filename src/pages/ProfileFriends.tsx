@@ -1,5 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { WifiOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/EmptyState";
 import { PendingFriendRequests } from "@/features/friends/requests/components/PendingFriendRequests";
 import { FriendsPaginatedList } from "@/features/friends/list/components/FriendsPaginatedList";
 import { FriendsSearch } from "@/features/friends/list/components/FriendsSearch";
@@ -7,8 +10,12 @@ import { SuggestedFriends } from "@/features/friends/suggestions/components/Sugg
 import { useUserFriends } from "@/features/friends/list/hooks/useUserFriends";
 import { useFriendActions } from "@/features/friends/hooks/useFriendActions";
 import { useFriendStatuses } from "@/features/friends/status/useFriendStatuses";
-import { presenceLabel } from "@/features/friends/status/presenceLabel";
-import { FRIENDS_SHOW_PARAM, type FriendsShow } from "@/features/friends/status/onlineFilter";
+import {
+  FRIENDS_SHOW_PARAM,
+  inStableOrder,
+  sameIds,
+  type FriendsShow,
+} from "@/features/friends/status/onlineFilter";
 import { useUser } from "@/hooks/useUser";
 import { useProfileUserId } from "@/hooks/useProfileUserId";
 import { SectionHeader } from "@/components/PageHeader";
@@ -45,13 +52,19 @@ const ProfileFriends = () => {
   };
   const {
     statuses,
-    byId,
     isPending: statusesPending,
+    isError: statusesFailed,
+    refetch: refetchStatuses,
   } = useFriendStatuses({ enabled: isOwnProfile });
+  // Friends keep their places between polls (see inStableOrder)
+  const [shownIds, setShownIds] = useState<number[]>([]);
+  const ordered = useMemo(() => inStableOrder(shownIds, statuses), [shownIds, statuses]);
+  const orderedIds = ordered.map((status) => status.id);
+  if (!sameIds(orderedIds, shownIds)) setShownIds(orderedIds);
   const online = useMemo(() => {
     const query = search.toLowerCase();
-    return query ? statuses.filter((s) => s.username.toLowerCase().includes(query)) : statuses;
-  }, [statuses, search]);
+    return query ? ordered.filter((s) => s.username.toLowerCase().includes(query)) : ordered;
+  }, [ordered, search]);
   const onlinePages = Math.max(1, Math.ceil(online.length / limit));
   const onlinePage = Math.min(page, onlinePages);
 
@@ -85,14 +98,29 @@ const ProfileFriends = () => {
                 { value: "all", label: `All ${total}` },
                 {
                   value: "online",
-                  label: statusesPending ? "Online" : `Online ${statuses.length}`,
+                  // No count until it's known (loading, or the request failed)
+                  label: statusesPending || statusesFailed ? "Online" : `Online ${statuses.length}`,
                 },
               ]}
               className="w-full sm:w-72"
             />
           )}
 
-          {showOnline ? (
+          {showOnline && statusesFailed ? (
+            <div className="space-y-4">
+              <FriendsSearch />
+              <EmptyState
+                icon={WifiOff}
+                title="Couldn't load which friends are online"
+                description="Check your connection and try again."
+                action={
+                  <Button size="lg" variant="outline" onClick={() => void refetchStatuses()}>
+                    Try again
+                  </Button>
+                }
+              />
+            </div>
+          ) : showOnline ? (
             <FriendsPaginatedList
               {...actions}
               friends={online.slice((onlinePage - 1) * limit, onlinePage * limit)}
@@ -100,10 +128,6 @@ const ProfileFriends = () => {
               setPage={setPage}
               pagination={{ total: online.length, totalPages: onlinePages }}
               isLoading={statusesPending}
-              secondaryTextFor={(friend) => {
-                const status = byId.get(friend.id);
-                return status ? presenceLabel(status) : null;
-              }}
               emptyMessage={
                 search
                   ? `No friends online match “${search}”`

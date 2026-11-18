@@ -22,7 +22,6 @@ interface FriendsPaginatedListProps extends FriendActionHandlers {
   mode?: FriendCardMode;
   currentUserId?: number;
   isOwnProfile?: boolean;
-  secondaryTextFor?: (friend: Friend) => ReactNode;
 }
 
 export const FriendsPaginatedList = ({
@@ -40,7 +39,6 @@ export const FriendsPaginatedList = ({
   currentUserId,
   isOwnProfile,
   mode,
-  secondaryTextFor,
 }: FriendsPaginatedListProps) => {
   const totalPages = pagination?.totalPages ?? 1;
   const hasNextPage = page < totalPages;
@@ -61,7 +59,6 @@ export const FriendsPaginatedList = ({
           currentUserId={currentUserId}
           isOwnProfile={isOwnProfile}
           mode={mode}
-          secondaryTextFor={secondaryTextFor}
         />
       )}
 

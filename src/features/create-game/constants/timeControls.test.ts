@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { defaultShorterClock, shorterClocks } from "./timeControls";
+import {
+  customPickerValues,
+  defaultShorterClock,
+  PLAY_TIME_CONTROLS,
+  shorterClocks,
+} from "./timeControls";
 
 describe("time odds clocks", () => {
   it("offers only clocks shorter than the other player's, longest first", () => {
@@ -16,5 +21,19 @@ describe("time odds clocks", () => {
     // Nothing at half or below: the shortest there is
     expect(defaultShorterClock(20)).toBe(15);
     expect(defaultShorterClock(15)).toBeNull();
+  });
+});
+
+describe("customPickerValues", () => {
+  it("shows every preset as it is, so the inline picker can follow a picked preset", () => {
+    for (const { options } of PLAY_TIME_CONTROLS) {
+      for (const { time, increment } of options) {
+        expect(customPickerValues({ time, increment })).toEqual({ minutes: time / 60, increment });
+      }
+    }
+  });
+
+  it("falls back to 10 minutes and no increment for values it doesn't offer", () => {
+    expect(customPickerValues({ time: 15, increment: 7 })).toEqual({ minutes: 10, increment: 0 });
   });
 });

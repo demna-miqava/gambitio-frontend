@@ -15,7 +15,9 @@ const FRIEND_STATUS_POLL_MS = 30_000;
 /**
  * The signed-in user's friends who are online or playing, available ones
  * first, and the same by friend id. Every list that shows friends shares
- * this one query, so a page polls once however many lists it has.
+ * this one query, so a page polls once however many lists it has. Pass
+ * `enabled: false` where nothing would show the result (no friends listed,
+ * a player who isn't your friend), so it doesn't poll for nothing.
  */
 export const useFriendStatuses = ({ enabled = true }: { enabled?: boolean } = {}) => {
   const { id } = useUser();
@@ -36,6 +38,8 @@ export const useFriendStatuses = ({ enabled = true }: { enabled?: boolean } = {}
     statuses: query.data ?? [],
     byId,
     isPending: query.isPending,
-    isError: query.isError,
+    // Nothing to show: a failed poll keeps the last list on screen
+    isError: query.isError && query.data === undefined,
+    refetch: query.refetch,
   };
 };

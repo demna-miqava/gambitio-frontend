@@ -1,5 +1,6 @@
-import axios, { type AxiosRequestConfig } from "axios";
+import axios, { isAxiosError, type AxiosRequestConfig } from "axios";
 import { API_BASE_URL } from "@/constants/apiConfig";
+import { recordServerDate } from "@/utils/serverClock";
 
 type TokenGetter = () => Promise<string | null>;
 let getAuthToken: TokenGetter | null = null;
@@ -20,6 +21,19 @@ axiosInstance.interceptors.request.use(async (config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+// Every response's Date header tells how far this device's clock is off
+// (see serverClock); errors carry one too
+axiosInstance.interceptors.response.use(
+  (response) => {
+    recordServerDate(response.headers?.date);
+    return response;
+  },
+  (error) => {
+    if (isAxiosError(error)) recordServerDate(error.response?.headers?.date);
+    return Promise.reject(error);
+  }
+);
 
 export const apiRequest = async <T>(
   method: "get" | "post" | "put" | "patch" | "delete",

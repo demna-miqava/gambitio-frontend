@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   newTableGame,
   tableGameReducer,
@@ -6,6 +6,8 @@ import {
   timeLeft,
   flagResult,
   canStillMate,
+  isInProgress,
+  newTableGameId,
   type TableAction,
   type TableGameState,
   type TableSetup,
@@ -121,6 +123,47 @@ describe("table game clocks", () => {
   it("time odds", () => {
     const s = newTableGame(setup({ whiteTime: 300, blackTime: 60 }), 0, "g");
     expect(s.remaining).toEqual({ white: 300_000, black: 60_000 });
+  });
+});
+
+describe("clock ticks", () => {
+  it("a tick that changes nothing returns the same state, so the screen doesn't re-render", () => {
+    const s = started();
+    expect(tableGameReducer(s, { type: "tick", now: 5_000 })).toBe(s);
+    const paused = run(s, { type: "pause", now: 2_000 });
+    expect(tableGameReducer(paused, { type: "tick", now: 90_000 })).toBe(paused);
+    // The flag falling is the one tick that does change it
+    expect(tableGameReducer(s, { type: "tick", now: 61_000 }).status).toBe("over");
+  });
+
+  it("a clock read a moment before it started shows its full time", () => {
+    const s = run(started(), { type: "move", san: "e4", now: 11_000 });
+    // Black's half last read the time at 10_950, before its clock started
+    expect(timeLeft(s, "black", 10_950)).toBe(60_000);
+    expect(timeLeft(s, "black", 11_100)).toBe(59_900);
+  });
+});
+
+describe("games on the device", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("only a finished game (or none) leaves room for a new one", () => {
+    const ready = newTableGame(setup(), 0, "g1");
+    expect(isInProgress(null)).toBe(false);
+    expect(isInProgress(ready)).toBe(true);
+    expect(isInProgress(started())).toBe(true);
+    expect(isInProgress(run(started(), { type: "pause", now: 2_000 }))).toBe(true);
+    expect(isInProgress(run(started(), { type: "resign", side: "white", now: 2_000 }))).toBe(false);
+  });
+
+  it("gives new games ids that can be sent as a save's clientId", () => {
+    const valid = /^[A-Za-z0-9_-]{8,64}$/;
+    expect(newTableGameId()).toMatch(valid);
+    // Without crypto.randomUUID (an older browser, or an insecure origin)
+    vi.stubGlobal("crypto", {});
+    const fallback = newTableGameId();
+    expect(fallback).toMatch(valid);
+    expect(newTableGameId()).not.toBe(fallback);
   });
 });
 

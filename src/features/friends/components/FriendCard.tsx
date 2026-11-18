@@ -20,6 +20,7 @@ import {
 import { Link } from "react-router-dom";
 import { getGameRoute, getProfileRoute } from "@/constants/routes";
 import { AvatarWithPresence } from "../status/Presence";
+import { presenceLabel } from "../status/presenceLabel";
 
 export type FriendCardMode = "manage" | "pick";
 
@@ -108,7 +109,8 @@ export function FriendCard<T extends Friend>({
 
   const identity = (
     <>
-      <AvatarWithPresence presence={presence}>
+      {/* The status is said in words under the name, so the dot stays silent */}
+      <AvatarWithPresence presence={presence} announce={false}>
         <UserAvatar
           src={avatarSrc(friend.id, friend.avatarUrl)}
           username={friend.username}
@@ -116,8 +118,12 @@ export function FriendCard<T extends Friend>({
       </AvatarWithPresence>
       <div className="flex min-w-0 flex-col">
         <span className="truncate font-medium">{friend.username}</span>
-        {secondaryText && (
+        {(presence || secondaryText) && (
           <span className="truncate text-xs text-muted-foreground">
+            {presence && (
+              <span className="font-medium text-foreground">{presenceLabel(presence)}</span>
+            )}
+            {presence && secondaryText && " · "}
             {secondaryText}
           </span>
         )}

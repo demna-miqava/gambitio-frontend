@@ -10,12 +10,10 @@ import {
 import { Chess } from "chess.js";
 import type { Key } from "@lichess-org/chessground/types";
 import { useBasePuzzleSession } from "../hooks/useBasePuzzleSession";
-import { useAdvanceAfterWrongMove } from "../hooks/useAdvanceAfterWrongMove";
 import { PUZZLE_CONFIG } from "../constants/puzzle.constants";
 import { PuzzleContext, type EnteredMove, type PuzzleContextType } from "./PuzzleContext";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
-import { calculateLegalMoves } from "@/features/game/utils/board-utils";
 import { parseTypedMove } from "@/features/game/utils/parseTypedMove";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { parsePersonalBest } from "../utils/rushRun";
@@ -29,7 +27,7 @@ import {
   playerMoveCount,
   type AppendRefusal,
 } from "../utils/calculateLine";
-import { calculateAttemptReducer, initialCalculateAttempt } from "../utils/calculateAttempt";
+import { calculateAttemptReducer, initialCalculateAttempt, isRunFinished } from "../utils/calculateAttempt";
 
 const RULES = PUZZLE_CONFIG.CALCULATE;
 
@@ -50,7 +48,8 @@ const turnOf = (chess: Chess) => (chess.turn() === "w" ? "white" : "black");
  * every move of the player's right is a solve, a wrong one costs a life and
  * the solution plays out, and a reply predicted differently (after right
  * moves) costs nothing: the board plays up to the real reply and the player
- * finishes move by move, as in Survival.
+ * enters the rest of the line from there, judged the same way. No move of
+ * theirs is ever played before they have entered it as part of a line.
  */
 export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) => {
   const [storedBest, setStoredBest] = useLocalStorage<number>(RULES.BEST_STORAGE_KEY, 0) as [
@@ -65,26 +64,19 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
   const isGameOver = lives <= 0;
   const score = history.filter(Boolean).length;
 
-  const { cgRef, chessRef, setInputLocked } = useChessBoardContext();
+  const { cgRef, setInputLocked } = useChessBoardContext();
   const { playSound, playGenericSound } = useChessSound();
 
   const [attemptState, dispatch] = useReducer(calculateAttemptReducer, null, initialCalculateAttempt);
   const [entryError, setEntryError] = useState<string | null>(null);
-  const finishing = attemptState.phase === "finishing";
 
   // Declared before the session, so the first puzzle loads with the board
-  // locked. Pieces only move on the board while finishing move by move.
+  // locked. Pieces never move on the board itself: lines are entered on the
+  // overlay or typed, and only replays move them.
   useEffect(() => {
-    if (finishing) {
-      setInputLocked(false);
-      const chess = chessRef.current;
-      const turn = turnOf(chess);
-      cgRef.current?.set({ turnColor: turn, movable: { color: turn, dests: calculateLegalMoves(chess) } });
-    } else {
-      setInputLocked(true);
-      cgRef.current?.set({ movable: { color: undefined } });
-    }
-  }, [finishing, setInputLocked, cgRef, chessRef]);
+    setInputLocked(true);
+    cgRef.current?.set({ movable: { color: undefined } });
+  }, [setInputLocked, cgRef]);
 
   const onPuzzleSolved = useCallback(() => setHistory((prev) => [...prev, true]), []);
   const onPuzzleFailed = useCallback(() => {
@@ -94,7 +86,7 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
 
   const session = useBasePuzzleSession({ onPuzzleSolved, onPuzzleFailed, isGameOver });
   const { puzzle, status, puzzleState, loadNextPuzzle, recordSolve, recordFail, baseRestart } = session;
-  const { setStatus, setMoveIndex } = puzzleState;
+  const { setStatus } = puzzleState;
 
   const loadNextRef = useRef(loadNextPuzzle);
   useEffect(() => {
@@ -128,7 +120,7 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
     () => (attemptState.puzzleId === puzzleId ? attemptState : initialCalculateAttempt(puzzleId)),
     [attemptState, puzzleId]
   );
-  const { entered, phase, verdict } = attempt;
+  const { entered, fixed, phase, verdict, differed } = attempt;
 
   const followed = useMemo(() => (puzzle ? followLine(puzzle.fen, entered) : null), [puzzle, entered]);
   const position = followed?.chess ?? null;
@@ -137,8 +129,18 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
     () => (puzzle && verdict ? lineToSan(puzzle.fen, puzzle.moves) : []),
     [puzzle, verdict]
   );
+  /** The reply predicted differently, in SAN: what was played, and what the solver expected */
+  const differedSan = useMemo(() => {
+    if (!puzzle || !differed) return null;
+    const predicted = lineToSan(puzzle.fen, [...entered.slice(0, differed.index), differed.predicted]);
+    return { index: differed.index, real: enteredSan[differed.index] ?? "", predicted: predicted.at(-1) ?? "" };
+  }, [puzzle, differed, entered, enteredSan]);
   const canSubmit =
-    !!puzzle && phase === "entering" && !isGameOver && isLineComplete(puzzle.fen, entered, puzzle.moves.length);
+    !!puzzle &&
+    phase === "entering" &&
+    !isGameOver &&
+    entered.length > fixed &&
+    isLineComplete(puzzle.fen, entered, puzzle.moves.length);
 
   /** Why a move can't go in, or null once it has */
   const tryAdd = useCallback(
@@ -228,15 +230,20 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
 
   const submit = useCallback(() => {
     if (!puzzle || !canSubmit) return;
+    // The whole line is judged, its fixed start being the solution's own
     const judged = judgeLine(puzzle.fen, puzzle.moves, entered);
+    const solution = puzzle.moves;
     dispatch({ type: "submit", verdict: judged });
     setEntryError(null);
+    // The board shows the position after the fixed start; replays go on from there
+    const fromFen = followLine(puzzle.fen, entered.slice(0, fixed))?.chess.fen() ?? puzzle.fen;
+    const replayed = () => dispatch({ type: "replayed", solution });
 
     if (judged.result === "solved") {
       recordSolve();
       setStatus("success");
-      playLine(puzzle.fen, entered, () => {
-        dispatch({ type: "replayed" });
+      playLine(fromFen, entered.slice(fixed), () => {
+        replayed();
         playGenericSound();
         schedule(() => void loadNextRef.current(), RULES.NEXT_AFTER_SOLVE_MS);
       });
@@ -247,40 +254,15 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
       recordFail();
       setStatus("failed");
       playGenericSound();
-      playLine(puzzle.fen, puzzle.moves, () => dispatch({ type: "replayed" }));
+      playLine(fromFen, solution.slice(fixed), replayed);
       return;
     }
 
-    // A reply differed: up to and including the real reply, then the
-    // player plays on from the position it leaves (no penalty so far)
-    playLine(puzzle.fen, puzzle.moves.slice(0, judged.index + 1), (chess) => {
-      chessRef.current.load(chess.fen());
-      setMoveIndex(judged.index + 1);
-      setStatus("solving");
-      dispatch({ type: "replayed" });
-    });
-  }, [
-    puzzle,
-    canSubmit,
-    entered,
-    recordSolve,
-    recordFail,
-    setStatus,
-    setMoveIndex,
-    playLine,
-    playGenericSound,
-    schedule,
-    chessRef,
-  ]);
-
-  // Finishing move by move, as in Survival: a solve moves on after a beat,
-  // a wrong move stays marked for a moment and costs a life
-  useEffect(() => {
-    if (!finishing || status !== "success") return;
-    const timer = setTimeout(() => void loadNextRef.current(), RULES.NEXT_AFTER_SOLVE_MS);
-    return () => clearTimeout(timer);
-  }, [finishing, status]);
-  useAdvanceAfterWrongMove(status, finishing && !isGameOver, loadNextPuzzle, puzzle?.id);
+    // A reply differed: the line up to and including the real reply is
+    // played, and the rest is entered from the position it leaves (no
+    // penalty so far)
+    playLine(fromFen, solution.slice(fixed, judged.index + 1), replayed);
+  }, [puzzle, canSubmit, entered, fixed, recordSolve, recordFail, setStatus, playLine, playGenericSound, schedule]);
 
   useEffect(() => {
     if (isGameOver && score > best) setStoredBest(score);
@@ -319,6 +301,8 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
       attempt,
       enteredSan,
       solutionSan,
+      differed: differedSan,
+      runFinished: isRunFinished(isGameOver, attempt),
       requiredMoves: puzzle ? playerMoveCount(puzzle.moves) : 0,
       position,
       canSubmit,
@@ -350,6 +334,7 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
       attempt,
       enteredSan,
       solutionSan,
+      differedSan,
       position,
       canSubmit,
       entryError,

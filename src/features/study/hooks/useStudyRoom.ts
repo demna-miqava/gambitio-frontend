@@ -10,8 +10,15 @@ import { RECONNECT_OPTIONS } from "@/constants/websocket";
 import { useAuthenticatedWebSocket, useSocketReauth } from "@/hooks/useAuthenticatedWebSocket";
 import { useUser } from "@/hooks/useUser";
 import { parseWebSocketMessage } from "@/features/game/utils/websocket-helpers";
-import type { StudyClientMessage, StudyRoomSnapshot, StudyServerMessage } from "../types";
-import { applyStudyMessage, nodeOf } from "../utils/studyState";
+import type { StudyChatState, StudyClientMessage, StudyRoomSnapshot, StudyServerMessage } from "../types";
+import {
+  applyStudyChat,
+  applyStudyMessage,
+  chatAfterRefusal,
+  gameSyncOnConnect,
+  nodeOf,
+  wantsGameSync,
+} from "../utils/studyState";
 import { activityMessage } from "../utils/activity";
 
 export type StudyRoomStatus = "connecting" | "ready" | "not_found";
@@ -44,6 +51,8 @@ export const useStudyRoom = (roomId: number) => {
   const gameSyncedThisConnection = useRef(false);
   /** Why the last chat message was refused, shown in the chat panel */
   const [chatError, setChatError] = useState<string | null>(null);
+  // Apart from the snapshot: a chat message re-renders the chat panel only
+  const [chat, setChat] = useState<StudyChatState | null>(null);
   const syncTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(syncTimer.current), []);
   const leaving = useRef(false);
@@ -94,7 +103,15 @@ export const useStudyRoom = (roomId: number) => {
           }
           if (code === "STUDY_NOT_FOUND") return leave("You're no longer in this study room");
           // Chat problems belong to the chat panel; the board is fine
-          if (code?.startsWith("CHAT_")) return setChatError(text || "Couldn't send that message");
+          if (code?.startsWith("CHAT_")) {
+            // Closed, or no chat for us here: the panel says so itself
+            if (chatAfterRefusal(null, code)) {
+              setChat((current) => chatAfterRefusal(current, code)?.chat ?? current);
+              setChatError(null);
+              return;
+            }
+            return setChatError(text || "Couldn't send that message");
+          }
           // The game's line will come with the next sync; nothing to show
           if (code === "STUDY_NOT_LINKED") return;
           toast.error(text || "Something went wrong", { id: "study-error" });
@@ -115,11 +132,14 @@ export const useStudyRoom = (roomId: number) => {
         }
       }
 
+      setChat((current) => applyStudyChat(current, message));
+      if (message.type === "chat") return;
+
       const before = snapshotRef.current;
       const { snapshot: next, needsSync } = applyStudyMessage(before, message);
       if (message.type === "study_state") {
         syncPending.current = false;
-        if (message.room.gameId !== null && !gameSyncedThisConnection.current) {
+        if (gameSyncOnConnect(next, gameSyncedThisConnection.current)) {
           gameSyncedThisConnection.current = true;
           send({ type: "sync_game" });
         }
@@ -162,7 +182,7 @@ export const useStudyRoom = (roomId: number) => {
 
   /** A room watching a game: the game socket delivered a move (or the game ended). */
   const syncGame = useCallback(() => {
-    if (snapshotRef.current?.room.gameId != null) send({ type: "sync_game" });
+    if (wantsGameSync(snapshotRef.current)) send({ type: "sync_game" });
   }, [send]);
 
   const sendChat = useCallback(
@@ -192,6 +212,7 @@ export const useStudyRoom = (roomId: number) => {
     boardResetKey,
     activity,
     syncGame,
+    chat,
     sendChat,
     chatError,
   };

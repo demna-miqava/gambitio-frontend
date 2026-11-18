@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowRight, CheckCircle2, ExternalLink, LayoutGrid, Loader2, RotateCcw, Target, Trash2, XCircle } from "lucide-react";
@@ -65,6 +65,7 @@ export const DrillView = ({ drill }: { drill: ConversionDrill }) => {
     orientation,
     flip,
     isPlayerTurn,
+    slipped,
   } = useEndgameExercise(position);
   useFlipBoardKey(flip);
   const { data: drills } = useConversionDrills();
@@ -87,17 +88,38 @@ export const DrillView = ({ drill }: { drill: ConversionDrill }) => {
     );
   }, [result, attempt, drill.id, playerMoves, saveAttempt]);
 
+  // An attempt given up once the lead has dipped (a retry, or leaving the
+  // drill) is a miss, not a do-over: otherwise a slipping attempt could
+  // always be dropped before it fails. One that hasn't dipped is dropped.
+  const abandonRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    abandonRef.current = () => {
+      if (!slipped || result || recordedAttempt.current === attempt) return;
+      recordedAttempt.current = attempt;
+      saveAttempt({ drillId: drill.id, success: false, moves: playerMoves });
+    };
+  }, [slipped, result, attempt, drill.id, playerMoves, saveAttempt]);
+  useEffect(() => {
+    const abandon = abandonRef;
+    return () => abandon.current();
+  }, []);
+
+  const restart = useCallback(() => {
+    abandonRef.current();
+    retry();
+  }, [retry]);
+
   // R retries at once (not while typing a move)
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() !== "r" || event.metaKey || event.ctrlKey || event.altKey) return;
       if (event.repeat || isTypingTarget(event.target)) return;
       event.preventDefault();
-      retry();
+      restart();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [retry]);
+  }, [restart]);
 
   const playerCode = drill.color === "white" ? "w" : "b";
   const lastMove = history.at(-1);
@@ -210,7 +232,7 @@ export const DrillView = ({ drill }: { drill: ConversionDrill }) => {
           <Button
             size="md"
             variant={result?.status === "success" ? "outline" : "default"}
-            onClick={retry}
+            onClick={restart}
             aria-keyshortcuts="r"
             disabled={history.length === 0 && !result}
           >
@@ -238,7 +260,8 @@ export const DrillView = ({ drill }: { drill: ConversionDrill }) => {
 
       <p className="text-sm text-muted-foreground">
         Stockfish resigns once it sees a forced mate or is hopelessly behind. If your lead drops under +1.5, or
-        the game is drawn, the win has slipped. A conversion brings the drill back later; a miss keeps it due.
+        the game is drawn, the win has slipped. Retrying or leaving once your lead has dipped counts as a miss. A
+        conversion brings the drill back later; a miss keeps it due.
       </p>
 
       <div className="space-y-2 lg:border-t lg:border-border lg:pt-3">

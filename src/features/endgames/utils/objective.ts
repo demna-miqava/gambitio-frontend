@@ -220,6 +220,15 @@ export const formatAdvantage = (score: EngineScore): string => {
   return `${pawns >= 0 ? "+" : "−"}${Math.abs(pawns).toFixed(1)}`;
 };
 
+/**
+ * The lead has dipped: the engine's latest score (its side) leaves the
+ * player under CONVERSION_SLIPPED_CP, or sees a mate for itself. One dip
+ * doesn't fail the attempt (conversionVerdict wants two in a row), but an
+ * attempt given up after one counts as a miss.
+ */
+export const hasSlipped = (latest: EngineScore | null): boolean =>
+  latest !== null && (latest.type === "mate" ? latest.value > 0 : -latest.value < CONVERSION_SLIPPED_CP);
+
 /** A score from the engine's side, turned to the player's. */
 const playerSide = (score: EngineScore): EngineScore => ({ type: score.type, value: -score.value });
 

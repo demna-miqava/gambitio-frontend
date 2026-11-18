@@ -20,6 +20,11 @@ export interface ReportInput {
   details?: string;
   /** The game it happened in; only a game the two played against each other */
   gameId?: number;
+  /**
+   * Instead of gameId: the study room it happened in (its chat goes with
+   * the report); only a room both are members of
+   */
+  studyRoomId?: number;
 }
 
 export const REPORT_REASONS: { value: ReportReason; label: string; hint: string }[] = [

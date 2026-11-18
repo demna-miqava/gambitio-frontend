@@ -85,6 +85,20 @@ describe("judgeLine", () => {
     expect(judgeLine(START, LINE, ["e2e4", "c7c5", "g1f3"])).toEqual({ result: "reply-differs", index: 1 });
   });
 
+  it("judges the rest of a line entered after the real reply was played", () => {
+    // e4 c5 was fixed as e4 e5: the moves entered after it decide
+    const long = ["e2e4", "e7e5", "g1f3", "b8c6", "f1b5"];
+    expect(judgeLine(START, long, ["e2e4", "e7e5", "g1f3", "b8c6", "f1b5"])).toEqual({ result: "solved" });
+    expect(judgeLine(START, long, ["e2e4", "e7e5", "f1c4", "b8c6", "c4b5"])).toEqual({ result: "failed", index: 2 });
+    expect(judgeLine(START, long, ["e2e4", "e7e5", "g1f3", "g8f6", "f1b5"])).toEqual({
+      result: "reply-differs",
+      index: 3,
+    });
+    // Only the player's move after the fixed start ends the line
+    expect(isLineComplete(START, ["e2e4", "e7e5", "g1f3"], 5)).toBe(false);
+    expect(isLineComplete(START, ["e2e4", "e7e5", "g1f3", "b8c6", "f1b5"], 5)).toBe(true);
+  });
+
   it("a wrong move before a different reply is still a miss", () => {
     expect(judgeLine(START, LINE, ["d2d4", "c7c5", "d4d5"])).toEqual({ result: "failed", index: 0 });
   });

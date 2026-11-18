@@ -50,6 +50,15 @@ export const CUSTOM_MINUTES = [1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 45, 60, 90]
 export const CUSTOM_INCREMENTS = [0, 1, 2, 3, 5, 10, 15, 20, 30, 60];
 
 /**
+ * What the custom picker shows for a time control: its minutes and
+ * increment when the picker offers them, else 10 minutes and no increment.
+ */
+export const customPickerValues = ({ time, increment }: { time: number; increment: number }) => ({
+  minutes: CUSTOM_MINUTES.includes(time / 60) ? time / 60 : 10,
+  increment: CUSTOM_INCREMENTS.includes(increment) ? increment : 0,
+});
+
+/**
  * Clocks (seconds) the player with less time can be given in a game with
  * time odds. Only the ones shorter than the other player's clock are offered.
  */

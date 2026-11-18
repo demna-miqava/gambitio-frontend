@@ -85,10 +85,17 @@ interface PuzzleContextCalculate extends PuzzleContextBase {
   /** The run that just ended beat the previous best */
   isNewBest: boolean;
   attempt: CalculateAttempt;
-  /** The entered line in SAN */
+  /** The line in SAN: the moves already played (attempt.fixed), then the entered ones */
   enteredSan: string[];
   /** The solution in SAN, shown once the line has been judged */
   solutionSan: string[];
+  /**
+   * The last reply predicted differently (SAN): the real one is on the board
+   * and the rest of the line is being entered from there
+   */
+  differed: { index: number; real: string; predicted: string } | null;
+  /** Out of lives, and the last line has finished playing out: the run's end can be shown */
+  runFinished: boolean;
   /** Moves of the player's own the line needs */
   requiredMoves: number;
   /** The hidden position the entered line has reached (null without a puzzle) */

@@ -6,60 +6,26 @@ import { useGameSetup } from "../../GameSetupContext";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
 import type { PlayerColorOption } from "@/types/game.types";
-import { formatClock, formatTimeControl, formatTimeOdds } from "@/utils/timeControl";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { defaultShorterClock, shorterClocks } from "../../constants/timeControls";
+import { formatTimeControl, formatTimeOdds } from "@/utils/timeControl";
 import { OutgoingChallengeCard } from "../OutgoingChallengeCard";
 import { Custom } from "./Custom";
 import { SegmentedRadioGroup, type SegmentedOption } from "@/components/SegmentedRadioGroup";
 import type { BestOf } from "@/features/notifications/types/websocket-messages";
 import { OpeningPicker } from "./OpeningPicker";
+import { isMirrorMatch, timedMatchLabel } from "@/features/series/utils/seriesFormat";
 import {
-  gameFitsMatch,
-  isMirrorMatch,
-  MATCH_MINUTES,
-  timedMatchLabel,
-} from "@/features/series/utils/seriesFormat";
-
-type MatchFormat = "single" | "mirror" | "series" | "timed";
-
-const FORMAT_CHOICES: SegmentedOption<MatchFormat>[] = [
-  { value: "single", label: "Single" },
-  { value: "mirror", label: "Mirror" },
-  { value: "series", label: "Series" },
-  { value: "timed", label: "Timed" },
-];
-
-type SeriesLength = "3" | "5";
-
-const LENGTH_CHOICES: SegmentedOption<SeriesLength>[] = [
-  { value: "3", label: "Best of 3" },
-  { value: "5", label: "Best of 5" },
-];
+  planChallenge,
+  type MatchFormat,
+  type Rating,
+  type SeriesLength,
+  type TimeOdds,
+} from "../../utils/challengePlan";
+import { TimeOddsSection } from "./friend-invite/TimeOddsSection";
+import { MatchFormatSection } from "./friend-invite/MatchFormatSection";
+import { RatingSection } from "./friend-invite/RatingSection";
 
 /** The length a timed match starts at: the usual speed-event format */
 const DEFAULT_MATCH_MINUTES = 15;
-
-/** Under the format choice: how the chosen one is played and scored */
-const formatHint = (bestOf: BestOf, matchMinutes: number | null): string | null => {
-  if (matchMinutes !== null) {
-    return `As many games as fit in ${matchMinutes} minutes. Each next game starts by itself with the colours swapped. A win scores 2, a draw 1, and after two wins in a row points count double. Most points when the time is up wins; a game still going then is played out and counts.`;
-  }
-  if (isMirrorMatch(bestOf)) {
-    return "Two games from the same position, one with each colour, scored as a pair: a win each is a drawn match.";
-  }
-  if (bestOf > 1) {
-    return `Colours alternate each game and a draw is half a point. Whoever leads after ${bestOf} games wins, or sooner once the lead can't be caught.`;
-  }
-  return null;
-};
 
 /** What Send says the challenge is: "best-of-3 challenge", "mirror match", "15-minute timed match" */
 const challengeNoun = (bestOf: BestOf, matchMinutes: number | null): string =>
@@ -70,23 +36,6 @@ const challengeNoun = (bestOf: BestOf, matchMinutes: number | null): string =>
       : bestOf > 1
         ? `best-of-${bestOf} challenge`
         : "challenge";
-
-/** Who starts with less time: nobody, the sender, or the friend */
-type TimeOdds = "even" | "me" | "them";
-
-const ODDS_CHOICES: SegmentedOption<TimeOdds>[] = [
-  { value: "even", label: "Even" },
-  { value: "me", label: "Less for me" },
-  { value: "them", label: "Less for them" },
-];
-
-/** Whether the game (or every game of the series) changes ratings */
-type Rating = "rated" | "unrated";
-
-const RATING_CHOICES: SegmentedOption<Rating>[] = [
-  { value: "rated", label: "Rated" },
-  { value: "unrated", label: "Unrated" },
-];
 
 const COLOR_CHOICES: SegmentedOption<PlayerColorOption>[] = [
   { value: "white", label: "White" },
@@ -99,11 +48,6 @@ export const FriendInviteOptions = () => {
   const [format, setFormat] = useState<MatchFormat>("single");
   const [seriesLength, setSeriesLength] = useState<SeriesLength>("3");
   const [pickedMinutes, setPickedMinutes] = useState<number>(DEFAULT_MATCH_MINUTES);
-  const bestOf: BestOf =
-    format === "mirror" ? 2 : format === "series" ? (Number(seriesLength) as BestOf) : 1;
-  const matchMinutes = format === "timed" ? pickedMinutes : null;
-  // More than one game, whatever the format
-  const isMatch = bestOf > 1 || matchMinutes !== null;
   const [odds, setOdds] = useState<TimeOdds>("even");
   const [rating, setRating] = useState<Rating>("rated");
   // The shorter clock the player picked; dropped when it no longer fits the time control
@@ -144,22 +88,22 @@ export const FriendInviteOptions = () => {
   }
 
   const friendRating = selectedFriend[`${timeControl.format}Rating`];
-  // Time odds: one player keeps the time control's clock, the other gets a
-  // shorter one. No shorter clock exists below the shortest time control
-  const clockChoices = shorterClocks(timeControl.time);
-  const shorterClock =
-    pickedClock !== null && clockChoices.includes(pickedClock)
-      ? pickedClock
-      : defaultShorterClock(timeControl.time);
-  const hasOdds = odds !== "even" && shorterClock !== null;
-  const ownTime = hasOdds && odds === "me" ? shorterClock : timeControl.time;
-  const friendTime = hasOdds && odds === "them" ? shorterClock : timeControl.time;
-  // Time odds always make it unrated, so the choice only applies to even clocks
-  const isUnrated = !hasOdds && rating === "unrated";
+  // The rules (bestOf, odds clocks, when it's unrated) live in planChallenge
+  const plan = planChallenge({
+    friendId: selectedFriend.id,
+    color: colorChoice,
+    time: timeControl.time,
+    increment: timeControl.increment,
+    format,
+    seriesLength,
+    matchMinutes: pickedMinutes,
+    odds,
+    pickedClock,
+    rating,
+    openingId: startingOpening?.id ?? null,
+  });
+  const { bestOf, matchMinutes, isMatch, hasOdds, ownTime, friendTime } = plan;
   const isWaitingForThisFriend = outgoingChallenge?.challengedId === selectedFriend.id;
-  // At least one whole game has to fit in a timed match (the server checks too)
-  const tooLongForMatch =
-    matchMinutes !== null && !gameFitsMatch(timeControl.time, timeControl.increment, matchMinutes);
 
   return (
     <div className="flex flex-col gap-6">
@@ -195,126 +139,24 @@ export const FriendInviteOptions = () => {
             )}
           </div>
 
-          {clockChoices.length > 0 && (
-            <section className="space-y-3">
-              <div className="space-y-2">
-                <p aria-hidden="true" className="text-sm text-muted-foreground">
-                  Time odds
-                </p>
-                <SegmentedRadioGroup
-                  label="Time odds"
-                  value={odds}
-                  onValueChange={setOdds}
-                  options={ODDS_CHOICES}
-                />
-              </div>
-              {hasOdds && (
-                <>
-                  <div className="flex items-center justify-between gap-3">
-                    <Label htmlFor="odds-clock" className="min-w-0 truncate">
-                      {odds === "me" ? "My clock" : `${selectedFriend.username}'s clock`}
-                    </Label>
-                    <Select
-                      value={String(shorterClock)}
-                      onValueChange={(v) => setPickedClock(Number(v))}
-                    >
-                      <SelectTrigger id="odds-clock" className="h-11 w-32 shrink-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clockChoices.map((clock) => (
-                          <SelectItem key={clock} value={String(clock)}>
-                            {formatClock(clock)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    You start with {formatClock(ownTime)}, {selectedFriend.username} with{" "}
-                    {formatClock(friendTime)}
-                    {isMatch ? ", in every game" : ""}. Games with time odds are unrated.
-                  </p>
-                </>
-              )}
-            </section>
-          )}
+          <TimeOddsSection
+            plan={plan}
+            odds={odds}
+            onOddsChange={setOdds}
+            onClockChange={setPickedClock}
+            friendName={selectedFriend.username}
+          />
 
-          {!hasOdds && (
-            <section className="space-y-2">
-              <p aria-hidden="true" className="text-sm text-muted-foreground">
-                Rating
-              </p>
-              <SegmentedRadioGroup
-                label="Rating"
-                value={rating}
-                onValueChange={setRating}
-                options={RATING_CHOICES}
-              />
-              {isUnrated && (
-                <p className="text-xs text-muted-foreground">
-                  {bestOf > 1
-                    ? "No game of the series changes"
-                    : matchMinutes !== null
-                      ? "No game of the match changes"
-                      : "The game doesn't change"}{" "}
-                  either
-                  player's rating.
-                </p>
-              )}
-            </section>
-          )}
-
-          <section className="space-y-2">
-            <p
-              aria-hidden="true"
-              className="text-sm text-muted-foreground"
-            >
-              Match format
-            </p>
-            <SegmentedRadioGroup
-              label="Match format"
-              value={format}
-              onValueChange={setFormat}
-              options={FORMAT_CHOICES}
-            />
-            {format === "series" && (
-              <SegmentedRadioGroup
-                label="Series length"
-                value={seriesLength}
-                onValueChange={setSeriesLength}
-                options={LENGTH_CHOICES}
-              />
-            )}
-            {matchMinutes !== null && (
-              <div className="flex items-center justify-between gap-3 pt-1">
-                <Label htmlFor="match-minutes" className="min-w-0 truncate">
-                  Match length
-                </Label>
-                <Select value={String(matchMinutes)} onValueChange={(v) => setPickedMinutes(Number(v))}>
-                  <SelectTrigger id="match-minutes" className="h-11 w-32 shrink-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MATCH_MINUTES.map((minutes) => (
-                      <SelectItem key={minutes} value={String(minutes)}>
-                        {minutes} min
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {formatHint(bestOf, matchMinutes) && (
-              <p className="text-xs text-muted-foreground">{formatHint(bestOf, matchMinutes)}</p>
-            )}
-            {tooLongForMatch && (
-              <p role="alert" className="text-xs font-medium text-destructive">
-                A {formatTimeControl(timeControl.time, timeControl.increment)} game doesn't fit in{" "}
-                {matchMinutes} minutes. Pick a faster time control or a longer match.
-              </p>
-            )}
-          </section>
+          <MatchFormatSection
+            plan={plan}
+            format={format}
+            onFormatChange={setFormat}
+            seriesLength={seriesLength}
+            onSeriesLengthChange={setSeriesLength}
+            onMatchMinutesChange={setPickedMinutes}
+            time={timeControl.time}
+            increment={timeControl.increment}
+          />
 
           <OpeningPicker
             value={startingOpening?.id ?? null}
@@ -327,6 +169,9 @@ export const FriendInviteOptions = () => {
                   : undefined
             }
           />
+
+          {/* After the format and opening, which decide whether the choice applies */}
+          <RatingSection plan={plan} rating={rating} onRatingChange={setRating} />
 
           <section className="space-y-2">
             <p
@@ -346,22 +191,9 @@ export const FriendInviteOptions = () => {
           <Button
             size="xl"
             className="h-auto min-h-12 w-full whitespace-normal py-2.5"
-            disabled={tooLongForMatch}
+            disabled={!plan.fitsMatch}
             onClick={() =>
-              sendChallenge(
-                {
-                  challengedId: selectedFriend.id,
-                  color: colorChoice,
-                  time: ownTime,
-                  increment: timeControl.increment,
-                  ...(hasOdds && { opponentTime: friendTime }),
-                  bestOf,
-                  ...(isUnrated && { rated: false }),
-                  ...(startingOpening && { openingId: startingOpening.id }),
-                  ...(matchMinutes !== null && { matchMinutes }),
-                },
-                { username: selectedFriend.username, opening: startingOpening }
-              )
+              sendChallenge(plan.data, { username: selectedFriend.username, opening: startingOpening })
             }
           >
             {/*
@@ -372,7 +204,8 @@ export const FriendInviteOptions = () => {
             */}
             <span className="flex flex-wrap justify-center gap-x-1.5">
               <span className="whitespace-nowrap">
-                Send {isUnrated && "unrated "}
+                {/* With time odds the clocks already say it's unrated */}
+                Send {!plan.rated && !hasOdds && "unrated "}
                 {challengeNoun(bestOf, matchMinutes)}
               </span>
               <span className="whitespace-nowrap tabular-nums opacity-80">

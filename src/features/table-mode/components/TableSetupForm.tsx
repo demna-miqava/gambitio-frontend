@@ -10,6 +10,7 @@ import { SegmentedRadioGroup } from "@/components/SegmentedRadioGroup";
 import { useDebounce } from "@/hooks/useDebounce";
 import { getUserFriends } from "@/services/user";
 import { cn } from "@/lib/utils";
+import { QKEY_TABLE_FRIEND_PICKER } from "@/constants/queryKeys";
 import type { Side, TableSetup } from "../utils/tableGame";
 
 /** Time controls offered at the table, minutes + increment seconds */
@@ -28,6 +29,8 @@ const PRESETS = [
 const MAX_MINUTES = 180;
 const MAX_INCREMENT = 180;
 const MAX_GUEST_NAME = 30;
+/** A friends list changes rarely: a search typed again within this long isn't fetched again */
+const FRIENDS_STALE_MS = 5 * 60_000;
 
 interface Friend {
   id: number;
@@ -51,9 +54,10 @@ const FriendPicker = ({
   const [search, setSearch] = useState("");
   const query = useDebounce(search.trim(), 250);
   const friends = useQuery({
-    queryKey: ["table-friend-picker", myId, query],
+    queryKey: [QKEY_TABLE_FRIEND_PICKER, myId, query],
     queryFn: () =>
       getUserFriends(myId, new URLSearchParams({ page: "1", limit: "8", ...(query ? { q: query } : {}) }).toString()),
+    staleTime: FRIENDS_STALE_MS,
   });
   const list = (friends.data?.data ?? []) as Friend[];
 

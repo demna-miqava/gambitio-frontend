@@ -16,6 +16,7 @@ import { getUserProfile } from "@/services/user";
 import { QKEY_USER_PROFILE } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
 import type { StartingOpening } from "@/features/openings/startingOpenings";
+import { NO_OPENING, startingOpeningFor, type OpeningChoice } from "./utils/openingChoice";
 import {
   getPlaySetupSearch,
   parsePlaySetup,
@@ -90,7 +91,6 @@ export const GameSetupProvider = ({
   const isSetupStep = state?.setupStep === true;
 
   const { timeControl, updateTimeControl: setTimeControl } = useTimeControl();
-  const [startingOpening, setStartingOpening] = useState<StartingOpening | null>(null);
   const { isSearching, isConnecting, setShouldConnect } = useMatchmaking({
     time: timeControl.time,
     increment: timeControl.increment,
@@ -171,6 +171,19 @@ export const GameSetupProvider = ({
   const isSelectedFriendLoading =
     !!friendId && !friendFromState && friendQuery.isPending;
 
+  // The challenge form's opening, kept here for the board beside the form.
+  // Like the form's other options it starts over for each challenge: it
+  // belongs to the friend it was picked for, and leaving the form (back to
+  // the friends list) clears it
+  const [opening, setOpening] = useState<OpeningChoice>(NO_OPENING);
+  if (opening.friendId !== null && opening.friendId !== friendId) setOpening(NO_OPENING);
+  const startingOpening = startingOpeningFor(opening, friendId);
+  const setStartingOpening = useCallback(
+    (next: StartingOpening | null) =>
+      setOpening(next && friendId ? { friendId, opening: next } : NO_OPENING),
+    [friendId]
+  );
+
   const value = useMemo(
     () => ({
       activeSection,
@@ -191,6 +204,7 @@ export const GameSetupProvider = ({
     }),
     [
       startingOpening,
+      setStartingOpening,
       activeSection,
       setActiveSection,
       openCustomTime,

@@ -7,15 +7,9 @@ import { useUser } from "@/hooks/useUser";
 import { notificationMessages } from "@/services/websocketMessageDispatcher";
 import { NOTIFICATION_MESSAGE_TYPES } from "@/features/notifications/constants/websocket-types";
 import type { FriendsUpdatedNotification } from "@/features/notifications/types/websocket-messages";
-import {
-  QKEY_FRIEND_STATUSES,
-  QKEY_LIVE_GAMES_FRIENDS,
-  QKEY_PENDING_FRIEND_REQUESTS,
-  QKEY_SUGGESTED_FRIENDS,
-  QKEY_USER_FRIENDS,
-  QKEY_USER_PROFILE,
-} from "@/constants/queryKeys";
+import { QKEY_PENDING_FRIEND_REQUESTS, QKEY_SUGGESTED_FRIENDS } from "@/constants/queryKeys";
 import { getProfileFriendsRoute } from "@/constants/routes";
+import { invalidateAfterFriendshipChange } from "../utils/friendshipQueries";
 
 /**
  * Keeps friend lists and requests current when another player sends,
@@ -32,12 +26,8 @@ export const FriendUpdates = () => {
       void queryClient.invalidateQueries({ queryKey: [QKEY_PENDING_FRIEND_REQUESTS] });
       void queryClient.invalidateQueries({ queryKey: [QKEY_SUGGESTED_FRIENDS] });
       if (event === "request_accepted" || event === "removed") {
-        void queryClient.invalidateQueries({ queryKey: [QKEY_USER_FRIENDS] });
-        // Friend counts on profile headers
-        void queryClient.invalidateQueries({ queryKey: [QKEY_USER_PROFILE] });
-        void queryClient.invalidateQueries({ queryKey: [QKEY_LIVE_GAMES_FRIENDS] });
-        // A new friend may be online right now; a removed one mustn't stay listed
-        void queryClient.invalidateQueries({ queryKey: [QKEY_FRIEND_STATUSES] });
+        // Lists, friend counts on profile headers, live games and who's online
+        invalidateAfterFriendshipChange(queryClient);
       }
 
       const name = user.username ?? "Someone";

@@ -92,6 +92,16 @@ export type TableAction =
 
 export const other = (side: Side): Side => (side === "white" ? "black" : "white");
 
+/**
+ * A new game's id. It is also the save's idempotency key (tableClientId),
+ * so only letters, digits and "-": a UUID, or failing that the time and a
+ * random part in base 36.
+ */
+export const newTableGameId = (): string =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+
 export const newTableGame = (setup: TableSetup, now: number, id: string): TableGameState => ({
   v: 1,
   id,
@@ -108,11 +118,19 @@ export const newTableGame = (setup: TableSetup, now: number, id: string): TableG
   endedAt: null,
 });
 
+/**
+ * A game on the device that isn't over yet (ready, running or paused): it
+ * blocks setting up another, which would overwrite it.
+ */
+export const isInProgress = (state: TableGameState | null): state is TableGameState =>
+  state !== null && state.status !== "over";
+
 /** Time left on a side's clock at `now` (ms, never below 0). */
 export const timeLeft = (state: TableGameState, side: Side, now: number): number => {
   const base = state.remaining[side];
   if (state.status !== "running" || side !== state.turn || state.turnStartedAt === null) return Math.max(0, base);
-  return Math.max(0, base - (now - state.turnStartedAt));
+  // A `now` read a moment before the clock started (a clock's last tick) counts as no time yet
+  return Math.max(0, base - Math.max(0, now - state.turnStartedAt));
 };
 
 /** The game so far on a board (chess.js). */

@@ -23,8 +23,9 @@ const FriendsGrid = () => {
   const userId = useProfileUserId();
   const { id: currentUserId } = useUser();
   const avatarSrc = useAvatarSrc();
-  // Your own friends (on someone else's profile, the ones you have in common)
-  const { byId: statuses } = useFriendStatuses();
+  // Your own friends (on someone else's profile, the ones you have in common);
+  // not polled while there's no one to show it for
+  const { byId: statuses } = useFriendStatuses({ enabled: friends.length > 0 });
   // The profile header already loaded the friend count: use it for the
   // heading and the number of placeholders, so the card keeps its size
   const { profile } = useUserProfile();

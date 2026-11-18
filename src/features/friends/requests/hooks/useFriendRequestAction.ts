@@ -4,10 +4,10 @@ import { apiRequest } from "@/services";
 import {
   QKEY_PENDING_FRIEND_REQUESTS,
   QKEY_USER_FRIENDS,
-  QKEY_USER_PROFILE,
 } from "@/constants/queryKeys";
 import { getApiErrorMessage } from "@/lib/utils";
 import { useUser } from "@/hooks/useUser";
+import { invalidateAfterFriendshipChange } from "../../utils/friendshipQueries";
 
 export type FriendRequestAction = "accept" | "decline" | "cancel";
 
@@ -48,9 +48,11 @@ export const useFriendRequestAction = () => {
       queryClient.invalidateQueries({
         queryKey: [QKEY_PENDING_FRIEND_REQUESTS, userId],
       });
-      queryClient.invalidateQueries({ queryKey: [QKEY_USER_FRIENDS] });
       if (action === "accept") {
-        queryClient.invalidateQueries({ queryKey: [QKEY_USER_PROFILE] });
+        // A new friend: lists, counts, and whether they're online right now
+        invalidateAfterFriendshipChange(queryClient);
+      } else {
+        queryClient.invalidateQueries({ queryKey: [QKEY_USER_FRIENDS] });
       }
     },
     onError: (error, { action }) => {

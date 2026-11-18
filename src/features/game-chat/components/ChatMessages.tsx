@@ -22,21 +22,45 @@ export const ChatMessages = ({ messages, viewerId, opponentName }: ChatMessagesP
       const own = message.userId === viewerId;
       const startsGroup = index > 0 && messages[index - 1].userId !== message.userId;
       return (
-        <p
+        <ChatBubble
           key={message.id}
-          // Right-to-left text lays out correctly whatever the page's direction
-          dir="auto"
-          title={formatMessageTime(message.at)}
-          className={cn(
-            "w-fit max-w-[85%] rounded-2xl px-3 py-1.5 text-sm leading-snug [overflow-wrap:anywhere]",
-            own ? "self-end bg-primary/15 text-foreground" : "self-start bg-muted text-foreground",
-            startsGroup && "mt-1.5"
-          )}
-        >
-          <span className="sr-only">{own ? "You: " : `${opponentName}: `}</span>
-          {message.text}
-        </p>
+          message={message}
+          own={own}
+          senderName={opponentName}
+          className={cn(own ? "self-end" : "self-start", startsGroup && "mt-1.5")}
+        />
       );
     })}
   </>
+);
+
+/**
+ * One message as a bubble (also the study room's chat). The text stays a
+ * text node; see ChatMessages.
+ */
+export const ChatBubble = ({
+  message,
+  own,
+  senderName,
+  className,
+}: {
+  message: ChatMessage;
+  own: boolean;
+  /** Read out before someone else's message */
+  senderName: string;
+  className?: string;
+}) => (
+  <p
+    // Right-to-left text lays out correctly whatever the page's direction
+    dir="auto"
+    title={formatMessageTime(message.at)}
+    className={cn(
+      "w-fit max-w-[85%] rounded-2xl px-3 py-1.5 text-sm leading-snug [overflow-wrap:anywhere]",
+      own ? "bg-primary/15 text-foreground" : "bg-muted text-foreground",
+      className
+    )}
+  >
+    <span className="sr-only">{own ? "You: " : `${senderName}: `}</span>
+    {message.text}
+  </p>
 );

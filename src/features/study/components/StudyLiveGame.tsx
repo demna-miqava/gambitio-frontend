@@ -1,4 +1,5 @@
-import { AlertCircle, Loader2, Radio } from "lucide-react";
+import { memo } from "react";
+import { AlertCircle, Loader2, Radio, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { ProvisionalMark } from "@/components/ProvisionalMark";
@@ -7,23 +8,67 @@ import { LiveGamePreview } from "@/features/watch/components/LiveGamePreview";
 import { useShortcutKey } from "@/features/game/hooks/useShortcutKey";
 import { cn } from "@/lib/utils";
 import type { PlayerColor } from "@/features/game/types/game.types";
-import type { WatchedGame } from "../utils/watchedGame";
+import type { WatchedGame, WatchedGameStatus } from "../utils/watchedGame";
 import { describeWatchedResult } from "../utils/watchedGame";
-import type { WatchedGameStatus } from "../hooks/useWatchedGame";
+import { useWatchedGame } from "../hooks/useWatchedGame";
 
 interface StudyLiveGameProps {
-  game: WatchedGame | null;
-  status: WatchedGameStatus;
-  /** The shared board is on the game's latest move */
+  /** The game the room watches */
+  gameId: number;
+  /** The game socket delivered a move or the end: the room catches up */
+  onGameChange: () => void;
+  /** The shared board is on the game's latest move in the room */
   atLive: boolean;
   /** Moves the room's board to the game's latest move */
   onGoLive: () => void;
   /** The room has the latest move in its tree (it may lag the game socket for a moment) */
   canGoLive: boolean;
+  /**
+   * The room's own label of that move ("41. Qxf7#"), for a game that is
+   * over: its moves may have been deleted from the room since, so the
+   * game's last move isn't necessarily the room's
+   */
+  roomLiveLabel: string | null;
+}
+
+/**
+ * The game a room watches, with its own socket, so a move or a clock
+ * update re-renders this panel only, not the room's board and moves.
+ */
+export const StudyLiveGame = memo(({ gameId, onGameChange, ...panel }: StudyLiveGameProps) => {
+  const { game, status, retry } = useWatchedGame(gameId, onGameChange);
+  return <StudyLiveGamePanel game={game} status={status} onRetry={retry} {...panel} />;
+});
+StudyLiveGame.displayName = "StudyLiveGame";
+
+interface StudyLiveGamePanelProps extends Omit<StudyLiveGameProps, "gameId" | "onGameChange"> {
+  game: WatchedGame | null;
+  status: WatchedGameStatus;
+  /** Connects to the game again (after "lost" or "refused") */
+  onRetry: () => void;
 }
 
 /** Full move number label of the latest move, e.g. "23. Nf3" or "23... Nf6" */
 const moveLabel = (ply: number, san: string) => `${Math.ceil(ply / 2)}${ply % 2 === 1 ? "." : "..."} ${san}`;
+
+/** "Couldn't open the game" / "Lost the connection", with a Retry */
+const ConnectionProblem = ({ status, onRetry }: { status: "refused" | "lost"; onRetry: () => void }) => (
+  <div role="alert" className="flex items-center gap-2 text-sm text-muted-foreground">
+    {status === "refused" ? (
+      <AlertCircle className="size-4 shrink-0 text-loss" aria-hidden="true" />
+    ) : (
+      <WifiOff className="size-4 shrink-0 text-loss" aria-hidden="true" />
+    )}
+    <p className="min-w-0 flex-1">
+      {status === "refused"
+        ? "Couldn't open the game. The room still works."
+        : "Lost the connection to the game. The room still works."}
+    </p>
+    <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+      Retry
+    </Button>
+  </div>
+);
 
 /**
  * The game a room watches, as everyone watching it sees it: the players,
@@ -31,17 +76,22 @@ const moveLabel = (ply: number, san: string) => `${Math.ceil(ply / 2)}${ply % 2 
  * room's board to the latest move (L). The room's own analysis is the
  * board beside it.
  */
-export const StudyLiveGame = ({ game, status, atLive, onGoLive, canGoLive }: StudyLiveGameProps) => {
+export const StudyLiveGamePanel = ({
+  game,
+  status,
+  onRetry,
+  atLive,
+  onGoLive,
+  canGoLive,
+  roomLiveLabel,
+}: StudyLiveGamePanelProps) => {
   useShortcutKey("l", onGoLive, canGoLive && !atLive);
 
   if (!game) {
     return (
       <section aria-label="The game" className="rounded-xl bg-card p-3 lg:rounded-none lg:bg-transparent">
-        {status === "error" ? (
-          <p role="alert" className="flex items-center gap-2 text-sm text-muted-foreground">
-            <AlertCircle className="size-4 text-loss" aria-hidden="true" />
-            Couldn't open the game. The room still works.
-          </p>
+        {status === "refused" || status === "lost" ? (
+          <ConnectionProblem status={status} onRetry={onRetry} />
         ) : (
           <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -105,6 +155,7 @@ export const StudyLiveGame = ({ game, status, atLive, onGoLive, canGoLive }: Stu
           </span>
         )}
       </div>
+      {(status === "lost" || status === "refused") && <ConnectionProblem status={status} onRetry={onRetry} />}
 
       <div className="flex items-center gap-3">
         <div className="w-20 shrink-0 sm:w-24">
@@ -116,23 +167,42 @@ export const StudyLiveGame = ({ game, status, atLive, onGoLive, canGoLive }: Stu
         </div>
       </div>
 
-      <Button
-        type="button"
-        size="sm"
-        variant={atLive ? "secondary" : "default"}
-        className={cn("w-full", atLive && "text-muted-foreground")}
-        onClick={onGoLive}
-        disabled={!canGoLive}
-        aria-pressed={atLive}
-        aria-keyshortcuts="L"
-        title="Go to the latest move (L)"
-      >
-        <Radio aria-hidden="true" />
-        {atLive ? "At the latest move" : "Live"}
-        {game.lastMove && (
-          <span className="font-normal tabular-nums opacity-80">· {moveLabel(game.ply, game.lastMove.san)}</span>
-        )}
-      </Button>
+      {game.inProgress ? (
+        <Button
+          type="button"
+          size="sm"
+          variant={atLive ? "secondary" : "default"}
+          className={cn("w-full", atLive && "text-muted-foreground")}
+          onClick={onGoLive}
+          disabled={!canGoLive}
+          aria-pressed={atLive}
+          aria-keyshortcuts="L"
+          title="Go to the latest move (L)"
+        >
+          <Radio aria-hidden="true" />
+          {atLive ? "At the latest move" : "Live"}
+          {game.lastMove && (
+            <span className="font-normal tabular-nums opacity-80">· {moveLabel(game.ply, game.lastMove.san)}</span>
+          )}
+        </Button>
+      ) : canGoLive ? (
+        // Over: the room's copy of the game, which may have been cut short since
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className={cn("w-full", atLive && "text-muted-foreground")}
+          onClick={onGoLive}
+          aria-pressed={atLive}
+          aria-keyshortcuts="L"
+          title="Go to the game's last move in this room (L)"
+        >
+          {atLive ? "At the game's last move" : "Game's last move"}
+          {roomLiveLabel && <span className="font-normal tabular-nums opacity-80">· {roomLiveLabel}</span>}
+        </Button>
+      ) : game.ply > 0 ? (
+        <p className="text-xs text-muted-foreground">The game's moves were deleted from this room.</p>
+      ) : null}
     </section>
   );
 };

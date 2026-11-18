@@ -10,8 +10,9 @@ import { getArchiveGameRoute } from "@/constants/routes";
 import { useTableGame } from "../hooks/useTableGame";
 import { useWakeLock } from "../hooks/useWakeLock";
 import { useSaveTableGame } from "../hooks/useSaveTableGame";
-import { boardOf, describeEnd, other, tableGamePgn, timeLeft, type Side, type TableGameState } from "../utils/tableGame";
-import { queueUnsaved, type UnsavedTableGame } from "../utils/tableStorage";
+import { boardOf, describeEnd, other, type Side, type TableGameState } from "../utils/tableGame";
+import { queueUnsaved } from "../utils/tableStorage";
+import { toUnsaved } from "../utils/tableSave";
 import { ClockHalf } from "./ClockHalf";
 import { TableBoard } from "./TableBoard";
 
@@ -31,30 +32,6 @@ const namesOf = (state: TableGameState): Record<Side, string> => {
     : { white: opponent, black: setup.recorderName };
 };
 
-/** What the server stores, from a finished game (null for clock-only games and games with no moves). */
-const toUnsaved = (state: TableGameState, names: Record<Side, string>): UnsavedTableGame | null => {
-  const { setup, result } = state;
-  if (!result || setup.clockOnly || state.moves.length === 0) return null;
-  return {
-    id: state.id,
-    finishedAt: state.endedAt ?? Date.now(),
-    label: `${names.white} vs ${names.black}`,
-    body: {
-      pgn: tableGamePgn(state),
-      result: result.result,
-      endReason: result.endReason,
-      color: setup.recorderColor,
-      whiteTime: setup.whiteTime,
-      blackTime: setup.blackTime,
-      increment: setup.increment,
-      opponent:
-        setup.opponent.kind === "guest"
-          ? { kind: "guest", name: setup.opponent.name }
-          : { kind: "friend", userId: setup.opponent.userId },
-    },
-  };
-};
-
 /**
  * The phone lying between the two players: the far player's clock turned
  * to face them, the board in the middle (or nothing, in clock-only mode)
@@ -62,7 +39,8 @@ const toUnsaved = (state: TableGameState, names: Record<Side, string>): UnsavedT
  * The screen stays awake while the game is on.
  */
 export const TablePlay = ({ initial, onLeave, onDone }: TablePlayProps) => {
-  const { state, now, dispatch } = useTableGame(initial);
+  // Re-renders when the game changes, not on the clock's ticks (ClockHalf reads the time)
+  const { state, dispatch } = useTableGame(initial);
   const [swapped, setSwapped] = useState(false);
   const [confirmAbandon, setConfirmAbandon] = useState(false);
   const names = useMemo(() => namesOf(state), [state]);
@@ -120,10 +98,7 @@ export const TablePlay = ({ initial, onLeave, onDone }: TablePlayProps) => {
   // A finished game goes on the device first, then to the server; once
   // stored, the game remembers it (a reload doesn't save it again)
   const savedGameId = state.savedGameId ?? null;
-  const unsaved = useMemo(
-    () => (over && savedGameId === null ? toUnsaved(state, names) : null),
-    [over, savedGameId, state, names]
-  );
+  const unsaved = useMemo(() => (over ? toUnsaved(state, names) : null), [over, state, names]);
   const queuedRef = useRef<string | null>(null);
   useEffect(() => {
     if (!unsaved || queuedRef.current === unsaved.id) return;
@@ -140,7 +115,6 @@ export const TablePlay = ({ initial, onLeave, onDone }: TablePlayProps) => {
     <ClockHalf
       side={side}
       name={names[side]}
-      timeMs={timeLeft(state, side, now)}
       state={state}
       flipped={flipped}
       onTap={() => dispatch({ type: "tap", side, now: Date.now() })}

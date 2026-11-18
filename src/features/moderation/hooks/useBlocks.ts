@@ -4,6 +4,7 @@ import { blockUser, getBlockedUsers, reportUser, unblockUser } from "@/services/
 import {
   QKEY_BLOCKED_USERS,
   QKEY_CHALLENGES,
+  QKEY_FRIEND_STATUSES,
   QKEY_LIVE_GAMES_FRIENDS,
   QKEY_PENDING_FRIEND_REQUESTS,
   QKEY_SUGGESTED_FRIENDS,
@@ -45,6 +46,8 @@ export const invalidateAfterBlockChange = (queryClient: QueryClient) => {
     QKEY_CHALLENGES,
     QKEY_USER_PROFILE,
     QKEY_LIVE_GAMES_FRIENDS,
+    // A blocked friend mustn't stay on the Online lists with Challenge / Watch
+    QKEY_FRIEND_STATUSES,
   ]) {
     void queryClient.invalidateQueries({ queryKey: [key] });
   }

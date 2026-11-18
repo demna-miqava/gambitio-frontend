@@ -20,7 +20,9 @@ export const MatchClock = ({
   className?: string;
 }) => {
   const active = series.status === "active" && !!series.endsAt;
-  const now = useNow(1_000, active);
+  // Server time; nothing left to count once the time is up ("Time's up"
+  // until the server says the match is over)
+  const now = useNow(1_000, active, series.endsAt ? new Date(series.endsAt).getTime() : null);
   if (!active) return null;
   const phase = matchPhase(series, now);
   const time = phase.kind === "over" ? null : formatCountdown(phase.msLeft);

@@ -13,8 +13,6 @@ interface FriendsListProps extends FriendActionHandlers {
   currentUserId?: number;
   isOwnProfile?: boolean;
   mode?: FriendCardMode;
-  /** The line under each name; "Friends since …" by default */
-  secondaryTextFor?: (friend: Friend) => ReactNode;
 }
 
 export const FriendsList = ({
@@ -25,11 +23,10 @@ export const FriendsList = ({
   currentUserId,
   isOwnProfile,
   mode,
-  secondaryTextFor = (friend) => `Friends since ${formatShortDate(friend.friendsSince)}`,
 }: FriendsListProps) => {
   // Known for the signed-in user's own friends only; on someone else's
-  // profile that's the friends you have in common
-  const { byId: statuses } = useFriendStatuses();
+  // profile that's the friends you have in common. Not polled for an empty list
+  const { byId: statuses } = useFriendStatuses({ enabled: items.length > 0 });
 
   if (items.length === 0 && emptyMessage) {
     return typeof emptyMessage === "string" ? (
@@ -51,7 +48,7 @@ export const FriendsList = ({
             isOwnProfile={isOwnProfile}
             mode={mode}
             presence={statuses.get(friend.id)}
-            secondaryText={secondaryTextFor(friend)}
+            secondaryText={`Friends since ${formatShortDate(friend.friendsSince)}`}
           />
         </li>
       ))}

@@ -13,6 +13,7 @@ import { useIncomingChallenges } from "./useIncomingChallenges";
 import type {
   NotificationWebSocketMessage,
   Challenge,
+  ChallengeReceivedNotification,
   ChallengeRef,
   OutgoingChallenge,
 } from "../types/websocket-messages";
@@ -41,6 +42,32 @@ export const upsertChallenge = (
   ),
   challenge,
 ];
+
+/**
+ * The challenge a challenge_received message describes, as the list and the
+ * toast show it. Keeps the series it continues, so the toast for game 2
+ * reads "Mirror match, game 2" or "Game 2 of 3".
+ */
+export const challengeFromMessage = (data: ChallengeReceivedNotification["data"]): Challenge => ({
+  id: data.id,
+  challengerId: data.challengerId,
+  username: data.username,
+  avatarUrl: data.avatarUrl || null,
+  color: data.color,
+  time: data.time,
+  increment: data.increment,
+  ownTime: data.ownTime ?? null,
+  opponentTime: data.opponentTime ?? null,
+  createdAt: data.createdAt,
+  rating: data.rating,
+  bestOf: data.bestOf,
+  seriesId: data.seriesId ?? null,
+  seriesGame: data.seriesGame ?? null,
+  rated: data.rated,
+  opening: data.opening ?? null,
+  matchMinutes: data.matchMinutes ?? null,
+  version: data.version,
+});
 
 /**
  * Hook for handling challenge-related WebSocket messages.
@@ -86,24 +113,7 @@ export const useChallengeMessageHandlers = ({
     (message: NotificationWebSocketMessage) => {
       if (message.type !== NOTIFICATION_MESSAGE_TYPES.CHALLENGE_RECEIVED)
         return;
-      const challenge: Challenge = {
-        id: message.data.id,
-        challengerId: message.data.challengerId,
-        username: message.data.username,
-        avatarUrl: message.data.avatarUrl || null,
-        color: message.data.color,
-        time: message.data.time,
-        increment: message.data.increment,
-        ownTime: message.data.ownTime ?? null,
-        opponentTime: message.data.opponentTime ?? null,
-        createdAt: message.data.createdAt,
-        rating: message.data.rating,
-        bestOf: message.data.bestOf,
-        rated: message.data.rated,
-        opening: message.data.opening ?? null,
-        matchMinutes: message.data.matchMinutes ?? null,
-        version: message.data.version,
-      };
+      const challenge = challengeFromMessage(message.data);
 
       queryClient.setQueryData<Challenge[]>([QKEY_CHALLENGES], (old = []) =>
         upsertChallenge(old, challenge)
