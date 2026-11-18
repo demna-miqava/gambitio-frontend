@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
 import { useIncomingChallenges } from "@/features/notifications/hooks/useIncomingChallenges";
 import { describeChallengeTerms } from "@/features/notifications/utils/challengeLabels";
+import { INCOMING_LIST_ATTR } from "@/features/notifications/utils/incomingList";
+import { challengeToastId } from "@/features/notifications/hooks/useManageChallenge";
 import { UserAvatar } from "@/components/UserAvatar";
 import { formatDistance } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -33,12 +36,28 @@ export const Challenges = ({ className }: ChallengesProps) => {
   const { data: challenges = [], isLoading } = useIncomingChallenges();
   const { handleAcceptChallenge, handleDeclineChallenge } = useChallenges();
   const now = useNow(REFRESH_MS, challenges.length > 0);
+  // In view, the list closes the toasts for the challenges it shows: the
+  // same challenge twice, the toast on top of its own entry on a phone
+  const sectionRef = useRef<HTMLElement>(null);
+  const challengerKey = challenges.map((c) => c.challengerId).join(",");
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || !challengerKey) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      for (const id of challengerKey.split(",")) toast.dismiss(challengeToastId(Number(id)));
+    });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [challengerKey]);
 
   if (isLoading || challenges.length === 0) {
     return null;
   }
   return (
     <section
+      ref={sectionRef}
+      {...{ [INCOMING_LIST_ATTR]: "" }}
       aria-labelledby="incoming-challenges-title"
       className={cn("space-y-3", className ?? "border-t border-border pt-5")}
     >
@@ -79,7 +98,8 @@ export const Challenges = ({ className }: ChallengesProps) => {
                   {" · "}
                   {terms.color}
                   {" · "}
-                  {formatDistance(new Date(challenge.createdAt), now, {
+                  {/* `now` ticks every 30 s: a newer challenge isn't "in" the future */}
+                  {formatDistance(Math.min(new Date(challenge.createdAt).getTime(), now), now, {
                     addSuffix: true,
                   })}
                 </p>

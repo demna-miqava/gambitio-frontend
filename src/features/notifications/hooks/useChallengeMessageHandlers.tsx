@@ -10,6 +10,7 @@ import { getGameRoute } from "@/constants/routes";
 import { notificationMessages } from "@/services/websocketMessageDispatcher";
 import { challengeToastId } from "./useManageChallenge";
 import { useIncomingChallenges } from "./useIncomingChallenges";
+import { isIncomingListInView } from "../utils/incomingList";
 import type {
   NotificationWebSocketMessage,
   Challenge,
@@ -120,20 +121,31 @@ export const useChallengeMessageHandlers = ({
       );
       invalidateChallenges();
 
-      toastsShownRef.current.add(challenge.challengerId);
-      // Same id per challenger, so a repeated message updates the toast
-      toast(
-        <ChallengeNotification
-          challenge={challenge}
-          onAccept={handleAccept}
-          onDecline={handleDecline}
-        />,
-        {
-          id: challengeToastId(challenge.challengerId),
-          duration: Infinity,
-          onDismiss: () => toastsShownRef.current.delete(challenge.challengerId),
+      const id = challengeToastId(challenge.challengerId);
+      // Once the list has rendered the challenge: with "Challenges for you"
+      // on screen it shows there, and a toast would only repeat it (and
+      // cover it on a phone). An older toast from them goes too, its terms
+      // may be out of date. The list closes toasts it scrolls into view.
+      setTimeout(() => {
+        if (isIncomingListInView()) {
+          toast.dismiss(id);
+          return;
         }
-      );
+        toastsShownRef.current.add(challenge.challengerId);
+        // Same id per challenger, so a repeated message updates the toast
+        toast(
+          <ChallengeNotification
+            challenge={challenge}
+            onAccept={handleAccept}
+            onDecline={handleDecline}
+          />,
+          {
+            id,
+            duration: Infinity,
+            onDismiss: () => toastsShownRef.current.delete(challenge.challengerId),
+          }
+        );
+      }, 0);
     },
     [handleAccept, handleDecline, invalidateChallenges, queryClient]
   );
