@@ -7,6 +7,10 @@ import { cn } from "@/lib/utils";
 interface TimeControlsSectionProps {
   /** Shows a "Custom" tile that opens the custom picker */
   showCustom?: boolean;
+  /** Replaces opening the custom picker step, e.g. to show it inline */
+  onCustom?: () => void;
+  /** The inline custom picker `onCustom` toggles is open */
+  isCustomOpen?: boolean;
 }
 
 const valueOf = (time: number, increment: number) => `${time}+${increment}`;
@@ -15,7 +19,11 @@ const valueOf = (time: number, increment: number) => `${time}+${increment}`;
  * All time controls visible at once, grouped by speed. One radio group: a
  * single Tab stop, arrow keys move between tiles.
  */
-export const TimeControlsSection = ({ showCustom = true }: TimeControlsSectionProps) => {
+export const TimeControlsSection = ({
+  showCustom = true,
+  onCustom,
+  isCustomOpen,
+}: TimeControlsSectionProps) => {
   const { timeControl, updateTimeControl, openCustomTime, isSearching } =
     useGameSetup();
   const isPreset = PLAY_TIME_CONTROLS.some(({ options }) =>
@@ -70,7 +78,8 @@ export const TimeControlsSection = ({ showCustom = true }: TimeControlsSectionPr
       {showCustom && (
         <button
           type="button"
-          onClick={openCustomTime}
+          onClick={onCustom ?? openCustomTime}
+          aria-expanded={onCustom ? isCustomOpen : undefined}
           disabled={isSearching}
           className={cn(
             "flex h-11 w-full items-center justify-center rounded-xl text-sm font-medium transition-colors",

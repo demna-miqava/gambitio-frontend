@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { defaultShorterClock, shorterClocks } from "../../constants/timeControls";
 import { OutgoingChallengeCard } from "../OutgoingChallengeCard";
+import { Custom } from "./Custom";
 import { SegmentedRadioGroup, type SegmentedOption } from "@/components/SegmentedRadioGroup";
 import type { BestOf } from "@/features/notifications/types/websocket-messages";
 import { OpeningPicker } from "./OpeningPicker";
@@ -77,6 +78,8 @@ export const FriendInviteOptions = () => {
   const [rating, setRating] = useState<Rating>("rated");
   // The shorter clock the player picked; dropped when it no longer fits the time control
   const [pickedClock, setPickedClock] = useState<number | null>(null);
+  // The custom time picker, shown in the form so the friend stays selected
+  const [isCustomOpen, setIsCustomOpen] = useState(false);
   const {
     selectedFriend,
     isSelectedFriendLoading,
@@ -147,7 +150,17 @@ export const FriendInviteOptions = () => {
         <OutgoingChallengeCard />
       ) : (
         <>
-          <TimeControlsSection showCustom={false} />
+          <div className="space-y-3">
+            <TimeControlsSection
+              onCustom={() => setIsCustomOpen((open) => !open)}
+              isCustomOpen={isCustomOpen}
+            />
+            {isCustomOpen && (
+              <div className="rounded-xl bg-muted/50 p-4">
+                <Custom onDone={() => setIsCustomOpen(false)} />
+              </div>
+            )}
+          </div>
 
           {clockChoices.length > 0 && (
             <section className="space-y-3">

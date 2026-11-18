@@ -53,7 +53,10 @@ export const CUSTOM_INCREMENTS = [0, 1, 2, 3, 5, 10, 15, 20, 30, 60];
  * Clocks (seconds) the player with less time can be given in a game with
  * time odds. Only the ones shorter than the other player's clock are offered.
  */
-export const ODDS_CLOCKS = [15, 30, 45, 60, 120, 180, 300, 600, 900, 1200];
+export const ODDS_CLOCKS = [
+  15, 30, 45, 60, 90, 120, 150, 180, 240, 300, 360, 420, 480, 540, 600, 720, 900, 1200,
+  1500, 1800, 2400, 2700, 3600, 4500, 5400,
+];
 
 /** The shorter clocks on offer against `time`, longest first. */
 export const shorterClocks = (time: number): number[] =>

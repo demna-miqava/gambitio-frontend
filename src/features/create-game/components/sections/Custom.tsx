@@ -16,8 +16,13 @@ import {
 } from "../../constants/timeControls";
 import { formatTimeControl } from "@/utils/timeControl";
 
+interface CustomProps {
+  /** Called once the time control is applied (default: back to the previous step) */
+  onDone?: () => void;
+}
+
 /** Pick any minutes + increment combination. */
-export const Custom = () => {
+export const Custom = ({ onDone }: CustomProps) => {
   const { timeControl, updateTimeControl, goBack } = useGameSetup();
   const [minutes, setMinutes] = useState(
     CUSTOM_MINUTES.includes(timeControl.time / 60) ? timeControl.time / 60 : 10
@@ -63,7 +68,9 @@ export const Custom = () => {
       </div>
 
       <div className="flex items-center justify-between border-y border-border py-3">
-        <span className="text-sm text-muted-foreground">This game will be</span>
+        <span className="text-sm text-muted-foreground">
+          {onDone ? "Time control" : "This game will be"}
+        </span>
         <span className="text-sm font-medium capitalize">
           {format} ·{" "}
           <span className="tabular-nums">{formatTimeControl(minutes * 60, increment)}</span>
@@ -75,7 +82,7 @@ export const Custom = () => {
         className="w-full"
         onClick={() => {
           updateTimeControl(format, minutes * 60, increment);
-          goBack();
+          (onDone ?? goBack)();
         }}
       >
         Use this time control
