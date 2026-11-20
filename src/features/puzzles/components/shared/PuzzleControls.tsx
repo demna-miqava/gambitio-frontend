@@ -50,8 +50,6 @@ export const PuzzleControls = () => {
         <FlipBoardButton onFlip={flipBoard} orientation={orientation} />
       </div>
 
-      {!autoAdvance && status === "success" && <PuzzleSolutionLine puzzle={puzzle} />}
-
       <PuzzleActionButtons
         status={status}
         onRetry={onRetry}
@@ -60,6 +58,8 @@ export const PuzzleControls = () => {
         onShowSolution={onShowSolution}
         autoAdvance={autoAdvance}
       />
+
+      {!autoAdvance && status === "success" && <PuzzleSolutionLine puzzle={puzzle} />}
 
       {engineAllowed && <PuzzleAnalysis exploration={exploration} />}
 

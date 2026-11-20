@@ -8,10 +8,13 @@ export const PuzzleInfiniteSidebar = () => {
   const { theme, onThemeChange, sessionStats } = useInfiniteMode();
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       <PuzzleRatingCard />
       <PuzzleThemePicker value={theme} onChange={onThemeChange} />
-      <PuzzleControls />
+      {/* On phones it comes first, under the board: the result and Next button need no scrolling */}
+      <div className="panel-first-stacked">
+        <PuzzleControls />
+      </div>
       <PuzzleSessionStats stats={sessionStats} />
     </div>
   );

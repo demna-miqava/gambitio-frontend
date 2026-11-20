@@ -1491,6 +1491,12 @@
   /* Level with the board's top, below the app's top bar if there is one */
   --panel-top: calc(var(--app-top-bar-height, 0px) + 1.25rem);
 }
+/* Stacked: what the player acts on (a puzzle's result and Next button) goes
+   first in the panel, right under the board, so it's on screen without
+   scrolling. The panel's flex column must hold it for order to apply. */
+.game-layout-panel .panel-first-stacked {
+  order: -1;
+}
 
 @media (width >= 40rem) {
   .game-layout {
@@ -1558,6 +1564,9 @@
   .game-layout-panel {
     position: sticky;
     top: var(--panel-top);
+  }
+  .game-layout-panel .panel-first-stacked {
+    order: 0;
   }
 }
 
