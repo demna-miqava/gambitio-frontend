@@ -3,7 +3,7 @@ import { CloudOff, Loader2, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { formatShortDate } from "@/lib/utils";
-import { UNSAVED_KEY, UNSAVED_CHANGED_EVENT, loadUnsaved, removeUnsaved, type UnsavedTableGame } from "../utils/tableStorage";
+import { UNSAVED_CHANGED_EVENT, isUnsavedStorageKey, loadUnsaved, removeUnsaved, type UnsavedTableGame } from "../utils/tableStorage";
 import { useTableGameSaver } from "../hooks/useSaveTableGame";
 
 const errorText = (error: unknown) =>
@@ -23,7 +23,7 @@ export const UnsavedTableGames = () => {
   useEffect(() => {
     const refresh = () => setGames(loadUnsaved());
     const onStorage = (event: StorageEvent) => {
-      if (event.key === null || event.key === UNSAVED_KEY) refresh();
+      if (isUnsavedStorageKey(event.key)) refresh();
     };
     window.addEventListener(UNSAVED_CHANGED_EVENT, refresh);
     window.addEventListener("storage", onStorage);

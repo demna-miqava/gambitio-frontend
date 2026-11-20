@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { newTableGame, newTableGameId, tableGameReducer, type TableGameState } from "./tableGame";
+import { setStorageAccount } from "@/utils/userStorage";
 import {
   CURRENT_KEY,
   UNSAVED_KEY,
+  isUnsavedStorageKey,
   loadCurrentGame,
   loadUnsaved,
   markCurrentSaved,
@@ -13,9 +15,13 @@ import {
   type UnsavedTableGame,
 } from "./tableStorage";
 
-/** Tests run in Node: a minimal Storage */
+/** Where the signed-in account's entry is kept (see userStore) */
+const keyOf = (key: string, account = "user_a") => `gambitio:u:${account}:table:${key}`;
+
+/** Tests run in Node: a minimal Storage, with an account signed in */
 const useMemoryStorage = () =>
   beforeEach(() => {
+    setStorageAccount("user_a");
     const items = new Map<string, string>();
     globalThis.localStorage = {
       getItem: (key: string) => items.get(key) ?? null,
@@ -133,10 +139,38 @@ describe("table storage", () => {
   it("loads a stored game, and nothing from a damaged entry", () => {
     storeCurrentGame(game());
     expect(loadCurrentGame()).toEqual(game());
-    localStorage.setItem(CURRENT_KEY, JSON.stringify({ ...game(), setup: {} }));
+    localStorage.setItem(keyOf(CURRENT_KEY), JSON.stringify({ ...game(), setup: {} }));
     expect(loadCurrentGame()).toBeNull();
-    localStorage.setItem(UNSAVED_KEY, JSON.stringify([unsaved(), { id: "x" }]));
+    localStorage.setItem(keyOf(UNSAVED_KEY), JSON.stringify([unsaved(), { id: "x" }]));
     expect(loadUnsaved().map((g) => g.id)).toEqual(["g-1"]);
+  });
+
+  it("keeps each account's games to itself", () => {
+    storeCurrentGame(game());
+    setStorageAccount("user_b");
+    expect(loadCurrentGame()).toBeNull();
+    // Nobody signed in: nothing is read or kept
+    setStorageAccount(null);
+    expect(loadCurrentGame()).toBeNull();
+    storeCurrentGame(game());
+    setStorageAccount("user_b");
+    expect(loadCurrentGame()).toBeNull();
+    setStorageAccount("user_a");
+    expect(loadCurrentGame()).toEqual(game());
+  });
+
+  it("doesn't read what was stored for the whole browser before games were per account", () => {
+    localStorage.setItem("gambitio:table-game", JSON.stringify(game()));
+    localStorage.setItem("gambitio:table-unsaved", JSON.stringify([unsaved()]));
+    expect(loadCurrentGame()).toBeNull();
+    expect(loadUnsaved()).toEqual([]);
+  });
+
+  it("tells another tab's change to the unsaved list from other storage changes", () => {
+    expect(isUnsavedStorageKey(keyOf(UNSAVED_KEY))).toBe(true);
+    expect(isUnsavedStorageKey(null)).toBe(true);
+    expect(isUnsavedStorageKey(keyOf(CURRENT_KEY))).toBe(false);
+    expect(isUnsavedStorageKey("gambitio:table-unsaved")).toBe(false);
   });
 
   it("marks the game on the device saved when the server has stored it", () => {

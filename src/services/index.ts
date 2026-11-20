@@ -30,7 +30,13 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (isAxiosError(error)) recordServerDate(error.response?.headers?.date);
+    if (isAxiosError(error)) {
+      recordServerDate(error.response?.headers?.date);
+      // The error carries the request it answers, session token included,
+      // and callers log errors whole (console.error(error)): a console
+      // screenshot or a pasted log must not hold a working token
+      error.config?.headers?.delete("Authorization");
+    }
     return Promise.reject(error);
   }
 );

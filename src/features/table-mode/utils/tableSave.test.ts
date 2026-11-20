@@ -11,6 +11,7 @@ import {
   type UnsavedTableGame,
 } from "./tableStorage";
 import { saveUnsavedTableGame, toUnsaved } from "./tableSave";
+import { setStorageAccount } from "@/utils/userStorage";
 
 vi.mock("@/services/game", () => ({ saveTableGame: vi.fn() }));
 const save = vi.mocked(saveTableGame);
@@ -74,6 +75,7 @@ describe("saveUnsavedTableGame", () => {
   let changes: number;
 
   beforeEach(() => {
+    setStorageAccount("user_a");
     const items = new Map<string, string>();
     vi.stubGlobal("localStorage", {
       getItem: (key: string) => items.get(key) ?? null,

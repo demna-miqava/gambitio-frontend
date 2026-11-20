@@ -14,6 +14,7 @@ import {
 } from "./tableGame";
 import { Chess } from "chess.js";
 import { loadCurrentGame, loadUnsaved, queueUnsaved, removeUnsaved, storeCurrentGame } from "./tableStorage";
+import { setStorageAccount } from "@/utils/userStorage";
 
 const setup = (overrides: Partial<TableSetup> = {}): TableSetup => ({
   whiteTime: 60,
@@ -186,8 +187,9 @@ describe("clock only", () => {
 });
 
 describe("table storage", () => {
-  // Tests run in Node: a minimal Storage
+  // Tests run in Node: a minimal Storage, with an account signed in
   beforeEach(() => {
+    setStorageAccount("user_a");
     const items = new Map<string, string>();
     globalThis.localStorage = {
       getItem: (key: string) => items.get(key) ?? null,
@@ -205,12 +207,12 @@ describe("table storage", () => {
     const s = run(started(), { type: "move", san: "e4", now: 2_000 });
     storeCurrentGame(s);
     expect(loadCurrentGame()).toEqual(s);
-    localStorage.setItem("gambitio:table-game", JSON.stringify({ ...s, moves: ["e5"] }));
+    localStorage.setItem("gambitio:u:user_a:table:game", JSON.stringify({ ...s, moves: ["e5"] }));
     expect(loadCurrentGame()).toBeNull();
-    localStorage.setItem("gambitio:table-game", "{not json");
+    localStorage.setItem("gambitio:u:user_a:table:game", "{not json");
     expect(loadCurrentGame()).toBeNull();
     storeCurrentGame(null);
-    expect(localStorage.getItem("gambitio:table-game")).toBeNull();
+    expect(localStorage.getItem("gambitio:u:user_a:table:game")).toBeNull();
   });
 
   it("queues finished games to retry, once each", () => {
@@ -222,6 +224,6 @@ describe("table storage", () => {
     removeUnsaved("a");
     removeUnsaved("b");
     expect(loadUnsaved()).toEqual([]);
-    expect(localStorage.getItem("gambitio:table-unsaved")).toBeNull();
+    expect(localStorage.getItem("gambitio:u:user_a:table:unsaved")).toBeNull();
   });
 });

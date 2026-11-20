@@ -15,9 +15,14 @@ export interface ParsedPgn {
 
 export class PgnParseError extends Error {}
 
-const HEADER_RE = /^\s*\[(\w+)\s+"((?:[^"\\]|\\.)*)"\]\s*$/gm;
+// Both are written so a pasted text can't take quadratic time (a tab frozen
+// for seconds): the header's leading space stays on its own line (\s would
+// re-scan every run of blank lines from each of its lines), and a comment
+// that is never closed runs to the end of the text, once, where a required
+// "}" would have every "{" scan to the end and fail.
+const HEADER_RE = /^[ \t]*\[(\w+)\s+"((?:[^"\\]|\\.)*)"\]\s*$/gm;
 // Comments, variation brackets, NAGs, results, move numbers, or a move token
-const TOKEN_RE = /\{[^}]*\}|;[^\n]*|\(|\)|\$\d+|1-0|0-1|1\/2-1\/2|\*|\d+\.(?:\.\.)?|[^\s(){};]+/g;
+const TOKEN_RE = /\{[^}]*\}?|;[^\n]*|\(|\)|\$\d+|1-0|0-1|1\/2-1\/2|\*|\d+\.(?:\.\.)?|[^\s(){};]+/g;
 const MOVE_SUFFIX_RE = /[!?]+$/;
 
 export function parsePgn(pgn: string): ParsedPgn {

@@ -1,15 +1,31 @@
 import { z } from "zod";
 import type { TableGameState } from "./tableGame";
 import { boardOf } from "./tableGame";
+import { userStore } from "@/utils/userStorage";
 
 /**
  * Table games kept on the device: the one being played (so a reload, or
  * the phone locking, doesn't lose it) and finished games the server hasn't
  * stored yet (no connection at the table), to retry later. Storage can be
  * blocked or full: reads then come back empty and writes do nothing.
+ *
+ * Kept per account (userStore): the games name the recorder's friends, and
+ * saving one writes it into the signed-in account's history, so the next
+ * person to sign in on a shared device must not find them. Signing out
+ * removes them with the account's other entries. They used to be stored
+ * for the whole browser; those entries can't be told apart by account and
+ * are dropped.
  */
-export const CURRENT_KEY = "gambitio:table-game";
-export const UNSAVED_KEY = "gambitio:table-unsaved";
+const store = userStore("table", { legacyPrefix: "gambitio:table-" });
+export const CURRENT_KEY = "game";
+export const UNSAVED_KEY = "unsaved";
+
+/**
+ * Whether a "storage" event (a change made by another tab) may have changed
+ * this account's list of unsaved games. A null key means everything was cleared.
+ */
+export const isUnsavedStorageKey = (key: string | null) =>
+  key === null || (key.startsWith("gambitio:u:") && key.endsWith(`:table:${UNSAVED_KEY}`));
 /** Finished games kept for a retry at most */
 const MAX_UNSAVED = 20;
 
@@ -41,20 +57,17 @@ export interface UnsavedTableGame {
 
 const read = (key: string): unknown => {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = store.get(key);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 };
 
+// Blocked or full: the store keeps nothing and the game goes on in memory
 const write = (key: string, value: unknown) => {
-  try {
-    if (value === null) localStorage.removeItem(key);
-    else localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Blocked or full: the game goes on in memory
-  }
+  if (value === null) store.remove(key);
+  else store.set(key, JSON.stringify(value));
 };
 
 /**
