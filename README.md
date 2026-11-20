@@ -135,11 +135,6 @@ VITE_API_BASE_URL=http://localhost:8080/api
 VITE_WS_BASE_URL=http://localhost:8080/api/ws
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
 VITE_STOCKFISH_URL=/stockfish-17.1-lite-single-03e3232.js
-
-# Sound URLs (optional - update with your hosted sound files)
-VITE_MOVE_SOUND_URL=https://example.com/sounds/move.mp3
-VITE_CAPTURE_SOUND_URL=https://example.com/sounds/capture.mp3
-VITE_GENERIC_SOUND_URL=https://example.com/sounds/generic.mp3
 ```
 
 ### Environment Variables
@@ -150,9 +145,6 @@ VITE_GENERIC_SOUND_URL=https://example.com/sounds/generic.mp3
 | `VITE_WS_BASE_URL`           | WebSocket server URL            | `http://localhost:8080/api/ws`            |
 | `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key           | `pk_test_...`                             |
 | `VITE_STOCKFISH_URL`         | Stockfish script in `public/`   | `/stockfish-17.1-lite-single-03e3232.js`  |
-| `VITE_MOVE_SOUND_URL`        | URL for move sound effect       | `https://example.com/sounds/move.mp3`     |
-| `VITE_CAPTURE_SOUND_URL`     | URL for capture sound effect    | `https://example.com/sounds/capture.mp3`  |
-| `VITE_GENERIC_SOUND_URL`     | URL for generic sound effect    | `https://example.com/sounds/generic.mp3`  |
 
 ### Development
 

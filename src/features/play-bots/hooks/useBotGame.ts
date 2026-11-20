@@ -98,7 +98,7 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
     settings?.showLegalMovesEnabled ?? BOARD_SETTING_DEFAULTS.showLegalMovesEnabled;
   const autoQueen =
     settings?.autoPromoteToQueenEnabled ?? BOARD_SETTING_DEFAULTS.autoPromoteToQueenEnabled;
-  const { playSoundForMove, playGenericSound } = useChessSound();
+  const { playSoundForMove, playGameEndSound } = useChessSound();
 
   const [history, setHistory] = useState<Move[]>([]);
   const [thinking, setThinking] = useState(false);
@@ -151,8 +151,8 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
       const chess = chessRef.current;
       syncBoard();
       setHistory(chess.history({ verbose: true }));
-      playSoundForMove(move, chess.isCheckmate());
       const finished = getResult(chess, playerColor);
+      playSoundForMove(move, finished !== null);
       if (finished) {
         finishedRef.current = true;
         setResult(finished);
@@ -254,7 +254,6 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
       engine
         .newGame(bot.rating)
         .then(() => {
-          playGenericSound();
           if (playerCode === "b") void playEngineMove();
         })
         .catch(() => setEngineError(true));
@@ -392,6 +391,7 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
     if (result || finishedRef.current) return;
     finishedRef.current = true;
     setResult({ outcome: "loss", reason: "by resignation", endReason: "resignation" });
+    playGameEndSound();
     cgRef.current?.stop();
     cgRef.current?.set({ movable: { color: undefined, dests: new Map() } });
   };

@@ -41,7 +41,7 @@ export const RESULT_DIALOG_DELAY_MS = 1000;
 export const useGameActions = () => {
   const { game, sendMessage } = useLiveGame();
   const { ply } = useChessBoardContext();
-  const { playGenericSound } = useChessSound();
+  const { playGameEndSound } = useChessSound();
   const { id: currentUserId } = useUser();
 
   const [openGameResultDialog, setOpenGameResultDialog] = useState(false);
@@ -77,10 +77,10 @@ export const useGameActions = () => {
           setOpenGameResultDialog(true);
         }
         // No live-region announcement: the dialog takes focus and is read out
-        playGenericSound();
+        playGameEndSound();
       }
     },
-    [playGenericSound, currentUserId]
+    [playGameEndSound, currentUserId]
   );
 
   // Opening an already finished game: show the result, without the dialog

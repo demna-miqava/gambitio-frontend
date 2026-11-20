@@ -75,7 +75,7 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
     settings?.showLegalMovesEnabled ?? BOARD_SETTING_DEFAULTS.showLegalMovesEnabled;
   const autoQueen =
     settings?.autoPromoteToQueenEnabled ?? BOARD_SETTING_DEFAULTS.autoPromoteToQueenEnabled;
-  const { playSoundForMove, playGenericSound } = useChessSound();
+  const { playSoundForMove, playGameEndSound } = useChessSound();
 
   const [history, setHistory] = useState<Move[]>([]);
   const [thinking, setThinking] = useState(false);
@@ -117,7 +117,7 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
       syncBoard();
       setHistory(moves);
       setEvaluation(result);
-      playSoundForMove(move, chess.isCheckmate());
+      playSoundForMove(move, finishedRef.current);
       if (finishedRef.current) cgRef.current?.stop();
       return finishedRef.current;
     },
@@ -156,6 +156,7 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
             finishedRef.current = true;
             setEvaluation(verdict);
             syncBoard();
+            playGameEndSound();
             cgRef.current?.stop();
             return;
           }
@@ -173,7 +174,7 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
       .finally(() => {
         if (attemptRef.current === attemptId) setThinking(false);
       });
-  }, [afterMove, converting, syncBoard]);
+  }, [afterMove, converting, syncBoard, playGameEndSound]);
 
   /** Returns the move played, or null if it wasn't played */
   const playUserMove = useCallback(
@@ -219,7 +220,6 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
       engineRef.current = engine;
       engine
         .newGame(ENDGAME_ENGINE_RATING)
-        .then(() => playGenericSound())
         .catch(() => setEngineError(true));
     } catch {
       setEngineError(true);

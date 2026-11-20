@@ -143,7 +143,7 @@ export const ArchiveGameProvider = ({
     const prev = previousNode.current;
     if (prev && currentNode.move && prev.children.some((c) => c.id === currentNode.id)) {
       const { san } = currentNode.move;
-      playSound(san.endsWith("#") ? "generic" : san.includes("x") ? "capture" : "move");
+      playSound(san.endsWith("#") ? "gameEnd" : san.includes("x") ? "capture" : "move");
     }
     previousNode.current = currentNode;
   }, [currentNode, syncBoardTo, playSound]);

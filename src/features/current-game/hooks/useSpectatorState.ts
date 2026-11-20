@@ -23,7 +23,7 @@ export interface SpectatorFinish {
  */
 export const useSpectatorState = () => {
   const { game, announce } = useLiveGame();
-  const { playGenericSound } = useChessSound();
+  const { playGameEndSound } = useChessSound();
   const [spectatorCount, setSpectatorCount] = useState<number | null>(null);
   const [finish, setFinish] = useState<SpectatorFinish | null>(null);
   const white = game.whitePlayer.username;
@@ -49,9 +49,9 @@ export const useSpectatorState = () => {
       const message = getSpectatorEndMessage(data.result, data.reason, white, black);
       setFinish(message);
       announce(`Game over. ${message.title}. ${message.description}`);
-      playGenericSound();
+      playGameEndSound();
     },
-    [white, black, announce, playGenericSound]
+    [white, black, announce, playGameEndSound]
   );
 
   useMessageDispatcher<SpectatorsMessage>(

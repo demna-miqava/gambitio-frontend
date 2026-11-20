@@ -74,7 +74,7 @@ export const usePuzzleGame = ({
 
   // inputLockedRef: Rush keeps the board locked outside a running clock
   const { chessRef, cgRef, inputLockedRef, setOrientation } = useChessBoardContext();
-  const { playSound, playGenericSound } = useChessSound();
+  const { playSound } = useChessSound();
 
   // Pending reply/solution timers. Cleared when the board resets so a reply
   // scheduled for one puzzle can never land on the next one.
@@ -197,14 +197,13 @@ export const usePuzzleGame = ({
       // The panel's live region announces it; the board marks the square
       setStatus("failed");
       setWrongMove({ from: move.from, to: move.to, san: move.san });
-      playGenericSound();
 
       cgRef.current.set({ movable: { color: undefined } });
       cgRef.current.setAutoShapes(wrongMoveShapes(move.to as Key));
 
       onFail();
     },
-    [cgRef, setStatus, setWrongMove, playGenericSound, onFail]
+    [cgRef, setStatus, setWrongMove, onFail]
   );
 
   const handleMoveSuccess = useCallback(
@@ -220,7 +219,6 @@ export const usePuzzleGame = ({
       // Any checkmate solves the puzzle, even an alternative to the listed line
       if (nextIndex >= line.length || chessRef.current.isCheckmate()) {
         setStatus("success");
-        playGenericSound();
         cgRef.current.set({ movable: { color: undefined } });
         onSolve();
         return;
@@ -235,7 +233,6 @@ export const usePuzzleGame = ({
       playSound,
       setMoveIndex,
       setStatus,
-      playGenericSound,
       playOpponentMove,
       onSolve,
     ]

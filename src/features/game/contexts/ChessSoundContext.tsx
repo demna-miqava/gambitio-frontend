@@ -1,31 +1,32 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import type { Move } from "chess.js";
-import {
-  CAPTURE_SOUND_URL,
-  GENERIC_SOUND_URL,
-  MOVE_SOUND_URL,
-} from "@/constants/apiConfig";
 import { useSettings } from "@/features/settings/SettingsContext";
 
-export type ChessSoundType = "move" | "capture" | "generic";
+export type ChessSoundType = "move" | "capture" | "gameEnd";
 
-// Each URL is optional (VITE_*_SOUND_URL); an unset one is simply silent
-const SOUND_URLS: Record<ChessSoundType, string | undefined> = {
-  move: MOVE_SOUND_URL,
-  capture: CAPTURE_SOUND_URL,
-  generic: GENERIC_SOUND_URL,
+// Served from public/sounds/
+const SOUND_URLS: Record<ChessSoundType, string> = {
+  move: "/sounds/move.mp3",
+  capture: "/sounds/capture.mp3",
+  gameEnd: "/sounds/game-end.mp3",
 };
 const VOLUME = 0.5;
 /** A sound later than this after its move is skipped rather than played */
 const MAX_RESUME_DELAY_MS = 250;
+/**
+ * A game that ends on the board asks for the game-end sound twice: for the
+ * move itself, and again when the server reports the result.
+ */
+const GAME_END_REPEAT_MS = 1500;
 const SOUND_TYPES = Object.keys(SOUND_URLS) as ChessSoundType[];
 // Any of these counts as the tap or key press that lets a page play sound
 const UNLOCK_EVENTS = ["pointerdown", "touchend", "keydown"] as const;
 
 interface ChessSoundContextValue {
   playSound: (soundType: ChessSoundType) => void;
-  playSoundForMove: (move: Move | null, isCheckmate: boolean) => void;
-  playGenericSound: () => void;
+  /** `endsGame`: the move finished the game (checkmate, stalemate, ...) */
+  playSoundForMove: (move: Move | null, endsGame: boolean) => void;
+  playGameEndSound: () => void;
 }
 
 const ChessSoundContext = createContext<ChessSoundContextValue | null>(null);
@@ -73,8 +74,10 @@ export const ChessSoundProvider = ({ children }: { children: React.ReactNode }) 
   // Mobile browsers block playback until the user interacts with the page;
   // say so once instead of on every move
   const warnedRef = useRef(false);
+  const lastGameEndAtRef = useRef(-Infinity);
 
-  // Created the first time sounds are enabled, i.e. once settings have loaded
+  // Created the first time sounds are enabled, i.e. once settings have loaded.
+  // All three sounds are fetched and decoded here, ahead of the first move.
   useEffect(() => {
     if (!enabled || playerRef.current) return;
     if (typeof AudioContext === "undefined") return;
@@ -84,11 +87,7 @@ export const ChessSoundProvider = ({ children }: { children: React.ReactNode }) 
     gain.connect(context.destination);
     const player: SoundPlayer = { context, gain, buffers: {}, fallbacks: {} };
     playerRef.current = player;
-    for (const type of SOUND_TYPES) {
-      // An unset VITE_*_SOUND_URL is simply silent
-      const url = SOUND_URLS[type];
-      if (url) void loadSound(player, type, url);
-    }
+    for (const type of SOUND_TYPES) void loadSound(player, type, SOUND_URLS[type]);
   }, [enabled]);
 
   // Browsers start an AudioContext suspended until the user interacts with
@@ -117,6 +116,11 @@ export const ChessSoundProvider = ({ children }: { children: React.ReactNode }) 
     (soundType: ChessSoundType) => {
       const player = enabled ? playerRef.current : null;
       if (!player) return;
+      if (soundType === "gameEnd") {
+        const now = performance.now();
+        if (now - lastGameEndAtRef.current < GAME_END_REPEAT_MS) return;
+        lastGameEndAtRef.current = now;
+      }
       const warn = (error: unknown) => {
         if (warnedRef.current) return;
         warnedRef.current = true;
@@ -159,20 +163,20 @@ export const ChessSoundProvider = ({ children }: { children: React.ReactNode }) 
   );
 
   const playSoundForMove = useCallback(
-    (move: Move | null, isCheckmate: boolean) => {
+    (move: Move | null, endsGame: boolean) => {
       if (!move) return;
-      if (isCheckmate) playSound("generic");
+      if (endsGame) playSound("gameEnd");
       else if (move.captured) playSound("capture");
       else playSound("move");
     },
     [playSound]
   );
 
-  const playGenericSound = useCallback(() => playSound("generic"), [playSound]);
+  const playGameEndSound = useCallback(() => playSound("gameEnd"), [playSound]);
 
   const value = useMemo(
-    () => ({ playSound, playSoundForMove, playGenericSound }),
-    [playSound, playSoundForMove, playGenericSound]
+    () => ({ playSound, playSoundForMove, playGameEndSound }),
+    [playSound, playSoundForMove, playGameEndSound]
   );
 
   return <ChessSoundContext.Provider value={value}>{children}</ChessSoundContext.Provider>;

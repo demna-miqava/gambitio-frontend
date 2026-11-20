@@ -94,7 +94,7 @@ export const useLineDrill = (
   }, []);
 
   const sound = useCallback(
-    (move: Move) => playSound(move.san.includes("#") ? "generic" : move.captured ? "capture" : "move"),
+    (move: Move) => playSound(move.san.includes("#") ? "gameEnd" : move.captured ? "capture" : "move"),
     [playSound]
   );
 

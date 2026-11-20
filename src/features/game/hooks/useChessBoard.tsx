@@ -7,7 +7,6 @@ import { calculateLegalMoves } from "../utils/board-utils";
 import { currentHistory, nextHistory, type MoveHistory } from "../utils/moveHistory";
 import { BOARD_CONFIG } from "../constants/board-config";
 import { useSettings } from "@/features/settings/SettingsContext";
-import { useChessSound } from "../contexts/ChessSoundContext";
 import { attachTouchDragAssist } from "../utils/touchDragAssist";
 import { useBoardOrientation } from "./useBoardOrientation";
 
@@ -36,7 +35,6 @@ export const useChessBoard = ({ color, viewOnly = false }: UseChessBoardOptions)
   const inputLockedRef = useRef(false);
   const [inputLocked, setInputLockedState] = useState(false);
   const { settings } = useSettings();
-  const { playGenericSound } = useChessSound();
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
 
@@ -116,8 +114,6 @@ export const useChessBoard = ({ color, viewOnly = false }: UseChessBoardOptions)
 
     const currentTurn = chess.turn();
     setTurn(currentTurn === "w" ? "white" : "black");
-
-    if (!viewOnly) playGenericSound();
 
     return scheduleDestroy;
     // eslint-disable-next-line react-hooks/exhaustive-deps

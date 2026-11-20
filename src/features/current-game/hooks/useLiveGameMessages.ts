@@ -97,7 +97,7 @@ export const useLiveGameMessages = ({
   const { chessRef, cgRef, color, setTurn, inputLockedRef, setInputLocked } =
     useChessBoardContext();
   const { goToLastMove } = useGameNavigation();
-  const { playSoundForMove, playGenericSound } = useChessSound();
+  const { playSound, playSoundForMove } = useChessSound();
   const { id: currentUserId } = useUser();
 
   const [whiteTimeLeft, setWhiteTimeLeft] = useState<number | undefined>(
@@ -261,11 +261,11 @@ export const useLiveGameMessages = ({
       cgRef.current?.cancelPremove();
       cgRef.current?.cancelMove();
       const synced = syncFromServerState(data.pgn, false);
-      playGenericSound();
+      playSound("move");
       onTakeback?.(data);
       if (!synced || chessRef.current.fen() !== data.fen) requestSync();
     },
-    [cgRef, chessRef, syncFromServerState, requestSync, playGenericSound, onTakeback]
+    [cgRef, chessRef, syncFromServerState, requestSync, playSound, onTakeback]
   );
 
   // Only the clock that got the time changes: the other one keeps counting

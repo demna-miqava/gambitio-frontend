@@ -65,7 +65,7 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
   const score = history.filter(Boolean).length;
 
   const { cgRef, setInputLocked } = useChessBoardContext();
-  const { playSound, playGenericSound } = useChessSound();
+  const { playSound } = useChessSound();
 
   const [attemptState, dispatch] = useReducer(calculateAttemptReducer, null, initialCalculateAttempt);
   const [entryError, setEntryError] = useState<string | null>(null);
@@ -244,7 +244,6 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
       setStatus("success");
       playLine(fromFen, entered.slice(fixed), () => {
         replayed();
-        playGenericSound();
         schedule(() => void loadNextRef.current(), RULES.NEXT_AFTER_SOLVE_MS);
       });
       return;
@@ -253,7 +252,6 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
     if (judged.result === "failed") {
       recordFail();
       setStatus("failed");
-      playGenericSound();
       playLine(fromFen, solution.slice(fixed), replayed);
       return;
     }
@@ -262,7 +260,7 @@ export const CalculatePuzzleProvider = ({ children }: { children: ReactNode }) =
     // played, and the rest is entered from the position it leaves (no
     // penalty so far)
     playLine(fromFen, solution.slice(fixed, judged.index + 1), replayed);
-  }, [puzzle, canSubmit, entered, fixed, recordSolve, recordFail, setStatus, playLine, playGenericSound, schedule]);
+  }, [puzzle, canSubmit, entered, fixed, recordSolve, recordFail, setStatus, playLine, schedule]);
 
   useEffect(() => {
     if (isGameOver && score > best) setStoredBest(score);

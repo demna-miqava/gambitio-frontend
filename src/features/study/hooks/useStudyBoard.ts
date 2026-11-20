@@ -69,7 +69,7 @@ export const useStudyBoard = ({
     // Sound for a single step forward (a move played or replayed)
     const prev = previousNode.current;
     if (prev && node.san && node.parentId === prev.id) {
-      playSound(node.san.endsWith("#") ? "generic" : node.san.includes("x") ? "capture" : "move");
+      playSound(node.san.endsWith("#") ? "gameEnd" : node.san.includes("x") ? "capture" : "move");
     }
     previousNode.current = node;
     // node.fen is the position; other node fields (comment, shapes) don't move pieces
