@@ -28,24 +28,27 @@ const MODES: { section: "new" | "friends"; label: string }[] = [
   { section: "friends", label: "Play a friend" },
 ];
 
-const PlayComputerLink = () => (
-  <Link
-    to={ROUTES.PLAY_BOTS}
-    className="rounded-xl bg-background p-3.5 text-sm transition-colors hover:bg-accent"
-  >
-    <span className="block font-medium">Play the computer</span>
-    <span className="block text-xs text-muted-foreground">No waiting, any strength</span>
-  </Link>
-);
+const otherWayLink =
+  "relative touch-target underline-offset-4 transition-colors hover:text-foreground hover:underline";
 
-const TableModeLink = () => (
-  <Link
-    to={ROUTES.TABLE}
-    className="rounded-xl bg-background p-3.5 text-sm transition-colors hover:bg-accent"
+/**
+ * The ways to play that aren't against another player online: one quiet
+ * line, so they don't crowd the opponent picker above. Both are in the
+ * sidebar's Play menu too.
+ */
+const OtherWaysToPlay = () => (
+  <nav
+    aria-label="Other ways to play"
+    className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-4 text-sm text-muted-foreground"
   >
-    <span className="block font-medium">Table mode</span>
-    <span className="block text-xs text-muted-foreground">A clock and recorder for a real board</span>
-  </Link>
+    <span>Also:</span>
+    <Link to={ROUTES.PLAY_BOTS} className={otherWayLink}>
+      Play the computer
+    </Link>
+    <Link to={ROUTES.TABLE} className={otherWayLink}>
+      Table mode
+    </Link>
+  </nav>
 );
 
 export const CreateGameSidebar = () => {
@@ -104,8 +107,7 @@ export const CreateGameSidebar = () => {
         </TabsContent>
       </Tabs>
 
-      {!isSearching && <PlayComputerLink />}
-      {!isSearching && <TableModeLink />}
+      {!isSearching && <OtherWaysToPlay />}
     </aside>
   );
 };

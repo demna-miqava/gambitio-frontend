@@ -96,7 +96,7 @@ export const QuickPairing = () => {
         </div>
       )}
       <div className="mt-4 flex items-center justify-between gap-4 text-sm text-muted-foreground">
-        <span>Custom time, play a friend or the computer</span>
+        <span>Custom time, the computer or table mode</span>
         <Link
           to={ROUTES.PLAY}
           state={{ section: "new" }}

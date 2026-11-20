@@ -13,6 +13,7 @@ import type { Friend, FriendStatus } from "@/types";
 import {
   Eye,
   MoreVertical,
+  SlidersHorizontal,
   Swords,
   UserMinus,
   UserRoundPlus,
@@ -44,6 +45,14 @@ interface FriendCardProps<T extends Friend> {
    * out: offline, or not known (someone who isn't your friend).
    */
   presence?: FriendStatus | null;
+  /**
+   * "pick" only: Challenge sends at once what `label` names ("5+0", the
+   * last challenge's time control), and a second button opens the form
+   * (`onChallenge`) for anything else.
+   */
+  quickChallenge?: { label: string; onSend: (friend: Friend) => void };
+  /** "pick" only: a challenge to this friend is waiting on their answer */
+  isChallenged?: boolean;
 }
 
 export function FriendCard<T extends Friend>({
@@ -56,6 +65,8 @@ export function FriendCard<T extends Friend>({
   isOwnProfile = true,
   mode = "manage",
   presence,
+  quickChallenge,
+  isChallenged = false,
 }: FriendCardProps<T>) {
   const [confirmRemove, setConfirmRemove] = useState(false);
   const avatarSrc = useAvatarSrc();
@@ -123,8 +134,16 @@ export function FriendCard<T extends Friend>({
             {presence && (
               <span className="font-medium text-foreground">{presenceLabel(presence)}</span>
             )}
-            {presence && secondaryText && " · "}
-            {secondaryText}
+            {presence && secondaryText ? (
+              // In the picker the buttons leave little room: the status
+              // alone where both wouldn't fit
+              <span className={mode === "pick" ? "hidden @sm:inline" : undefined}>
+                {" · "}
+                {secondaryText}
+              </span>
+            ) : (
+              secondaryText
+            )}
           </span>
         )}
       </div>
@@ -133,18 +152,48 @@ export function FriendCard<T extends Friend>({
 
   if (mode === "pick") {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-xl bg-card p-3">
+      <div className="@container flex items-center justify-between gap-3 rounded-xl bg-card p-3">
         <div className="flex min-w-0 items-center gap-3">{identity}</div>
-        {onChallenge && (
-          <Button size="lg"
-            variant="outline"
-            onClick={() => onChallenge(friend)}
-            className="shrink-0 px-4"
-            aria-label={`Challenge ${friend.username}`}
-          >
-            <Swords className="size-4" aria-hidden="true" />
-            Challenge
-          </Button>
+        {isChallenged ? (
+          <span className="shrink-0 px-1 text-sm text-muted-foreground">Challenge sent</span>
+        ) : quickChallenge ? (
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Button
+              size="lg"
+              onClick={() => quickChallenge.onSend(friend)}
+              className="px-4"
+              aria-label={`Challenge ${friend.username} to ${quickChallenge.label}`}
+            >
+              <Swords className="size-4" aria-hidden="true" />
+              {/* The word only where the row has room; the time always shows */}
+              <span className="hidden @sm:inline">Challenge</span>
+              <span className="tabular-nums">{quickChallenge.label}</span>
+            </Button>
+            {onChallenge && (
+              <Button
+                size="icon-lg"
+                variant="outline"
+                onClick={() => onChallenge(friend)}
+                aria-label={`Other options for a challenge to ${friend.username}`}
+                title="Other options"
+              >
+                <SlidersHorizontal className="size-4" aria-hidden="true" />
+              </Button>
+            )}
+          </div>
+        ) : (
+          onChallenge && (
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => onChallenge(friend)}
+              className="shrink-0 px-4"
+              aria-label={`Challenge ${friend.username}`}
+            >
+              <Swords className="size-4" aria-hidden="true" />
+              Challenge
+            </Button>
+          )
         )}
       </div>
     );

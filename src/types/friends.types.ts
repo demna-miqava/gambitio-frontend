@@ -52,3 +52,22 @@ export interface FriendStatus extends Friend {
   gameId: number | null;
   gameType: TimeControlType | null;
 }
+
+/**
+ * A friend as someone to play: a friends list item, whether they are online
+ * or playing now (null: neither), and when you last played them (null: not
+ * recently, or never). The server lists them online first, then playing,
+ * then most recently played, then by name.
+ */
+export interface FriendOpponent extends Friend {
+  status: FriendStatus["status"] | null;
+  /** The game in progress, when playing */
+  gameId: number | null;
+  gameType: TimeControlType | null;
+  lastPlayedAt: string | null;
+}
+
+export type PaginatedOpponentsResponse = {
+  data: FriendOpponent[];
+  pagination: PaginatedFriendsResponse["pagination"];
+};

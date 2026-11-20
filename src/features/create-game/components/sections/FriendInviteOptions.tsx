@@ -25,6 +25,7 @@ import { TimeOddsSection } from "./friend-invite/TimeOddsSection";
 import { MatchFormatSection } from "./friend-invite/MatchFormatSection";
 import { RatingSection } from "./friend-invite/RatingSection";
 import { MoreOptionsSection } from "./friend-invite/MoreOptionsSection";
+import { readLastChallenge, saveLastChallenge } from "../../utils/lastChallenge";
 
 /** The length a timed match starts at: the usual speed-event format */
 const DEFAULT_MATCH_MINUTES = 15;
@@ -46,12 +47,18 @@ const COLOR_CHOICES: SegmentedOption<PlayerColorOption>[] = [
 ];
 
 export const FriendInviteOptions = () => {
-  const [colorChoice, setColorChoice] = useState<PlayerColorOption>("random");
+  // Time, colour and Rated start from the last challenge sent (the time
+  // control in GameSetupContext); the options under "More options" don't
+  const [colorChoice, setColorChoice] = useState<PlayerColorOption>(
+    () => readLastChallenge()?.color ?? "random"
+  );
   const [format, setFormat] = useState<MatchFormat>("single");
   const [seriesLength, setSeriesLength] = useState<SeriesLength>("3");
   const [pickedMinutes, setPickedMinutes] = useState<number>(DEFAULT_MATCH_MINUTES);
   const [odds, setOdds] = useState<TimeOdds>("even");
-  const [rating, setRating] = useState<Rating>("rated");
+  const [rating, setRating] = useState<Rating>(() =>
+    readLastChallenge()?.rated === false ? "unrated" : "rated"
+  );
   // The shorter clock the player picked; dropped when it no longer fits the time control
   const [pickedClock, setPickedClock] = useState<number | null>(null);
   // The custom time picker, shown in the form so the friend stays selected
@@ -206,9 +213,16 @@ export const FriendInviteOptions = () => {
             size="xl"
             className="h-auto min-h-12 w-full whitespace-normal py-2.5"
             disabled={!plan.fitsMatch}
-            onClick={() =>
-              sendChallenge(plan.data, { username: selectedFriend.username, opening: startingOpening })
-            }
+            onClick={() => {
+              sendChallenge(plan.data, { username: selectedFriend.username, opening: startingOpening });
+              // What the form starts from next time, and what one tap on a friend sends
+              saveLastChallenge({
+                time: timeControl.time,
+                increment: timeControl.increment,
+                color: colorChoice,
+                rated: rating === "rated",
+              });
+            }}
           >
             {/*
               Two parts that never break inside, so a long label (time odds

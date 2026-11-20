@@ -49,3 +49,30 @@ describe("FriendCard presence", () => {
     expect(markup).not.toContain("Playing");
   });
 });
+
+describe("FriendCard challenge buttons, in the picker", () => {
+  const pick = (props: Partial<Parameters<typeof FriendCard>[0]> = {}) =>
+    renderToStaticMarkup(
+      <MemoryRouter>
+        <FriendCard friend={friend} mode="pick" onChallenge={() => {}} {...props} />
+      </MemoryRouter>
+    );
+
+  it("opens the form before there is a challenge to repeat", () => {
+    const markup = pick();
+    expect(markup).toContain('aria-label="Challenge alice"');
+    expect(markup).not.toContain("Other options");
+  });
+
+  it("sends the last challenge again in one tap, with the form a button away", () => {
+    const markup = pick({ quickChallenge: { label: "5+0", onSend: () => {} } });
+    expect(markup).toContain('aria-label="Challenge alice to 5+0"');
+    expect(markup).toContain('aria-label="Other options for a challenge to alice"');
+  });
+
+  it("says so instead while a challenge to this friend is out", () => {
+    const markup = pick({ quickChallenge: { label: "5+0", onSend: () => {} }, isChallenged: true });
+    expect(markup).toContain("Challenge sent");
+    expect(markup).not.toContain("<button");
+  });
+});

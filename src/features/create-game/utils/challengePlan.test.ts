@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { extraOptionsSummary, planChallenge, ratingHint, type ChallengeForm } from "./challengePlan";
+import {
+  extraOptionsSummary,
+  planChallenge,
+  planQuickChallenge,
+  quickChallengeSummary,
+  ratingHint,
+  type ChallengeForm,
+} from "./challengePlan";
 
 const form = (overrides: Partial<ChallengeForm> = {}): ChallengeForm => ({
   friendId: 12,
@@ -138,5 +145,34 @@ describe("extraOptionsSummary", () => {
     const plan = planChallenge(form({ time: 15, odds: "them" }));
     expect(plan.hasOdds).toBe(false);
     expect(extraOptionsSummary(plan, null)).toEqual([]);
+  });
+});
+
+describe("planQuickChallenge", () => {
+  it("sends a single game on the last challenge's terms", () => {
+    expect(planQuickChallenge(12, { time: 300, increment: 0, color: "random", rated: true })).toEqual({
+      challengedId: 12,
+      color: "random",
+      time: 300,
+      increment: 0,
+      bestOf: 1,
+    });
+    expect(planQuickChallenge(7, { time: 600, increment: 5, color: "black", rated: false })).toEqual({
+      challengedId: 7,
+      color: "black",
+      time: 600,
+      increment: 5,
+      bestOf: 1,
+      rated: false,
+    });
+  });
+
+  it("says what it sends", () => {
+    expect(quickChallengeSummary({ time: 300, increment: 0, color: "random", rated: true })).toBe(
+      "5+0 · Rated · Random colors"
+    );
+    expect(quickChallengeSummary({ time: 180, increment: 2, color: "white", rated: false })).toBe(
+      "3+2 · Unrated · You play white"
+    );
   });
 });

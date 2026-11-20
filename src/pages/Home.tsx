@@ -2,6 +2,7 @@ import { TournamentBanner } from "@/features/tournaments/components/TournamentBa
 import { GameTable } from "@/features/game-table";
 import { Header } from "@/components/home/Header";
 import { QuickPairing } from "@/components/home/QuickPairing";
+import { PlayFriend } from "@/components/home/PlayFriend";
 import { ResultsSummary } from "@/components/home/ResultsSummary";
 import { HOME_GAMES_LIMIT } from "@/components/home/constants";
 import { TopPlayers } from "@/features/leaderboard/components/TopPlayers";
@@ -14,8 +15,8 @@ import { PageContainer } from "@/components/PageContainer";
 
 /**
  * What to do next, not where to go (the sidebar does that): anything waiting
- * on the player first (a game in progress, challenges), then a new game, how
- * the last 30 days went, and recent games.
+ * on the player first (a game in progress, challenges), then a new game
+ * (against anyone, or a friend), how the last 30 days went, and recent games.
  */
 const Home = () => {
   const { id } = useUser();
@@ -30,7 +31,10 @@ const Home = () => {
 
       {/* One grid, so recent games follow the tiles however tall the side column is */}
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_19rem] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-6 lg:gap-y-10">
-        <QuickPairing />
+        <div className="space-y-5">
+          <QuickPairing />
+          <PlayFriend />
+        </div>
         <aside className="space-y-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <ResultsSummary />
           <TopPlayers />

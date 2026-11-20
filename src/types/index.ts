@@ -28,6 +28,8 @@ export type {
   FriendSuggestionActionHandlers,
   FriendsData,
   FriendStatus,
+  FriendOpponent,
+  PaginatedOpponentsResponse,
 } from "./friends.types";
 
 // UI types

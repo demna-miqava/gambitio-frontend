@@ -17,6 +17,8 @@ import { QKEY_USER_PROFILE } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
 import type { StartingOpening } from "@/features/openings/startingOpenings";
 import { NO_OPENING, startingOpeningFor, type OpeningChoice } from "./utils/openingChoice";
+import { useLastChallenge } from "./utils/lastChallenge";
+import { getTimeControlFormat } from "./constants/timeControls";
 import {
   getPlaySetupSearch,
   parsePlaySetup,
@@ -90,19 +92,45 @@ export const GameSetupProvider = ({
   const { section: activeSection, friendId } = parsePlaySetup(searchParams, state);
   const isSetupStep = state?.setupStep === true;
 
-  const { timeControl, updateTimeControl: setTimeControl } = useTimeControl();
+  // "Play online" and the challenge form each have a time control: the form
+  // starts from the last challenge you sent (the terms one tap on a friend
+  // sends), or from the online one before your first challenge
+  const { timeControl: onlineTimeControl, updateTimeControl: setOnlineTimeControl } = useTimeControl();
   const { isSearching, isConnecting, setShouldConnect } = useMatchmaking({
-    time: timeControl.time,
-    increment: timeControl.increment,
+    time: onlineTimeControl.time,
+    increment: onlineTimeControl.increment,
   });
+  const lastChallenge = useLastChallenge();
+  // Picked in the form. Like the opening it belongs to the friend it was
+  // picked for: another friend's form starts over
+  const [pickedTime, setPickedTime] = useState<{ friendId: number; timeControl: TimeControl } | null>(null);
+  if (pickedTime !== null && pickedTime.friendId !== friendId) setPickedTime(null);
+  const isChallengeForm = activeSection === "friend-invite-options" && friendId !== null;
+  const challengeTimeControl = useMemo<TimeControl>(
+    () =>
+      pickedTime?.timeControl ??
+      (lastChallenge
+        ? {
+            format: getTimeControlFormat(lastChallenge.time),
+            time: lastChallenge.time,
+            increment: lastChallenge.increment,
+          }
+        : onlineTimeControl),
+    [pickedTime, lastChallenge, onlineTimeControl]
+  );
+  const timeControl = isChallengeForm ? challengeTimeControl : onlineTimeControl;
 
-  // The time control can't change under a running search
   const updateTimeControl = useCallback(
-    (format: TimeControlType, time: number, increment?: number) => {
+    (format: TimeControlType, time: number, increment: number = 0) => {
+      if (isChallengeForm) {
+        setPickedTime({ friendId, timeControl: { format, time, increment } });
+        return;
+      }
+      // The time control can't change under a running search
       if (isSearching) return;
-      setTimeControl(format, time, increment);
+      setOnlineTimeControl(format, time, increment);
     },
-    [isSearching, setTimeControl]
+    [friendId, isChallengeForm, isSearching, setOnlineTimeControl]
   );
 
   // Leaving "Play online" (e.g. via the sidebar) stops the search

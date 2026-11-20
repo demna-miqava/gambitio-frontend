@@ -2,8 +2,10 @@ import type { PlayerColorOption } from "@/types/game.types";
 import type { BestOf } from "@/features/notifications/types/websocket-messages";
 import type { SendChallengeData } from "@/features/notifications/hooks/useManageChallenge";
 import { gameFitsMatch, MIRROR_MATCH_BEST_OF } from "@/features/series/utils/seriesFormat";
-import { formatTimeOdds } from "@/utils/timeControl";
+import { formatTimeControl, formatTimeOdds } from "@/utils/timeControl";
+import { describeChallengeColor } from "@/features/notifications/utils/challengeLabels";
 import { defaultShorterClock, shorterClocks } from "../constants/timeControls";
+import type { LastChallenge } from "./lastChallenge";
 
 /** One game, a mirror match, a best-of series, or a timed match */
 export type MatchFormat = "single" | "mirror" | "series" | "timed";
@@ -170,3 +172,30 @@ export const ratingHint = (plan: Pick<ChallengePlan, "bestOf" | "matchMinutes" |
         : "The game doesn't change";
   return `${scope} either player's rating.`;
 };
+
+/**
+ * What one tap on a friend sends: a single game on the terms of the last
+ * challenge, by the same rules as the form (planChallenge).
+ */
+export const planQuickChallenge = (friendId: number, terms: LastChallenge): SendChallengeData =>
+  planChallenge({
+    friendId,
+    color: terms.color,
+    time: terms.time,
+    increment: terms.increment,
+    format: "single",
+    seriesLength: "3",
+    matchMinutes: 0,
+    odds: "even",
+    pickedClock: null,
+    rating: terms.rated ? "rated" : "unrated",
+    openingId: null,
+  }).data;
+
+/** The terms one tap sends, in words: "5+0 · Rated · Random colors" */
+export const quickChallengeSummary = (terms: LastChallenge): string =>
+  [
+    formatTimeControl(terms.time, terms.increment),
+    terms.rated ? "Rated" : "Unrated",
+    describeChallengeColor(terms.color),
+  ].join(" · ");

@@ -1,5 +1,5 @@
 import { apiRequest } from ".";
-import type { Friend, FriendStatus } from "@/types";
+import type { Friend, FriendStatus, PaginatedOpponentsResponse } from "@/types";
 import type {
   PendingFriendRequestsResponse,
   SendFriendRequestParams,
@@ -29,3 +29,11 @@ export const removeFriend = (friendId: number): Promise<void> => {
 /** The signed-in user's friends who are online or playing: available ones first. */
 export const getFriendStatuses = async (): Promise<FriendStatus[]> =>
   (await apiRequest<{ data: FriendStatus[] }>("get", "/friends/status")).data;
+
+/**
+ * A page of the signed-in user's friends in the order you'd pick an
+ * opponent: online first, then playing, then most recently played, then by
+ * name. `query`: page, limit and an optional q (username search).
+ */
+export const getFriendOpponents = (query: string): Promise<PaginatedOpponentsResponse> =>
+  apiRequest("get", `/friends/opponents?${query}`);
