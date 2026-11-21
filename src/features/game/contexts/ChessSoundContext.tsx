@@ -90,6 +90,16 @@ export const ChessSoundProvider = ({ children }: { children: React.ReactNode }) 
     for (const type of SOUND_TYPES) void loadSound(player, type, SOUND_URLS[type]);
   }, [enabled]);
 
+  // Closed with the provider (signing out unmounts it): browsers allow only
+  // a few audio contexts per page, and an open one keeps the audio device busy
+  useEffect(
+    () => () => {
+      playerRef.current?.context.close().catch(() => {});
+      playerRef.current = null;
+    },
+    []
+  );
+
   // Browsers start an AudioContext suspended until the user interacts with
   // the page, and iOS suspends it again when the tab goes to the background.
   // Resume on every tap or key press, so it is already running when a move

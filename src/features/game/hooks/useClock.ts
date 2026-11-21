@@ -56,9 +56,15 @@ export const useClock = ({
     }
   }, [serverTimeLeft, setTime]);
 
-  // Handle timeout
+  // Handle timeout: once each time the clock reaches zero. Time it gets
+  // back (an early flag the server didn't take, increment, added time, a
+  // takeback, a resync) makes the next zero count again.
   useEffect(() => {
-    if (time === 0 && !timeoutCalledRef.current && onTimeout) {
+    if (time > 0) {
+      timeoutCalledRef.current = false;
+      return;
+    }
+    if (!timeoutCalledRef.current && onTimeout) {
       timeoutCalledRef.current = true;
       onTimeout();
     }

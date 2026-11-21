@@ -93,12 +93,19 @@ export type PaginatedGamesResponse = {
     total: number;
     totalPages: number;
   };
+  /**
+   * With an opponent filter only: the player that name belongs to, or null
+   * when nobody has it
+   */
+  opponent?: { id: number; username: string } | null;
 };
 
 export type GetUserGamesParams = {
   userId: number;
   page?: number;
   limit?: number;
+  /** Filters, as the API names them (historyFiltersToApi) */
+  filters?: Record<string, string>;
 };
 
 export type PlayerColorOption = "white" | "black" | "random";

@@ -35,6 +35,10 @@ class StockfishService {
   private currentSearch: Promise<MultiPvResult> | null = null;
   /** Bumped per request; a queued search that's been superseded is skipped */
   private searchGeneration = 0;
+  /** Rejecters of everything waiting on engine output, for a crash or destroy */
+  private failers = new Set<(error: Error) => void>();
+  /** Set once the worker has crashed: it answers nothing any more */
+  private crashed: Error | null = null;
 
   async init(options?: StockfishOptions): Promise<void> {
     if (this.worker && this.isReady) {
@@ -56,6 +60,7 @@ class StockfishService {
       try {
         const workerUrl = DEFAULT_STOCKFISH_URL;
 
+        this.crashed = null;
         this.worker = new Worker(workerUrl);
         this.worker.onmessage = (event: MessageEvent) => {
           const message =
@@ -63,15 +68,23 @@ class StockfishService {
 
           this.messageHandlers.forEach((handler) => handler(message));
           if (message === "uciok") {
+            this.failers.delete(reject);
             this.applyOptions();
             this.isReady = true;
             resolve();
           }
         };
         this.worker.onerror = (e) => {
-          reject(new Error(`Stockfish error: ${e.message}`));
+          const error = new Error(`Stockfish error: ${e.message}`);
+          reject(error);
+          // After start-up too: whatever waits on the dead worker fails
+          // instead of waiting forever (and holding up every later search)
+          this.crashed = error;
+          this.fail(error);
         };
 
+        // destroy() before "uciok" fails the start-up too
+        this.failers.add(reject);
         // Sends the UCI (Universal Chess Interface) protocol initialization command to the Stockfish Web Worker.
         this.worker.postMessage("uci");
       } catch (error) {
@@ -84,6 +97,12 @@ class StockfishService {
     } finally {
       this.readyPromise = null;
     }
+  }
+
+  private fail(error: Error): void {
+    this.messageHandlers.clear();
+    this.failers.forEach((reject) => reject(error));
+    this.failers.clear();
   }
 
   private send(command: string): void {
@@ -100,7 +119,6 @@ class StockfishService {
     if (multiPv !== undefined) {
       this.send(`setoption name MultiPV value ${multiPv}`);
     }
-    this.send("isready");
   }
 
   async setOptions(options: StockfishOptions): Promise<void> {
@@ -115,14 +133,20 @@ class StockfishService {
   }
 
   private waitForReady(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      if (this.crashed) {
+        reject(this.crashed);
+        return;
+      }
       const handler = (message: string) => {
         if (message === "readyok") {
           this.messageHandlers.delete(handler);
+          this.failers.delete(reject);
           resolve();
         }
       };
       this.messageHandlers.add(handler);
+      this.failers.add(reject);
       this.send("isready");
     });
   }
@@ -189,10 +213,15 @@ class StockfishService {
     fen: string,
     numLines: number
   ): Promise<MultiPvResult> {
+    if (this.crashed) throw this.crashed;
     if (!this.isReady) await this.init();
+    const generation = this.searchGeneration;
     // Set MultiPV option
     this.send(`setoption name MultiPV value ${numLines}`);
     await this.waitForReady();
+    // Superseded while the engine got ready: the newer request is waiting
+    // on this one, so don't make it sit through a whole search
+    if (generation !== this.searchGeneration) return { lines: [], depth: 0 };
 
     this.send(`position fen ${fen}`);
 
@@ -203,7 +232,15 @@ class StockfishService {
     // Determine if it's Black's turn (scores need to be negated for White's perspective)
     const isBlackTurn = fen.split(" ")[1] === "b";
 
-    return new Promise((resolve) => {
+    // Only the limits that are set ("go depth  movetime 2000" isn't UCI);
+    // with neither, a bare "go" would search forever
+    const limits = [
+      ...(targetDepth !== undefined ? [`depth ${targetDepth}`] : []),
+      ...(moveTime !== undefined ? [`movetime ${moveTime}`] : []),
+    ];
+    const go = `go ${limits.length ? limits.join(" ") : `depth ${DEFAULT_ENGINE_OPTIONS.depth}`}`;
+
+    return new Promise((resolve, reject) => {
       const lines: Map<number, EvaluationLine> = new Map();
       let maxDepth = 0;
 
@@ -216,6 +253,7 @@ class StockfishService {
 
         if (message.startsWith("bestmove")) {
           this.messageHandlers.delete(handler);
+          this.failers.delete(reject);
 
           // Convert map to sorted array
           const sortedLines = Array.from(lines.values()).sort(
@@ -229,7 +267,8 @@ class StockfishService {
       };
 
       this.messageHandlers.add(handler);
-      this.send(`go depth ${targetDepth ?? ""} movetime ${moveTime ?? ""}`);
+      this.failers.add(reject);
+      this.send(go);
     });
   }
 
@@ -245,6 +284,9 @@ class StockfishService {
   destroy(): void {
     this.searchGeneration++;
     this.currentSearch = null;
+    // Nothing answers once the worker is gone: settle whoever is waiting
+    this.fail(new Error("Stockfish stopped"));
+    this.crashed = null;
     if (this.worker) {
       this.send("quit");
       this.worker.terminate();

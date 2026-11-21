@@ -71,6 +71,24 @@ describe("checkmate objective", () => {
     const evaluation = evaluateObjective(white(fen, { type: "checkmate" }), covered, 0);
     expect(evaluation).toEqual({ status: "playing", message: "The pawn promoted. Take the new piece!" });
   });
+
+  it("fails when the new queen only replaces a piece the player took", () => {
+    const qvrp = white("8/6r1/8/8/8/8/3pk3/K5Q1 w - - 0 1", { type: "checkmate" });
+    const lost = after(qvrp, ["Qxg7", "d1=Q+"]);
+    expect(lost.status).toBe("failure");
+    expect(lost.message).toMatch(/promoted/);
+    // Once taken, it no longer counts
+    const fen = "3Q4/8/8/8/8/8/3p4/K5k1 b - - 0 1";
+    const chess = new Chess(fen);
+    chess.move("d1=Q+");
+    chess.move("Qxd1+");
+    expect(evaluateObjective(white(fen, { type: "checkmate" }), chess, 1)).toEqual({ status: "playing", message: "" });
+  });
+
+  it("names the stalemated king's colour", () => {
+    const black = { fen: "7K/8/6k1/8/8/8/8/5q2 b - - 0 1", playerColor: "black" as const, objective: { type: "checkmate" as const } };
+    expect(after(black, ["Qf7"]).message).toMatch(/white king/);
+  });
 });
 
 describe("promote objective", () => {

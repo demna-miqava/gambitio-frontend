@@ -98,7 +98,14 @@ export async function enablePush(): Promise<void> {
     userVisibleOnly: true,
     applicationServerKey: applicationServerKey(publicKey),
   });
-  await savePushSubscription(subscription.toJSON());
+  try {
+    await savePushSubscription(subscription.toJSON());
+  } catch (error) {
+    // The server doesn't have it: don't leave the browser subscribed, which
+    // would show notifications as on when none can arrive
+    await subscription.unsubscribe().catch(() => {});
+    throw error;
+  }
   setAttached(true);
 }
 
@@ -172,8 +179,21 @@ export async function releasePushAfterSessionEnd(): Promise<void> {
  */
 export async function syncPushSubscription(): Promise<void> {
   if (pushBlocker() || Notification.permission !== "granted") return;
-  const subscription = await currentSubscription();
+  let subscription = await currentSubscription();
   if (!subscription) return;
+  // Made with the server's old key (its keys changed since): nothing sent
+  // to it can be delivered. Made again with the new one; if the browser
+  // won't without a click, notifications show as off until turned back on.
+  const { publicKey } = await getPushKey();
+  if (publicKey && !sameKey(subscription, publicKey)) {
+    await subscription.unsubscribe();
+    const registration = await navigator.serviceWorker.getRegistration(SERVICE_WORKER_URL);
+    subscription =
+      (await registration?.pushManager
+        .subscribe({ userVisibleOnly: true, applicationServerKey: applicationServerKey(publicKey) })
+        .catch(() => null)) ?? null;
+    if (!subscription) return setAttached(false);
+  }
   await savePushSubscription(subscription.toJSON());
   setAttached(true);
 }

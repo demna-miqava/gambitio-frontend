@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useChessBoardContext } from "./ChessBoardContext";
 import { Chess } from "chess.js";
 import { calculateLegalMoves } from "../utils/board-utils";
@@ -48,11 +48,16 @@ export const GameNavigationProvider = ({
     isViewingHistory,
   } = useMoveNavigation(totalMoves);
 
+  // Whether the board showed an earlier position, the last time this ran
+  const wasViewingHistoryRef = useRef(false);
+
   // Handle navigation - runs when user explicitly navigates
   useEffect(() => {
     if (!chessRef.current || !cgRef.current) return;
 
     const history = getMoves();
+    const wasViewingHistory = wasViewingHistoryRef.current;
+    wasViewingHistoryRef.current = isViewingHistory;
 
     if (isViewingHistory) {
       // Viewing a historical position: the one after currentIndex moves
@@ -70,8 +75,13 @@ export const GameNavigationProvider = ({
         turnColor: tempChess.turn() === "w" ? "white" : "black",
         lastMove: shownMove ? [shownMove.from, shownMove.to] : undefined,
       });
-    } else if (viewingIndex === null && history.length > 0) {
-      // User navigated back to current position - restore the live board state
+    } else if (wasViewingHistory && history.length > 0) {
+      // User navigated back to current position - restore the live board
+      // state. Only then: at the live position whoever changes it (a move, a
+      // resync, a lock) syncs the board itself. Redoing it on every move
+      // would put back a premove Chessground just played, before its move
+      // event (deferred by a timeout) reaches the game, and re-enable the
+      // board under a premove's promotion picker.
       const playerColorCode = color === "white" ? "w" : "b";
       const isMyTurn = chessRef.current.turn() === playerColorCode;
       const lastMove = history[history.length - 1];
@@ -92,7 +102,6 @@ export const GameNavigationProvider = ({
       });
     }
   }, [
-    viewingIndex,
     chessRef,
     cgRef,
     getMoves,

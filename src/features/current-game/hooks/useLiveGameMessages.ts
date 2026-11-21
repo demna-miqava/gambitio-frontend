@@ -68,6 +68,12 @@ interface UseLiveGameMessagesOptions {
   /** Called when a takeback was accepted, after the board went back */
   onTakeback?: (data: TakebackMessage) => void;
   /**
+   * Called when the board is replaced with the server's position (a resync,
+   * a refused move, a takeback): anything waiting on the old board, like a
+   * promotion picker, goes
+   */
+  onBoardReplaced?: () => void;
+  /**
    * Asks the server for the full game state (answered with
    * initial_game_state). Move messages carry only the move and the FEN after
    * it, so a board that drifted (a missed message) resyncs this way.
@@ -91,6 +97,7 @@ export const useLiveGameMessages = ({
   onOpponentMove,
   onTimeAdded,
   onTakeback,
+  onBoardReplaced,
   requestSync,
   turnStartedAtRef,
 }: UseLiveGameMessagesOptions) => {
@@ -120,19 +127,24 @@ export const useLiveGameMessages = ({
   );
 
   /**
-   * Replaces the local position with the server's. `playPremove`: play a
-   * premove the player queued, if it's their turn now. False if the PGN
+   * Replaces the local position with the server's. A premove is never
+   * played here: it was queued for the position on the board, and the
+   * server's may be an earlier one (a refused move, a takeback), where it
+   * would be played as a move the player never made. If the position
+   * changed, the premove and any selection are dropped. False if the PGN
    * didn't load: the game, board and move list are then left as they were.
    */
   const syncFromServerState = useCallback(
-    (pgn: string, playPremove = true) => {
+    (pgn: string) => {
       const chess = chessRef.current;
       const cg = cgRef.current;
       if (!chess || !cg) return false;
       // The clocks restart from the server's times now
       turnStartedAtRef.current = performance.now();
 
+      const before = chess.fen();
       if (!loadServerPgn(chess, pgn)) return false;
+      if (chess.fen() !== before) cg.cancelMove();
 
       // Recorded first: the board's last-move highlight comes from the moves
       const moves = setTurn(getTurnColor(chess));
@@ -141,12 +153,12 @@ export const useLiveGameMessages = ({
         chess,
         movableColor: inputLockedRef.current ? undefined : color,
         lastMove: lastMoveSquares(moves),
-        playPremove,
       });
+      onBoardReplaced?.();
       goToLastMove();
       return true;
     },
-    [chessRef, cgRef, color, setTurn, goToLastMove, inputLockedRef, turnStartedAtRef]
+    [chessRef, cgRef, color, setTurn, goToLastMove, inputLockedRef, turnStartedAtRef, onBoardReplaced]
   );
 
   const handleIncomingMove = useCallback(
@@ -258,9 +270,8 @@ export const useLiveGameMessages = ({
       setBlackTimeLeft(data.blackTimeLeft);
       setClockRunning(data.clockRunning);
       serverFenRef.current = data.fen;
-      cgRef.current?.cancelPremove();
       cgRef.current?.cancelMove();
-      const synced = syncFromServerState(data.pgn, false);
+      const synced = syncFromServerState(data.pgn);
       playSound("move");
       onTakeback?.(data);
       if (!synced || chessRef.current.fen() !== data.fen) requestSync();
@@ -282,6 +293,11 @@ export const useLiveGameMessages = ({
   // Sent on connect and on every reconnect
   const handleInitialState = useCallback(
     ({ data }: InitialGameStateMessage) => {
+      // The full state answers whatever a pending error resync would ask
+      if (errorSyncTimerRef.current) {
+        clearTimeout(errorSyncTimerRef.current);
+        errorSyncTimerRef.current = null;
+      }
       if (data.isFinished) setInputLocked(true);
       // This is the answer to a sync, so a PGN that doesn't load isn't
       // asked for again (it would loop): the board stays as it was

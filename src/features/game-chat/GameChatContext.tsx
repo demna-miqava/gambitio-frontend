@@ -93,10 +93,15 @@ export const GameChatProvider = ({ children }: { children: ReactNode }) => {
   // How many places show the conversation right now (the panel, the sheet)
   const [viewers, setViewers] = useState(0);
   const lastSentRef = useRef("");
+  // The last message screen readers were told about, or the last one of the
+  // history that came with the state ("" when there was none). Null until
+  // the state arrives.
+  const announcedRef = useRef<string | null>(null);
 
   const applyState = useCallback((chat: ChatState) => {
     setStatus({ enabled: chat.enabled, reason: chat.reason });
     setMessages(chat.messages);
+    announcedRef.current = chat.messages[chat.messages.length - 1]?.id ?? "";
     if (chat.enabled) setWasOpen(true);
   }, []);
 
@@ -138,6 +143,7 @@ export const GameChatProvider = ({ children }: { children: ReactNode }) => {
       if (message.data.userId === viewerId) {
         // Our message went through
         setError(null);
+        setRejected(null);
       }
     },
     [viewerId]
@@ -167,6 +173,9 @@ export const GameChatProvider = ({ children }: { children: ReactNode }) => {
       lastSentRef.current = trimmed;
       const sent = sendMessage(JSON.stringify({ type: GAME_MESSAGE_TYPES.CHAT, text: trimmed }));
       setError(sent ? null : "Not connected. Your message wasn't sent.");
+      // A refused message was put back in the box once; a box opened later
+      // mustn't fill with it again
+      if (sent) setRejected(null);
       return sent;
     },
     [sendMessage]
@@ -195,15 +204,14 @@ export const GameChatProvider = ({ children }: { children: ReactNode }) => {
 
   const unread = muted || viewers > 0 ? 0 : countUnread(messages, viewerId, lastReadId);
 
-  // Tell screen reader users about a message they can't see arrive
-  const announcedRef = useRef<string | null>(null);
+  // Tell screen reader users about a message they can't see arrive. Not
+  // for the history that came with the state (see applyState), our own, or
+  // what's on screen.
   useEffect(() => {
     const latest = messages[messages.length - 1];
     if (!latest || latest.id === announcedRef.current) return;
-    const first = announcedRef.current === null;
     announcedRef.current = latest.id;
-    // Not for the history that came with the page, our own, or what's on screen
-    if (first || latest.userId === viewerId || muted || viewers > 0) return;
+    if (latest.userId === viewerId || muted || viewers > 0) return;
     announce(`${opponent.username} sent a chat message`);
   }, [messages, viewerId, muted, viewers, announce, opponent.username]);
 

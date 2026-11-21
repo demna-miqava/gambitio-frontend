@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { Bot as BotIcon, Loader2, RotateCcw } from "lucide-react";
+import { Bot as BotIcon, Loader2, Microscope, PencilRuler, RotateCcw } from "lucide-react";
+import { Chess } from "chess.js";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { GameLayout } from "@/features/game/components/GameLayout";
 import { PromotionSelector } from "@/features/game/components/PromotionSelector";
@@ -23,7 +24,15 @@ import { useSettings } from "@/features/settings/SettingsContext";
 import { useUser } from "@/hooks/useUser";
 import { useLeaveGuard } from "@/hooks/useLeaveGuard";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { ROUTES, getArchiveGameRoute, getGameReviewRoute } from "@/constants/routes";
+import {
+  ROUTES,
+  getAnalysisFromPositionRoute,
+  getArchiveGameRoute,
+  getBoardEditorRoute,
+  getGameReviewRoute,
+  getPlayBotsFromPositionRoute,
+} from "@/constants/routes";
+import { playablePositionFromFen, toFen } from "@/features/board-editor/utils/editorPosition";
 import { ReviewGameLinks } from "@/features/game-review/components/ReviewGameLinks";
 import type { ImportGameState } from "@/features/import-game/importGameState";
 import { buildBotGamePgn } from "@/features/play-bots/utils/botGamePgn";
@@ -43,7 +52,7 @@ const RESULT_TITLES: Record<BotGameResult["outcome"], string> = {
 // Server default for confirmDrawResignationEnabled, used while settings load
 const CONFIRM_RESIGN_DEFAULT = true;
 
-const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
+const BotGameView = ({ bot, color, startFen }: { bot: Bot; color: PlayerColor; startFen?: string }) => {
   const navigate = useNavigate();
   const { username, image } = useUser();
   const { settings } = useSettings();
@@ -65,7 +74,7 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
     orientation,
     flip,
     isPlayerTurn,
-  } = useBotGame(bot, color);
+  } = useBotGame(bot, color, startFen);
   // Said after an undo, until the next move: the move count it went back
   // to, and how many undos so far (repeated text isn't read out again, so
   // every other one gets a trailing no-break space)
@@ -81,10 +90,16 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
   const inProgress = history.length > 0 && !result && !engineError;
   const blocker = useLeaveGuard(inProgress);
 
+  // From a set-up position: the same position and side again (it's practice)
   const playAgain = () =>
     navigate(ROUTES.BOT_GAME, {
       replace: true,
-      state: { botId: bot.id, color: color === "white" ? "black" : "white", gameKey: Date.now() },
+      state: {
+        botId: bot.id,
+        color: startFen ? color : color === "white" ? "black" : "white",
+        gameKey: Date.now(),
+        ...(startFen && { startFen }),
+      },
     });
 
   const resultText = result ? `${RESULT_TITLES[result.outcome]} ${result.reason}` : undefined;
@@ -135,19 +150,21 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
   const finishedPgn = useMemo(
     () =>
       result && history.length > 0
-        ? buildBotGamePgn({ moves: history, playerColor: color, playerName, botName: bot.name, result })
+        ? buildBotGamePgn({ moves: history, playerColor: color, playerName, botName: bot.name, result, startFen })
         : null,
-    [result, history, color, playerName, bot.name]
+    [result, history, color, playerName, bot.name, startFen]
   );
 
   // Saved once it's over (unrated); review and analysis then open the stored
-  // game. A game resigned before any move has nothing to save.
+  // game. A game resigned before any move has nothing to save. One from a
+  // set-up position isn't saved at all: the server only keeps games from the
+  // usual start (review, stats and the rest assume one)
   const saveBody = useMemo(
     () =>
-      result && finishedPgn
+      result && finishedPgn && !startFen
         ? { botId: bot.id, color, pgn: finishedPgn, endReason: result.endReason }
         : null,
-    [result, finishedPgn, bot.id, color]
+    [result, finishedPgn, bot.id, color, startFen]
   );
   const save = useSaveBotGame(saveBody);
   // If saving failed, review/analysis get the game as PGN instead
@@ -164,7 +181,8 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
     .filter(Boolean)
     .join(". ");
 
-  const shownLine = positionsAlong(history, navigation.currentIndex);
+  const shownLine =
+    history.length > 0 ? positionsAlong(history, navigation.currentIndex) : [startFen ?? new Chess().fen()];
 
   const botRow = {
     name: bot.name,
@@ -262,11 +280,39 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
                 <RotateCcw /> Play again
               </Button>
               <Button size="md" variant="outline" asChild>
-                <Link to={ROUTES.PLAY_BOTS}>
+                <Link to={startFen ? getPlayBotsFromPositionRoute(startFen) : ROUTES.PLAY_BOTS}>
                   <BotIcon aria-hidden="true" /> Other bots
                 </Link>
               </Button>
             </div>
+            {startFen && (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  {finishedPgn ? (
+                    <Button size="md" variant="outline" asChild>
+                      <Link to={ROUTES.TOOLS.IMPORT_GAME} state={importState(false)}>
+                        <Microscope aria-hidden="true" /> Analyse
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button size="md" variant="outline" asChild>
+                      <Link to={getAnalysisFromPositionRoute(startFen)}>
+                        <Microscope aria-hidden="true" /> Analyse
+                      </Link>
+                    </Button>
+                  )}
+                  <Button size="md" variant="outline" asChild>
+                    <Link to={getBoardEditorRoute(startFen)}>
+                      <PencilRuler aria-hidden="true" /> Edit position
+                    </Link>
+                  </Button>
+                </div>
+                <p role="status" className="text-xs text-muted-foreground">
+                  Games from a set-up position aren't kept: this one won't be in your history.
+                  Analyse it now if you want to look at it again.
+                </p>
+              </>
+            )}
             {save.status === "saving" && (
               <p
                 role="status"
@@ -321,7 +367,11 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
       <GameLayout board={board} sidebar={sidebar} />
       <LeaveGameDialog
         blocker={blocker}
-        description="Games against the computer are saved only once they're over, so this one will be lost."
+        description={
+          startFen
+            ? "Games from a set-up position aren't saved, so this one will be lost."
+            : "Games against the computer are saved only once they're over, so this one will be lost."
+        }
       />
     </>
   );
@@ -331,13 +381,24 @@ const BotGameView = ({ bot, color }: { bot: Bot; color: PlayerColor }) => {
 const BotGame = () => {
   const location = useLocation();
   const state = location.state as
-    | { botId?: string; color?: PlayerColor; gameKey?: number }
+    | { botId?: string; color?: PlayerColor; gameKey?: number; startFen?: string }
     | null;
   const bot = state?.botId ? getBotById(state.botId) : undefined;
+  // From the board editor: only a legal position (router state can be stale)
+  const position = state?.startFen ? playablePositionFromFen(state.startFen) : null;
 
-  if (!bot || !state?.color) return <Navigate to={ROUTES.PLAY_BOTS} replace />;
+  if (!bot || !state?.color || (state.startFen && !position)) {
+    return <Navigate to={ROUTES.PLAY_BOTS} replace />;
+  }
 
-  return <BotGameView key={state.gameKey} bot={bot} color={state.color} />;
+  return (
+    <BotGameView
+      key={state.gameKey}
+      bot={bot}
+      color={state.color}
+      startFen={position ? toFen(position) : undefined}
+    />
+  );
 };
 
 export default BotGame;

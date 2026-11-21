@@ -127,6 +127,12 @@ export const useChallengeMessageHandlers = ({
       // cover it on a phone). An older toast from them goes too, its terms
       // may be out of date. The list closes toasts it scrolls into view.
       setTimeout(() => {
+        // Resolved in the meantime (cancelled, accepted elsewhere, a game
+        // started): no toast for it
+        const open = queryClient
+          .getQueryData<Challenge[]>([QKEY_CHALLENGES])
+          ?.some((c) => c.id === challenge.id);
+        if (!open) return;
         if (isIncomingListInView()) {
           toast.dismiss(id);
           return;
@@ -200,6 +206,9 @@ export const useChallengeMessageHandlers = ({
       const reason = message.data?.reason;
       if (outgoing && (declinedBy === undefined || declinedBy === outgoing.challengedId)) {
         clearOutgoing();
+        // Their own game is starting: the challenge just goes, without a
+        // notice over the new game that it "expired"
+        if (reason === "playing") return;
         toast.info(
           reason
             ? `Your challenge to ${outgoing.username} expired`
@@ -257,7 +266,11 @@ export const useChallengeMessageHandlers = ({
       if (message.type !== NOTIFICATION_MESSAGE_TYPES.MATCH_CREATED) return;
 
       clearOutgoing();
-      toast.dismiss();
+      // Every challenge toast, but not the player's other toasts (a study
+      // invite, a friend request)
+      for (const challengerId of toastsShownRef.current) {
+        toast.dismiss(challengeToastId(challengerId));
+      }
       toastsShownRef.current.clear();
       // The server deletes both players' challenges when a game starts
       queryClient.setQueryData<Challenge[]>([QKEY_CHALLENGES], []);

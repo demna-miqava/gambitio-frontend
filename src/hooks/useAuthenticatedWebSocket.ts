@@ -30,6 +30,11 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * - protocols: pass as the `protocols` option, unchanged (it is a stable
  *   array this hook fills in).
  *
+ * Only the latest getUrl call fills in `protocols`. react-use-websocket
+ * starts a new connect without cancelling the last one's (e.g. reconnecting
+ * at once while a connect is still retrying for a token): the older one
+ * stops asking and leaves the token alone.
+ *
  * getUrl never throws: react-use-websocket treats a throwing URL function
  * as "give up for good" (no socket, no close event, no more retries). If a
  * token can't be had (e.g. still offline after a phone wakes up), it
@@ -45,13 +50,17 @@ export const useAuthenticatedWebSocket = (
 ): { getUrl: (() => Promise<string>) | null; protocols: string[] } => {
   const { getToken, isSignedIn } = useAuth();
   const protocols = useRef<string[]>([WS_PROTOCOL]).current;
+  const latestCall = useRef(0);
 
   const getUrl = useCallback(async () => {
+    const call = ++latestCall.current;
     let token: string | null = null;
     for (let attempt = 0; attempt < TOKEN_ATTEMPTS && !token; attempt++) {
       if (attempt > 0) await wait(TOKEN_RETRY_MS * attempt);
+      if (call !== latestCall.current) return baseUrl ?? "";
       token = await getToken().catch(() => null);
     }
+    if (call !== latestCall.current) return baseUrl ?? "";
     protocols.splice(0, protocols.length, WS_PROTOCOL, ...(token ? [`${WS_TOKEN_PREFIX}${token}`] : []));
     return baseUrl ?? "";
   }, [baseUrl, getToken, protocols]);
@@ -65,7 +74,7 @@ export const useAuthenticatedWebSocket = (
  * then loses its sockets too).
  */
 export const useSocketReauth = (
-  sendMessage: (message: string) => void,
+  sendMessage: (message: string, keep?: boolean) => void,
   readyState: ReadyState
 ) => {
   const { getToken } = useAuth();
@@ -77,7 +86,11 @@ export const useSocketReauth = (
     const timer = setInterval(() => {
       void getToken()
         .then((token) => {
-          if (token) send.current(JSON.stringify({ type: "auth", token }));
+          // Not queued (keep = false) if the socket closed meanwhile: sent
+          // on the reconnect, a token that has expired by then would get
+          // the new socket closed ("Invalid session"). It authenticates
+          // with a fresh token of its own.
+          if (token) send.current(JSON.stringify({ type: "auth", token }), false);
         })
         .catch(() => {
           // Offline for now; the next round (or a reconnect) tries again

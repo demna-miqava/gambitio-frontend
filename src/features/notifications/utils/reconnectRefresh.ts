@@ -1,7 +1,10 @@
 import type { QueryKey } from "@tanstack/react-query";
 import {
+  QKEY_ACTIVE_DUEL,
   QKEY_ACTIVE_GAME,
   QKEY_CHALLENGES,
+  QKEY_DUEL,
+  QKEY_DUEL_INVITES,
   QKEY_FRIEND_STATUSES,
   QKEY_PENDING_FRIEND_REQUESTS,
   QKEY_TABLE_GAME_REQUESTS,
@@ -10,18 +13,22 @@ import {
 
 /**
  * Lists the notifications socket keeps up to date for the signed-in player
- * (challenges, the active game, friends' table games to confirm), and
- * friends' statuses: polled, but a reconnect (the network or the computer
- * waking up) is when they are most likely out of date
+ * (challenges, the active game, friends' table games to confirm, a puzzle
+ * duel being played and whether one is on: a missed "duel started" or the
+ * other player's progress), and friends' statuses: polled, but a reconnect
+ * (the network or the computer waking up) is when they are most likely out
+ * of date
  */
 const GLOBAL_KEYS: unknown[] = [
   QKEY_CHALLENGES,
   QKEY_ACTIVE_GAME,
   QKEY_FRIEND_STATUSES,
   QKEY_TABLE_GAME_REQUESTS,
+  QKEY_DUEL,
+  QKEY_ACTIVE_DUEL,
 ];
 /** Keyed [key, userId, ...]: only the signed-in player's own copy gets socket updates */
-const OWN_KEYS: unknown[] = [QKEY_PENDING_FRIEND_REQUESTS, QKEY_USER_FRIENDS];
+const OWN_KEYS: unknown[] = [QKEY_PENDING_FRIEND_REQUESTS, QKEY_USER_FRIENDS, QKEY_DUEL_INVITES];
 
 /**
  * Whether a query may have missed updates while the notifications socket was

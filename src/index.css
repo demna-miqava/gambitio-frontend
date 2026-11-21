@@ -1311,6 +1311,63 @@
   fill: var(--board-arrow);
 }
 
+/* Board editor: spare pieces drawn by the board's piece set, in buttons */
+/* !important: the board's own pieces are sized with !important below */
+.editor-tray .cg-wrap piece {
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none;
+}
+
+/* Puzzle duel: the last move of a finished puzzle, right or wrong */
+.cg-wrap cg-board square.duel-solved {
+  background-color: color-mix(in oklch, var(--win) 60%, transparent);
+}
+.cg-wrap cg-board square.duel-missed {
+  background-color: color-mix(in oklch, var(--loss) 60%, transparent);
+}
+
+/* Coordinates trainer: the clicked square flashes green when right, red when wrong */
+.cg-wrap cg-board square.coord-right {
+  background-color: color-mix(in oklch, var(--win) 70%, transparent);
+}
+.cg-wrap cg-board square.coord-wrong {
+  background-color: color-mix(in oklch, var(--loss) 70%, transparent);
+}
+/* The target square's name over the board: see-through, with a halo in the
+   page colour so it reads on light and dark squares alike */
+.coord-target {
+  opacity: 0.85;
+  text-shadow:
+    0 0 0.06em var(--background),
+    0 0 0.12em var(--background),
+    0 0 0.2em var(--background);
+}
+/* After a click the name briefly takes the result's colour (a new span each click) */
+.coord-target-right {
+  animation: coord-flash-right 450ms ease-out;
+}
+.coord-target-wrong {
+  animation: coord-flash-wrong 450ms ease-out;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .coord-target-wrong {
+    animation: coord-flash-wrong 450ms ease-out, coord-shake 250ms;
+  }
+}
+@keyframes coord-flash-right {
+  from { color: var(--win); }
+}
+@keyframes coord-flash-wrong {
+  from { color: var(--loss); }
+}
+@keyframes coord-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-0.06em); }
+  75% { transform: translateX(0.06em); }
+}
+
 .cg-wrap cg-board square.last-move {
   background-color: var(--board-last-move);
 }

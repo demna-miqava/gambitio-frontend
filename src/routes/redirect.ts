@@ -1,3 +1,4 @@
+import { matchPath } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 
 /** Query parameter carrying where to go after signing in (Clerk's name too). */
@@ -14,7 +15,8 @@ const UNSAFE_CHARS = /[\\\u0000-\u001f\u007f]/;
  * A same-origin, relative destination from `redirect_url` (or a clicked
  * notification), or HOME. Absolute URLs, protocol-relative ("//evil.com"),
  * backslashes ("/\\evil.com") and control characters are refused, as are the
- * auth pages themselves (they'd loop). public/sw.js applies the same rules
+ * auth pages themselves (they'd loop; matched as the router matches them,
+ * "/SignIn/" too). public/sw.js applies the same rules
  * (but for the auth pages) to notification links: keep them in step.
  */
 export const getSafeRedirect = (value: string | null | undefined): string => {
@@ -30,7 +32,7 @@ export const getSafeRedirect = (value: string | null | undefined): string => {
       ROUTES.AUTH.SIGN_UP,
       ROUTES.AUTH.PROFILE_SETUP,
     ];
-    if (authPages.includes(url.pathname)) return ROUTES.HOME;
+    if (authPages.some((page) => matchPath(page, url.pathname) !== null)) return ROUTES.HOME;
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
     return ROUTES.HOME;

@@ -6,10 +6,8 @@ import { SectionHeader } from "@/components/PageHeader";
 import type { FriendRequest } from "@/features/friends/types";
 import { IncomingRequests } from "./IncomingRequests";
 import { OutgoingRequests } from "./OutgoingRequests";
-import {
-  useFriendRequestAction,
-  type FriendRequestAction,
-} from "../hooks/useFriendRequestAction";
+import { useFriendRequestAction } from "../hooks/useFriendRequestAction";
+import type { FriendRequestAction } from "@/services/friends";
 
 const CountBadge = ({ count }: { count: number }) =>
   count > 0 ? (

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Chess } from "chess.js";
 import { buildBotGamePgn } from "./botGamePgn";
+import { parsePgn } from "@/features/archive-game/utils/pgn";
 
 const moves = ["f3", "e5", "g4", "Qh4#"].map((san) => ({ san }));
 const date = new Date("2026-11-13T10:00:00Z");
@@ -43,5 +44,23 @@ describe("buildBotGamePgn", () => {
     expect(
       result(buildBotGamePgn({ ...base, playerColor: "white", result: { outcome: "draw", reason: "by stalemate" } }))
     ).toBe("1/2-1/2");
+  });
+
+  it("writes a set-up position as SetUp and FEN headers, readable by the analysis board", () => {
+    const startFen = "4k3/8/8/8/8/8/4P3/4K3 w - - 0 1";
+    const pgn = buildBotGamePgn({
+      moves: [{ san: "e4" }, { san: "Kd7" }],
+      playerColor: "white",
+      playerName: "ann",
+      botName: "Bot",
+      result: { outcome: "draw", reason: "by agreement" },
+      date,
+      startFen,
+    });
+    expect(pgn).toContain('[SetUp "1"]');
+    expect(pgn).toContain(`[FEN "${startFen}"]`);
+    const { root } = parsePgn(pgn);
+    expect(root.fen).toBe(startFen);
+    expect(root.children[0]?.move?.san).toBe("e4");
   });
 });

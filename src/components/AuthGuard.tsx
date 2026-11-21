@@ -17,11 +17,15 @@ const publicRoutes: string[] = [
  */
 const openRoutes: string[] = [ROUTES.SHARED_GAME];
 
+/** Matched as the router does: any case, with or without a trailing slash */
+const isOneOf = (patterns: string[], pathname: string) =>
+  patterns.some((pattern) => matchPath(pattern, pathname) !== null);
+
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const isPublicRoute = publicRoutes.includes(location.pathname);
-  const isOpenRoute = openRoutes.some((pattern) => matchPath(pattern, location.pathname) !== null);
-  const isProfileSetupRoute = location.pathname === ROUTES.AUTH.PROFILE_SETUP;
+  const isPublicRoute = isOneOf(publicRoutes, location.pathname);
+  const isOpenRoute = isOneOf(openRoutes, location.pathname);
+  const isProfileSetupRoute = isOneOf([ROUTES.AUTH.PROFILE_SETUP], location.pathname);
   const { isPending, isAuthenticated, hasProfile, isError, refetch } = useUser();
 
   if (isPending) {

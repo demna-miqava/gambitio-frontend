@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { gameMessages } from "@/services/websocketMessageDispatcher";
 import { useUser } from "@/hooks/useUser";
@@ -39,10 +39,14 @@ export const useRematch = ({
   // The server takes one rematch request per player per game
   // (REMATCH_ALREADY_REQUESTED), so a cancelled one can't be sent again
   const [rematchUsed, setRematchUsed] = useState(false);
+  // An accept is on its way: a second click would only earn a "no rematch
+  // offer to answer" error once the first has started the game
+  const acceptingRef = useRef(false);
 
   // Restore a pending rematch offer after a reload or reconnect
   const handleInitialState = useCallback(
     ({ data }: InitialGameStateMessage) => {
+      acceptingRef.current = false;
       setRematchRequested(data.rematchRequestedBy === currentUserId);
       if (data.rematchRequestedBy === currentUserId) setRematchUsed(true);
       setRematchOffered(
@@ -53,11 +57,13 @@ export const useRematch = ({
   );
 
   const handleRematchCanceled = useCallback(() => {
+    acceptingRef.current = false;
     setRematchOffered(false);
     announce(`${opponent.username} withdrew the rematch offer`);
   }, [announce, opponent.username]);
 
   const handleRematchRequested = useCallback(() => {
+    acceptingRef.current = false;
     setRematchOffered(true);
     announce(`${opponent.username} wants a rematch`);
   }, [announce, opponent.username]);
@@ -73,10 +79,24 @@ export const useRematch = ({
     [announce, opponent.username]
   );
 
+  // useLiveGameMessages shows the error; this puts the buttons right. A
+  // rate-limited message was dropped unread, as if it was never sent.
   const handleError = useCallback(({ data }: GameErrorMessage) => {
-    if (data.code !== "REMATCH_ALREADY_REQUESTED") return;
-    setRematchRequested(false);
-    setRematchUsed(true);
+    const type = data.request?.type;
+    if (type === GAME_MESSAGE_TYPES.REMATCH_RESPONSE) acceptingRef.current = false;
+    if (data.code === "REMATCH_ALREADY_REQUESTED") {
+      setRematchRequested(false);
+      setRematchUsed(true);
+    } else if (data.code === "RATE_LIMITED") {
+      if (type === GAME_MESSAGE_TYPES.REMATCH_REQUEST) {
+        setRematchRequested(false);
+        setRematchUsed(false);
+      } else if (type === GAME_MESSAGE_TYPES.CANCEL_REMATCH) {
+        setRematchRequested(true);
+      } else if (type === GAME_MESSAGE_TYPES.REMATCH_RESPONSE) {
+        setRematchOffered(true);
+      }
+    }
   }, []);
 
   const handleMatchFound = useCallback(
@@ -132,7 +152,8 @@ export const useRematch = ({
   }, [send]);
 
   const acceptRematch = useCallback(() => {
-    send({ type: GAME_MESSAGE_TYPES.REMATCH_RESPONSE, data: { accepted: true } });
+    if (acceptingRef.current) return;
+    acceptingRef.current = send({ type: GAME_MESSAGE_TYPES.REMATCH_RESPONSE, data: { accepted: true } });
   }, [send]);
 
   const declineRematch = useCallback(() => {

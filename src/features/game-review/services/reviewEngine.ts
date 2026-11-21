@@ -40,6 +40,8 @@ export class ReviewEngine {
   /** The one thing currently waiting on engine output */
   private pending: { onLine: (line: string) => void; reject: (error: Error) => void } | null = null;
   private terminated = false;
+  /** Set once the worker has crashed: it answers nothing any more */
+  private crashed: Error | null = null;
   private readonly createWorker: () => EngineWorker;
 
   constructor(createWorker: () => EngineWorker = createStockfishWorker) {
@@ -53,6 +55,7 @@ export class ReviewEngine {
   /** Resolves with the first line `accept` returns a value for. */
   private waitFor<T>(accept: (line: string) => T | undefined): Promise<T> {
     if (this.terminated) return Promise.reject(new ReviewAbortedError());
+    if (this.crashed) return Promise.reject(this.crashed);
     return new Promise<T>((resolve, reject) => {
       this.pending = {
         onLine: (line) => {
@@ -77,7 +80,9 @@ export class ReviewEngine {
           for (const line of text.split("\n")) this.pending?.onLine(line);
         };
         worker.onerror = (event) => {
-          this.fail(new Error(`Stockfish failed${event.message ? `: ${event.message}` : ""}`));
+          // Also between searches: the next one fails instead of waiting forever
+          this.crashed = new Error(`Stockfish failed${event.message ? `: ${event.message}` : ""}`);
+          this.fail(this.crashed);
         };
 
         const uciOk = this.waitFor((line) => (line.trim() === "uciok" ? true : undefined));

@@ -18,15 +18,24 @@ export function useStockfish(options: UseStockfishOptions = {}) {
     if (!engineRef.current) {
       engineRef.current = new StockfishService();
     }
-    await engineRef.current.init({ depth, moveTime, skillLevel, multiPv });
-    setIsReady(true);
+    const engine = engineRef.current;
+    try {
+      await engine.init({ depth, moveTime, skillLevel, multiPv });
+    } catch (error) {
+      // Destroyed (unmounted) while starting: nothing went wrong
+      if (engineRef.current !== engine) return;
+      throw error;
+    }
+    if (engineRef.current === engine) setIsReady(true);
   }, [depth, moveTime, skillLevel, multiPv]);
 
   // Auto-initialize once on mount with the options at that time
   const mountRef = useRef({ autoInit, init });
   useEffect(() => {
     if (mountRef.current.autoInit) {
-      mountRef.current.init();
+      mountRef.current.init().catch((error) => {
+        console.error("Stockfish failed to start", error);
+      });
     }
     return () => {
       engineRef.current?.destroy();

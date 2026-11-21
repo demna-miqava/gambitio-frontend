@@ -1,15 +1,16 @@
 import type { SaveTableGameBody } from "@/features/table-mode/utils/tableStorage";
 import { apiRequest } from ".";
 import type { PaginatedGamesResponse, GetUserGamesParams, StoredGame } from "@/types";
-import { getUserGames as getUserGamesAPI } from "./user";
 
 export const getUserGames = async ({
   userId,
   page = 1,
   limit = 10,
+  filters,
 }: GetUserGamesParams): Promise<PaginatedGamesResponse> => {
-  const query = `page=${page}&limit=${limit}`;
-  return getUserGamesAPI(userId, query);
+  return apiRequest<PaginatedGamesResponse>("get", `/users/${userId}/games`, {
+    params: { page, limit, ...filters },
+  });
 };
 
 /**

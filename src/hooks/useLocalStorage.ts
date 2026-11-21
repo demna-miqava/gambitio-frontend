@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 
+/**
+ * A value kept in localStorage under `key`, which is read once: the key is
+ * meant to stay the same for the component's life.
+ */
 export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [value, setValue] = useState(function () {
+  const [value, setValue] = useState<T>(function () {
     // A corrupted or hand-edited value falls back to the default instead of crashing
     try {
       const storedValue = localStorage.getItem(key);
@@ -23,5 +27,5 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     [value, key]
   );
 
-  return [value, setValue];
+  return [value, setValue] as const;
 }

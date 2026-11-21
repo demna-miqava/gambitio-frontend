@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpDown, Eye, Microscope, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,43 +23,42 @@ import { useShownLine } from "@/features/game/hooks/useShownLine";
 import { useLiveSeries } from "@/features/series/hooks/useLiveSeries";
 import { SeriesStrip } from "@/features/series/components/SeriesStrip";
 import { WatchTogetherButton } from "@/features/study/components/WatchTogetherButton";
-
-// Widgets where "f" is typing, not a shortcut
+import { SpectatorChatProvider } from "@/features/spectator-chat/SpectatorChatContext";
+import {
+  SpectatorChatSection,
+  SpectatorChatSheetButton,
+} from "@/features/spectator-chat/components/SpectatorChat";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 /**
  * Someone else's live game, read-only: the board (white at the bottom until
  * flipped), both clocks, the moves and, at the end, the result with a link
- * to the review. Runs inside the same providers as the player's page, with
+ * to the review, and the spectators' chat (beside the board from 1024px, in
+ * a sheet below). Runs inside the same providers as the player's page, with
  * LiveGameProvider in spectating mode.
  */
 export const SpectatorView = () => {
-  const { cgRef } = useChessBoardContext();
-  const [orientation, setOrientation] = useState<PlayerColor>("white");
+  // The board's own orientation (white, from the provider), so everything
+  // reading it from the context turns with the board
+  const { orientation, flipBoard: flip } = useChessBoardContext();
   const { spectatorCount, finish } = useSpectatorState();
-
-  const flip = useCallback(
-    () => setOrientation((o) => (o === "white" ? "black" : "white")),
-    []
-  );
-
-  useEffect(() => {
-    cgRef.current?.set({ orientation });
-  }, [cgRef, orientation]);
 
   useFlipBoardKey(flip);
 
   return (
-    <GameLayout
-      board={<SpectatorBoard orientation={orientation} />}
-      sidebar={
-        <SpectatorPanel
-          orientation={orientation}
-          onFlip={flip}
-          spectatorCount={spectatorCount}
-          finish={finish}
-        />
-      }
-    />
+    <SpectatorChatProvider>
+      <GameLayout
+        board={<SpectatorBoard orientation={orientation} />}
+        sidebar={
+          <SpectatorPanel
+            orientation={orientation}
+            onFlip={flip}
+            spectatorCount={spectatorCount}
+            finish={finish}
+          />
+        }
+      />
+    </SpectatorChatProvider>
   );
 };
 
@@ -107,7 +105,7 @@ const SpectatorBoard = ({ orientation }: { orientation: PlayerColor }) => {
   // server's sweeper already settle a flag fall
   const clock = (side: PlayerColor) => (
     <Clock
-      startingTime={game.time}
+      startingTime={(side === "white" ? game.whiteTime : game.blackTime) ?? game.time}
       isActive={clockRunning && turn === side}
       gameEnded={gameEnded}
       serverTimeLeft={side === "white" ? whiteTimeLeft : blackTimeLeft}
@@ -148,6 +146,8 @@ const SpectatorPanel = ({
   const others = spectatorCount === null ? null : Math.max(0, spectatorCount - 1);
   const shownLine = useShownLine();
   const { series, seriesGame } = useLiveSeries(game);
+  // The chat sits in the panel only when the panel is beside the board
+  const wide = useMediaQuery("(min-width: 1024px)");
 
   return (
     <div className="flex flex-col gap-3 lg:rounded-2xl lg:bg-card lg:p-4">
@@ -240,8 +240,11 @@ const SpectatorPanel = ({
               More live games
             </Link>
           </Button>
+          {!wide && <SpectatorChatSheetButton gameId={game.id} className="flex-1" />}
         </div>
       </div>
+
+      {wide && <SpectatorChatSection gameId={game.id} className="border-t border-border pt-3" />}
     </div>
   );
 };

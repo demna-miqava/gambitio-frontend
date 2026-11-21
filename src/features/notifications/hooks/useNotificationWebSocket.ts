@@ -6,7 +6,7 @@ import { useUser } from "@/hooks/useUser";
 import { useAuthenticatedWebSocket, useSocketReauth } from "@/hooks/useAuthenticatedWebSocket";
 import { parseWebSocketMessage } from "@/features/game/utils/websocket-helpers";
 import { notificationMessages } from "@/services/websocketMessageDispatcher";
-import { NOTIFICATIONS_RECONNECT_OPTIONS } from "@/constants/websocket";
+import { NOTIFICATIONS_RECONNECT_OPTIONS, ON_MESSAGE_ONLY } from "@/constants/websocket";
 import type { NotificationWebSocketMessage } from "../types/websocket-messages";
 import { mayBeStaleAfterReconnect, RECONNECT_REFRESH_SPREAD_MS } from "../utils/reconnectRefresh";
 
@@ -43,6 +43,7 @@ export const useNotificationWebSocket = () => {
     getUrl,
     {
       ...NOTIFICATIONS_RECONNECT_OPTIONS,
+      ...ON_MESSAGE_ONLY,
       protocols,
       // Challenges, games and friend requests may have changed while we were
       // offline. Only those lists, only the ones on screen (inactive ones are

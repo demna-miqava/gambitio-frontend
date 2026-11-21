@@ -33,6 +33,10 @@ describe("getSafeRedirect", () => {
     expect(getSafeRedirect("/signup?x=1")).toBe("/home");
     expect(getSafeRedirect("/profile-setup")).toBe("/home");
     expect(getSafeRedirect("/")).toBe("/home");
+    // However the router would still match them
+    expect(getSafeRedirect("/SignIn")).toBe("/home");
+    expect(getSafeRedirect("/signin/")).toBe("/home");
+    expect(getSafeRedirect("/Profile-Setup/?x=1")).toBe("/home");
   });
 });
 

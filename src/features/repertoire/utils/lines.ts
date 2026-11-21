@@ -43,14 +43,28 @@ export type ParsedLine = { ok: true; moves: string[] } | { ok: false; message: s
  * checks again and normalises the notation).
  */
 export function parseMoveText(text: string): ParsedLine {
-  const tokens = text
-    // Comments, variations and NAGs aren't part of the line
+  // Headers (a whole pasted PGN), comments and NAGs aren't part of the line
+  const movetext = text
+    .replace(/^[ \t]*\[[^\]\n]*\][ \t]*$/gm, " ")
     .replace(/\{[^}]*\}/g, " ")
-    .replace(/\([^)]*\)/g, " ")
-    .replace(/\$\d+/g, " ")
+    .replace(/\$\d+/g, " ");
+  // Nor are variations, nested ones too (one pass, so a pasted text can't
+  // take quadratic time)
+  let depth = 0;
+  let mainline = "";
+  for (const char of movetext) {
+    if (char === "(" || (char === ")" && depth > 0)) {
+      depth += char === "(" ? 1 : -1;
+      mainline += " ";
+    } else if (depth === 0) {
+      mainline += char;
+    }
+  }
+  const tokens = mainline
     .split(/\s+/)
     .map((token) => token.replace(/^\d+\.(\.\.)?/, "").replace(/[!?]+$/, ""))
-    .filter((token) => token && !/^(1-0|0-1|1\/2-1\/2|\*)$/.test(token));
+    // "..." on its own: a black move spaced out ("1. ... e5")
+    .filter((token) => token && token !== "..." && !/^(1-0|0-1|1\/2-1\/2|\*)$/.test(token));
 
   if (tokens.length === 0) return { ok: false, message: "Type at least one move." };
   if (tokens.length > MAX_LINE_PLIES) {

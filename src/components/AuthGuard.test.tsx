@@ -53,4 +53,12 @@ describe("AuthGuard", () => {
     expect(shows("/")).toBe(true);
     expect(shows("/signin")).toBe(true);
   });
+
+  it("matches the sign-in pages as the router does", () => {
+    expect(shows("/signin/")).toBe(true);
+    expect(shows("/SignUp")).toBe(true);
+    // A signed-in user is sent away from those spellings too
+    Object.assign(user, { isAuthenticated: true, hasProfile: true });
+    expect(shows("/SIGNIN/")).toBe(false);
+  });
 });

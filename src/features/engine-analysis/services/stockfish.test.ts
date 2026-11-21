@@ -9,8 +9,16 @@ const AFTER_E4 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1";
 let searchOutput: string[] = [];
 
 class FakeStockfishWorker {
+  static last: FakeStockfishWorker | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
   onerror: ((event: { message: string }) => void) | null = null;
+  received: string[] = [];
+  /** When false, "go" gets no answer (a search that's still running) */
+  answerSearches = true;
+
+  constructor() {
+    FakeStockfishWorker.last = this;
+  }
 
   private emit(lines: string[]) {
     setTimeout(() => {
@@ -19,9 +27,10 @@ class FakeStockfishWorker {
   }
 
   postMessage(message: string) {
+    this.received.push(message);
     if (message === "uci") this.emit(["id name Fake", "uciok"]);
     else if (message === "isready") this.emit(["readyok"]);
-    else if (message.startsWith("go")) this.emit(searchOutput);
+    else if (message.startsWith("go") && this.answerSearches) this.emit(searchOutput);
   }
 
   terminate() {}
@@ -65,6 +74,72 @@ describe("StockfishService.analyzeMultiPv", () => {
     const result = await engine.analyzeMultiPv(AFTER_E4, 1);
 
     expect(result.lines[0]).toMatchObject({ depth: 10, score: 40, pv: ["c7c5"] });
+    engine.destroy();
+  });
+});
+
+describe("StockfishService failures and superseded searches", () => {
+  const tick = () => new Promise((r) => setTimeout(r, 5));
+
+  test("a worker crash after start-up fails the running search and every later one", async () => {
+    vi.stubGlobal("Worker", FakeStockfishWorker);
+    const engine = new StockfishService();
+    await engine.init({ depth: 18, moveTime: 2000 });
+    const worker = FakeStockfishWorker.last!;
+    worker.answerSearches = false;
+
+    const running = engine.analyzeMultiPv(START, 1);
+    await tick(); // searching
+    const queued = engine.analyzeMultiPv(AFTER_E4, 1);
+    worker.onerror?.({ message: "wasm out of memory" });
+
+    await expect(running).rejects.toThrow("wasm out of memory");
+    await expect(queued).rejects.toThrow("wasm out of memory");
+    await expect(engine.analyzeMultiPv(START, 1)).rejects.toThrow("wasm out of memory");
+    engine.destroy();
+  });
+
+  test("destroy settles a search that's still running", async () => {
+    vi.stubGlobal("Worker", FakeStockfishWorker);
+    const engine = new StockfishService();
+    await engine.init({ depth: 18, moveTime: 2000 });
+    FakeStockfishWorker.last!.answerSearches = false;
+
+    const running = engine.analyzeMultiPv(START, 1);
+    await tick();
+    engine.destroy();
+
+    await expect(running).rejects.toThrow();
+  });
+
+  test("a search superseded while the engine gets ready never starts", async () => {
+    vi.stubGlobal("Worker", FakeStockfishWorker);
+    searchOutput = ["info depth 10 multipv 1 score cp 20 pv e2e4", "bestmove e2e4"];
+    const engine = new StockfishService();
+    await engine.init({ depth: 18, moveTime: 2000 });
+    const worker = FakeStockfishWorker.last!;
+
+    const first = engine.analyzeMultiPv(START, 1);
+    const second = engine.analyzeMultiPv(AFTER_E4, 1);
+
+    expect(await first).toEqual({ lines: [], depth: 0 });
+    expect((await second).depth).toBe(10);
+    expect(worker.received.filter((m) => m.startsWith("position"))).toEqual([`position fen ${AFTER_E4}`]);
+    engine.destroy();
+  });
+
+  test("sends only the search limits that are set, and one isready per search", async () => {
+    vi.stubGlobal("Worker", FakeStockfishWorker);
+    searchOutput = ["bestmove e2e4"];
+    const engine = new StockfishService();
+    await engine.init({ depth: undefined, moveTime: 1500 });
+    const worker = FakeStockfishWorker.last!;
+    expect(worker.received).not.toContain("isready");
+
+    await engine.analyzeMultiPv(START, 1);
+
+    expect(worker.received.filter((m) => m.startsWith("go"))).toEqual(["go movetime 1500"]);
+    expect(worker.received.filter((m) => m === "isready")).toHaveLength(1);
     engine.destroy();
   });
 });

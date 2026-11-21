@@ -1,4 +1,4 @@
-import { Zap, Target, Skull, Brain, type LucideIcon } from "lucide-react";
+import { Zap, Target, Skull, Brain, Swords, type LucideIcon } from "lucide-react";
 import type { PuzzleMode } from "../types/puzzle.types";
 
 export interface PuzzleModeConfig {
@@ -6,7 +6,8 @@ export interface PuzzleModeConfig {
   description: string;
   icon: LucideIcon;
   iconColor: string;
-  url: PuzzleMode;
+  /** The mode's path under /puzzles/ (duels have a page of their own) */
+  url: PuzzleMode | "duel";
   disabled?: boolean;
 }
 
@@ -38,5 +39,12 @@ export const PUZZLE_MODES: PuzzleModeConfig[] = [
     icon: Brain,
     iconColor: "text-rapid",
     url: "calculate",
+  },
+  {
+    title: "Puzzle duel",
+    description: "Race a friend through the same puzzles for 3 minutes",
+    icon: Swords,
+    iconColor: "text-win",
+    url: "duel",
   },
 ];

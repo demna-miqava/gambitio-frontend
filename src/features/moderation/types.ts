@@ -25,6 +25,8 @@ export interface ReportInput {
    * the report); only a room both are members of
    */
   studyRoomId?: number;
+  /** Or the game whose spectator chat it happened in (that chat goes with the report) */
+  spectatorGameId?: number;
 }
 
 export const REPORT_REASONS: { value: ReportReason; label: string; hint: string }[] = [

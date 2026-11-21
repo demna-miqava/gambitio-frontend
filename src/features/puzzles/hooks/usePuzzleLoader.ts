@@ -69,18 +69,21 @@ export const usePuzzleLoader = ({
       const currentIndex = puzzle
         ? allPuzzles.findIndex((p) => p.id === puzzle.id)
         : -1;
-      const nextIndex = currentIndex + 1;
+      let nextIndex = currentIndex + 1;
+      // A broken puzzle is skipped: stopping at it would stall the feed for
+      // good (the next call would land on it again). A hidden (rated) puzzle
+      // comes without its solution.
+      const isInvalid = (p: Puzzle | undefined) => !p?.fen || (!p.hidden && !p.moves?.length);
+      if (nextIndex < allPuzzles.length && isInvalid(allPuzzles[nextIndex])) {
+        toast.error(PUZZLE_MESSAGES.INVALID_DATA);
+        while (nextIndex < allPuzzles.length && isInvalid(allPuzzles[nextIndex])) {
+          console.error("Invalid puzzle data", allPuzzles[nextIndex]);
+          nextIndex += 1;
+        }
+      }
 
       if (nextIndex < allPuzzles.length) {
-        const newPuzzle = allPuzzles[nextIndex];
-
-        // Validate puzzle data
-        // A hidden (rated) puzzle comes without its solution
-        if (!newPuzzle?.fen || (!newPuzzle.hidden && !newPuzzle.moves?.length)) {
-          console.error("Invalid puzzle data", newPuzzle);
-          toast.error(PUZZLE_MESSAGES.INVALID_DATA);
-          return;
-        }
+        const newPuzzle = allPuzzles[nextIndex]!;
 
         awaitingPageRef.current = false;
         setPuzzle(newPuzzle);

@@ -1,4 +1,4 @@
-import type { User, UserProfileResponse, PaginatedFriendsResponse, PaginatedGamesResponse } from "@/types";
+import type { User, UserProfileResponse, PaginatedFriendsResponse } from "@/types";
 import type { SignupSkill } from "@/features/auth/profile-setup/types";
 import { apiRequest } from ".";
 
@@ -28,7 +28,9 @@ export const syncProfile = async (data: SyncProfileData): Promise<{ message: str
 };
 
 export const checkUsernameAvailability = async (username: string): Promise<{ available: boolean }> => {
-  return apiRequest<{ available: boolean }>("get", `/users/check-username?username=${encodeURIComponent(username)}`);
+  return apiRequest<{ available: boolean }>("get", "/users/check-username", {
+    params: { username },
+  });
 };
 
 export const getUserProfile = async (userId: number): Promise<UserProfileResponse> => {
@@ -37,10 +39,6 @@ export const getUserProfile = async (userId: number): Promise<UserProfileRespons
 
 export const getUserFriends = async (userId: number, query: string): Promise<PaginatedFriendsResponse> => {
   return apiRequest<PaginatedFriendsResponse>("get", `/users/${userId}/friends?${query}`);
-};
-
-export const getUserGames = async (userId: number, query: string): Promise<PaginatedGamesResponse> => {
-  return apiRequest<PaginatedGamesResponse>("get", `/users/${userId}/games?${query}`);
 };
 
 /** Deletes the chess profile and the Clerk account (server-side). */

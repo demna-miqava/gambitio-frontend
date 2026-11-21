@@ -79,12 +79,23 @@ export const useDrawOffer = () => {
     if (!data.accepted) setDeclinedSinceMyMove(true);
   }, []);
 
-  // The server refused our offer: the opponent declined one since our last move
-  const handleError = useCallback(({ data }: GameErrorMessage) => {
-    if (data.code !== "DRAW_DECLINED") return;
-    setOfferSent(false);
-    setDeclinedSinceMyMove(true);
-  }, []);
+  // The server refused or dropped our offer or answer (useLiveGameMessages
+  // shows the error). DRAW_DECLINED: the opponent declined one since our
+  // last move. A dropped answer (rate limited) leaves their offer standing:
+  // show it again, so it can be answered.
+  const handleError = useCallback(
+    ({ data }: GameErrorMessage) => {
+      const type = data.request?.type;
+      if (data.code === "DRAW_DECLINED") setDeclinedSinceMyMove(true);
+      if (data.code === "DRAW_DECLINED" || type === GAME_MESSAGE_TYPES.DRAW_OFFER) {
+        setOfferSent(false);
+      } else if (type === GAME_MESSAGE_TYPES.DRAW_RESPONSE && data.code === "RATE_LIMITED" && !gameEnded) {
+        setIncomingOffer(true);
+        showOfferToast();
+      }
+    },
+    [showOfferToast, gameEnded]
+  );
 
   // My move declines the opponent's offer; the opponent's move declines mine
   const handleMove = useCallback(

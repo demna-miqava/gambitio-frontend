@@ -61,6 +61,8 @@ export class BotEngine {
     };
     this.worker.onmessageerror = () => this.fail(new Error("Stockfish message error"));
     this.ready = this.waitFor("uciok", () => this.send("uci")).then(() => undefined);
+    // Whoever awaits it sees the failure; a failure before anyone does isn't unhandled
+    this.ready.catch(() => undefined);
   }
 
   private fail(error: Error) {
@@ -149,8 +151,8 @@ export class BotEngine {
   }
 
   destroy() {
-    this.listeners.clear();
-    this.failers.clear();
+    // Nothing answers once the worker is gone: settle whoever is waiting
+    this.fail(new Error("Stockfish stopped"));
     this.send("quit");
     this.worker.terminate();
   }

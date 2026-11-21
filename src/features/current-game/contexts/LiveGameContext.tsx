@@ -401,6 +401,9 @@ export const LiveGameProvider = ({
     [announce, color, spectating, game.whitePlayer, game.blackPlayer]
   );
 
+  // The pawn waiting for its promotion piece was only on the board
+  const dropPendingPromotion = useCallback(() => setPendingPromotion(null), []);
+
   const requestSync = useCallback(() => {
     sendMessage(JSON.stringify({ type: GAME_MESSAGE_TYPES.SYNC }));
   }, [sendMessage]);
@@ -411,6 +414,7 @@ export const LiveGameProvider = ({
     onOpponentMove: handleOpponentMove,
     onTimeAdded: handleTimeAdded,
     onTakeback: handleTakeback,
+    onBoardReplaced: dropPendingPromotion,
     requestSync,
     turnStartedAtRef,
   });

@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Chess, type Move, type PieceSymbol, type Square } from "chess.js";
-import { Chessground } from "@lichess-org/chessground";
-import type { Api } from "@lichess-org/chessground/api";
 import type { Key } from "@lichess-org/chessground/types";
 import { calculateLegalMoves } from "@/features/game/utils/board-utils";
-import { isPromotionMove } from "@/features/game/utils/promotionUtils";
 import { parseTypedMove } from "@/features/game/utils/parseTypedMove";
-import { attachTouchDragAssist } from "@/features/game/utils/touchDragAssist";
 import { useMoveNavigation } from "@/features/game/hooks/useMoveNavigation";
+import { useChessground } from "@/features/game/hooks/useChessground";
+import { useBoardSettings } from "@/features/game/hooks/useBoardSettings";
+import { usePromotionPicker } from "@/features/game/hooks/usePromotionPicker";
 import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
-import { useSettings } from "@/features/settings/SettingsContext";
 import { BotEngine, type EngineScore } from "@/features/play-bots/services/botEngine";
-import { BOARD_SETTING_DEFAULTS } from "@/features/play-bots/hooks/useBotGame";
 import type { ObjectiveEvaluation, PracticePosition } from "../types";
 import { conversionVerdict, countPlayerMoves, evaluateObjective, hasSlipped } from "../utils/objective";
 import { useBoardOrientation } from "@/features/game/hooks/useBoardOrientation";
@@ -49,9 +46,29 @@ const lastMoveOf = (chess: Chess): [Key, Key] | undefined => {
  * or when the win has slipped (conversionVerdict).
  */
 export const useEndgameExercise = (exercise: PracticePosition) => {
-  const boardRef = useRef<HTMLDivElement>(null);
-  const cgRef = useRef<Api | null>(null);
   const chessRef = useRef(new Chess(exercise.fen));
+  const { playerColor } = exercise;
+  const playerCode = playerColor === "white" ? "w" : "b";
+  const boardSettings = useBoardSettings();
+  // Once per exercise (the page remounts for another one); settings changes
+  // are applied by the hook
+  const { boardRef, cgRef } = useChessground(
+    () => {
+      const chess = chessRef.current;
+      return {
+        fen: chess.fen(),
+        orientation: playerColor,
+        turnColor: chess.turn() === "w" ? "white" : "black",
+        draggable: { enabled: true },
+        movable: {
+          free: false,
+          color: playerColor,
+          dests: chess.turn() === playerCode ? calculateLegalMoves(chess) : new Map(),
+        },
+      };
+    },
+    { dragAssist: true, settings: boardSettings }
+  );
   // The player's side at the bottom until they flip the board (a retry keeps the view)
   const { orientation, flip } = useBoardOrientation(cgRef, exercise.playerColor);
   const engineRef = useRef<BotEngine | null>(null);
@@ -65,16 +82,6 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
   const [engineScore, setEngineScore] = useState<EngineScore | null>(null);
   const converting = exercise.objective.type === "convert";
 
-  const { settings } = useSettings();
-  const coordinates =
-    settings?.boardCoordinatesEnabled ?? BOARD_SETTING_DEFAULTS.boardCoordinatesEnabled;
-  const highlightLastMove =
-    settings?.moveHighlightEnabled ?? BOARD_SETTING_DEFAULTS.moveHighlightEnabled;
-  const premoves = settings?.premovesEnabled ?? BOARD_SETTING_DEFAULTS.premovesEnabled;
-  const showDests =
-    settings?.showLegalMovesEnabled ?? BOARD_SETTING_DEFAULTS.showLegalMovesEnabled;
-  const autoQueen =
-    settings?.autoPromoteToQueenEnabled ?? BOARD_SETTING_DEFAULTS.autoPromoteToQueenEnabled;
   const { playSoundForMove, playGameEndSound } = useChessSound();
 
   const [history, setHistory] = useState<Move[]>([]);
@@ -83,10 +90,6 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
   const [engineError, setEngineError] = useState(false);
   /** Bumped by every retry; the page records each finished attempt once */
   const [attempt, setAttempt] = useState(0);
-  const [pendingPromotion, setPendingPromotion] = useState<{ from: Square; to: Square } | null>(null);
-
-  const { playerColor } = exercise;
-  const playerCode = playerColor === "white" ? "w" : "b";
 
   const syncBoard = useCallback(() => {
     const chess = chessRef.current;
@@ -105,7 +108,7 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
       },
     });
     if (myTurn) cg.playPremove();
-  }, [playerCode, playerColor]);
+  }, [playerCode, playerColor, cgRef]);
 
   /** After any move: board, history, sound, and the objective. Returns true once the attempt is over. */
   const afterMove = useCallback(
@@ -121,7 +124,7 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
       if (finishedRef.current) cgRef.current?.stop();
       return finishedRef.current;
     },
-    [exercise, playerColor, syncBoard, playSoundForMove]
+    [exercise, playerColor, syncBoard, playSoundForMove, cgRef]
   );
 
   const playEngineMove = useCallback(() => {
@@ -174,7 +177,7 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
       .finally(() => {
         if (attemptRef.current === attemptId) setThinking(false);
       });
-  }, [afterMove, converting, syncBoard, playGameEndSound]);
+  }, [afterMove, converting, syncBoard, playGameEndSound, cgRef]);
 
   /** Returns the move played, or null if it wasn't played */
   const playUserMove = useCallback(
@@ -193,34 +196,20 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
     [afterMove, playEngineMove, syncBoard, playerCode]
   );
 
-  // Board and engine, once per exercise (the page remounts for another one)
+  // The engine, once per exercise (the board is useChessground's)
   useEffect(() => {
-    if (!boardRef.current) return;
-    const chess = chessRef.current;
-    cgRef.current = Chessground(boardRef.current, {
-      fen: chess.fen(),
-      orientation: playerColor,
-      turnColor: chess.turn() === "w" ? "white" : "black",
-      coordinates,
-      highlight: { lastMove: highlightLastMove, check: true },
-      premovable: { enabled: premoves },
-      draggable: { enabled: true },
-      movable: {
-        free: false,
-        color: playerColor,
-        showDests,
-        dests: chess.turn() === playerCode ? calculateLegalMoves(chess) : new Map(),
-      },
-    });
-    const detachDragAssist = attachTouchDragAssist(cgRef.current);
-
     let engine: BotEngine | null = null;
     try {
-      engine = new BotEngine();
-      engineRef.current = engine;
-      engine
+      const created = new BotEngine();
+      engine = created;
+      engineRef.current = created;
+      // Queued like the searches, so none starts before the engine is set up
+      engineQueueRef.current = created
         .newGame(ENDGAME_ENGINE_RATING)
-        .catch(() => setEngineError(true));
+        .catch(() => {
+          // Not for an engine destroyed meanwhile (unmount)
+          if (engineRef.current === created) setEngineError(true);
+        });
     } catch {
       setEngineError(true);
     }
@@ -229,43 +218,16 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
       attemptRef.current += 1; // drop any reply still coming
       engine?.destroy();
       engineRef.current = null;
-      detachDragAssist();
-      cgRef.current?.destroy();
-      cgRef.current = null;
     };
-    // Set up once; settings changes are applied below
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Board moves go through chess.js (and the promotion picker when needed)
-  useEffect(() => {
-    cgRef.current?.set({
-      movable: {
-        events: {
-          after: (orig, dest) => {
-            const from = orig as Square;
-            const to = dest as Square;
-            if (isPromotionMove(to, chessRef.current.get(from))) {
-              if (autoQueen) playUserMove(from, to, "q");
-              else setPendingPromotion({ from, to });
-              return;
-            }
-            playUserMove(from, to);
-          },
-        },
-      },
-    });
-  }, [playUserMove, autoQueen]);
-
-  useEffect(() => {
-    cgRef.current?.set({
-      coordinates,
-      highlight: { lastMove: highlightLastMove, check: true },
-      premovable: { enabled: premoves },
-      movable: { showDests },
-    });
-    if (!premoves) cgRef.current?.cancelPremove();
-  }, [coordinates, highlightLastMove, premoves, showDests]);
+  const { pendingPromotion, setPendingPromotion, selectPromotion } = usePromotionPicker(
+    cgRef,
+    chessRef,
+    playUserMove,
+    boardSettings.autoQueen
+  );
 
   // Stepping through the moves played. A new move jumps back to the live
   // position (useMoveNavigation resets on a new move count)
@@ -290,14 +252,7 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
       lastMove: shown ? [shown.from, shown.to] : undefined,
       movable: { color: undefined, dests: new Map() },
     });
-  }, [viewingIndex, syncBoard, exercise.fen]);
-
-  const selectPromotion = (piece: PieceSymbol) => {
-    if (!pendingPromotion) return;
-    const { from, to } = pendingPromotion;
-    setPendingPromotion(null);
-    playUserMove(from, to, piece);
-  };
+  }, [viewingIndex, syncBoard, exercise.fen, cgRef]);
 
   const cancelPromotion = () => {
     setPendingPromotion(null);
@@ -323,7 +278,7 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
     cgRef.current?.cancelPremove();
     cgRef.current?.selectSquare(null);
     syncBoard();
-  }, [exercise.fen, goToLastMove, syncBoard]);
+  }, [exercise.fen, goToLastMove, syncBoard, cgRef, setPendingPromotion]);
 
   /** Keyboard play (TypedMoveInput). Returns an error message, or null once played. */
   const submitTypedMove = (text: string): string | null => {
@@ -345,7 +300,7 @@ export const useEndgameExercise = (exercise: PracticePosition) => {
     cg.setAutoShapes(
       uci ? [{ orig: uci.slice(0, 2) as Key, dest: uci.slice(2, 4) as Key, brush: "paleBlue" }] : []
     );
-  }, []);
+  }, [cgRef]);
 
   const playerMoves = useMemo(() => countPlayerMoves(history, playerColor), [history, playerColor]);
   const positions = useMemo(

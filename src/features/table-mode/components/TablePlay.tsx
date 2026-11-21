@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeftRight, Check, CloudOff, Loader2, LogOut, Microscope, Play, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getApiErrorMessage } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
 import { parseTypedMove } from "@/features/game/utils/parseTypedMove";
@@ -270,14 +271,17 @@ const SaveStatus = ({
       </p>
     );
   }
-  const message = (save.error as { response?: { data?: { error?: string } } } | null)?.response?.data?.error;
+  const message = getApiErrorMessage(
+    save.error,
+    "It's kept on this phone. Try again when you're back online, here or from Table mode."
+  );
   return (
     <div role="alert" className="space-y-2 text-sm">
       <p className="flex items-center justify-center gap-2 text-loss">
         <CloudOff className="size-4" aria-hidden="true" /> Couldn't save the game.
       </p>
       <p className="text-muted-foreground">
-        {message ?? "It's kept on this phone. Try again when you're back online, here or from Table mode."}
+        {message}
       </p>
       <Button size="sm" variant="outline" onClick={save.retry}>
         Try again

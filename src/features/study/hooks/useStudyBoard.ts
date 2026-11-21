@@ -135,8 +135,15 @@ export const useStudyBoard = ({
     // Put the pawn back
     const cg = cgRef.current;
     if (!cg) return;
-    chessRef.current.load(nodeRef.current.fen);
-    syncBoard({ cg, chess: chessRef.current, movableColor: "both" });
+    const { fen, uci } = nodeRef.current;
+    chessRef.current.load(fen);
+    // The position's own last move again, not the cancelled one's squares
+    syncBoard({
+      cg,
+      chess: chessRef.current,
+      movableColor: "both",
+      lastMove: uci ? [uci.slice(0, 2) as Key, uci.slice(2, 4) as Key] : undefined,
+    });
   }, [cgRef, chessRef]);
 
   /** Plays a typed move ("Nf3", "e2e4") from the shared position. Returns an error, or null. */

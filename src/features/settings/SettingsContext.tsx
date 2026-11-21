@@ -7,7 +7,8 @@ import type { Settings } from "./types";
 
 type SettingsContextType = {
   settings: Settings | undefined;
-  updateSettings: ReturnType<typeof useUpdateSettings>;
+  /** Only `mutate`: it's stable, unlike the rest of the mutation's state */
+  updateSettings: Pick<ReturnType<typeof useUpdateSettings>, "mutate">;
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -16,7 +17,10 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { data: settings } = useGetSettings();
-  const updateSettingsMutation = useUpdateSettings();
+  // useMutation returns a new object on every render (and its status changes
+  // around each save), which would hand every settings reader (the live game
+  // board included) a new context value each time. Its mutate is stable.
+  const { mutate } = useUpdateSettings();
 
   // The palette is saved on the account; the device keeps a copy (in
   // ThemeContext) so the right colours show before settings load and on
@@ -33,9 +37,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       settings: settings?.data,
-      updateSettings: updateSettingsMutation,
+      updateSettings: { mutate },
     }),
-    [settings?.data, updateSettingsMutation]
+    [settings?.data, mutate]
   );
 
   return (

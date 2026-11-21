@@ -3,10 +3,28 @@ import { updateSettings } from "@/services/settings";
 import type { Settings } from "../types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getApiErrorMessage } from "@/lib/utils";
 
 type SettingsResponse = { data: Settings };
 
 const MUTATION_KEY = ["update-settings"];
+
+/**
+ * The settings with one failed change undone: only the keys it set, and
+ * only those no later change has set again, so another toggle saved (or on
+ * its way) meanwhile still shows.
+ */
+export const undoPatch = (
+  current: Settings,
+  previous: Settings,
+  patch: Partial<Settings>
+): Settings => {
+  const data: Record<string, unknown> = { ...current };
+  for (const key of Object.keys(patch) as (keyof Settings)[]) {
+    if (current[key] === patch[key]) data[key] = previous[key];
+  }
+  return data as Settings;
+};
 
 /**
  * Saves settings as soon as they change. The new value shows at once
@@ -30,15 +48,21 @@ export const useUpdateSettings = () => {
       }
       return { previous };
     },
-    onError: (error: Error, _patch, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData([QKEY_USER_SETTINGS], context.previous);
+    onError: (error: Error, patch, context) => {
+      const previous = context?.previous;
+      if (previous) {
+        queryClient.setQueryData<SettingsResponse>([QKEY_USER_SETTINGS], (current) =>
+          current ? { ...current, data: undoPatch(current.data, previous.data, patch) } : previous
+        );
       }
-      // The snapshot predates any other toggle saved meanwhile; reload so
-      // those aren't shown as undone
-      void queryClient.invalidateQueries({ queryKey: [QKEY_USER_SETTINGS] });
+      // Then what the server has. Unless another change is still being
+      // saved: a reload could answer before it lands and show it undone,
+      // and its response (see onSuccess) has everything anyway
+      if (queryClient.isMutating({ mutationKey: MUTATION_KEY }) <= 1) {
+        void queryClient.invalidateQueries({ queryKey: [QKEY_USER_SETTINGS] });
+      }
       toast.error("Couldn't save your settings", {
-        description: error.message || "Check your connection and try again.",
+        description: getApiErrorMessage(error, "Check your connection and try again."),
       });
     },
     onSuccess: (response) => {

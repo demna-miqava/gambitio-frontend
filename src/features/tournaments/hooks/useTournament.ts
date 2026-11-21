@@ -11,7 +11,7 @@ import {
   QKEY_TOURNAMENT_STANDINGS,
 } from "@/constants/queryKeys";
 import { getGameRoute } from "@/constants/routes";
-import { RECONNECT_OPTIONS } from "@/constants/websocket";
+import { ON_MESSAGE_ONLY, RECONNECT_OPTIONS } from "@/constants/websocket";
 import { useAuthenticatedWebSocket, useSocketReauth } from "@/hooks/useAuthenticatedWebSocket";
 import { parseWebSocketMessage } from "@/features/game/utils/websocket-helpers";
 import { getApiErrorMessage } from "@/lib/utils";
@@ -124,6 +124,7 @@ export const useTournament = (tournamentId: number | null) => {
 
   const { sendMessage, readyState } = useWebSocket(getUrl, {
     ...RECONNECT_OPTIONS,
+    ...ON_MESSAGE_ONLY,
     shouldReconnect: () => goneRef.current !== tournamentId,
     protocols,
     onMessage: (event) => {

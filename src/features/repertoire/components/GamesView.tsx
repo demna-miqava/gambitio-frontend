@@ -101,6 +101,8 @@ export const GamesView = ({ hasLines }: { hasLines: boolean }) => {
   }
 
   const summary = summarizeChecks(games);
+  // Games that reached a line at all: the others say nothing about it
+  const covered = summary.total - summary.notCovered;
   return (
     <div className="space-y-4">
       {!hasLines && (
@@ -127,7 +129,11 @@ export const GamesView = ({ hasLines }: { hasLines: boolean }) => {
       <p className="text-sm text-muted-foreground">
         {summary.youDeviated > 0
           ? `You left your preparation in ${summary.youDeviated} of your last ${summary.total} games.`
-          : `You stayed in your preparation in all of your last ${summary.total} games.`}
+          : covered === 0
+            ? `None of your last ${summary.total} games reached your lines.`
+            : covered < summary.total
+              ? `You stayed in your preparation in every game that reached it (${covered} of your last ${summary.total}).`
+              : `You stayed in your preparation in all of your last ${summary.total} games.`}
       </p>
       <ul className="space-y-2">
         {games.map((game) => (

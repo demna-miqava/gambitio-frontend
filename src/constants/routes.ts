@@ -2,6 +2,9 @@ export const ROUTES = {
   HOME: "/home",
   PUZZLES: "/puzzles",
   PUZZLE_MODE: "/puzzles/:mode",
+  /** Puzzle duels: invites (the lobby), and a duel being played */
+  PUZZLE_DUEL: "/puzzles/duel",
+  PUZZLE_DUEL_GAME: "/puzzles/duel/:duelId",
   PLAY: "/play",
   PLAY_BOTS: "/play-bots",
   BOT_GAME: "/bot-game",
@@ -25,6 +28,8 @@ export const ROUTES = {
   ENDGAME_EXERCISE: "/endgames/:exerciseId",
   CONVERSION_DRILLS: "/drills",
   CONVERSION_DRILL: "/drills/:drillId",
+  /** Coordinates trainer: click the named square */
+  COORDINATES: "/coordinates",
   PROFILE: {
     ROOT: "/profile/:id",
     OVERVIEW: "",
@@ -40,6 +45,8 @@ export const ROUTES = {
   TOOLS: {
     IMPORT_GAME: "/import-game",
     ANALYSIS_BOARD: "/analysis",
+    /** Set up any position (?fen=) */
+    BOARD_EDITOR: "/editor",
   },
   LANDING: "/",
 } as const;
@@ -47,6 +54,7 @@ export const ROUTES = {
 // Helper functions for dynamic routes
 export const getPuzzleModeRoute = (mode: "infinite" | "rush" | "survival" | "calculate") =>
   `/puzzles/${mode}`;
+export const getPuzzleDuelRoute = (duelId: number) => `/puzzles/duel/${duelId}`;
 export const getGameRoute = (gameId: string | number) => `/game/${gameId}`;
 export const getArchiveGameRoute = (gameId: string | number) => `/archive/${gameId}`;
 /** Query param that starts the computer review as soon as the game page opens */
@@ -60,6 +68,16 @@ export const getSeriesRoute = (seriesId: number) => `/series/${seriesId}`;
 export const getStudyRoomRoute = (roomId: number) => `/study/${roomId}`;
 export const getEndgameExerciseRoute = (exerciseId: string) => `/endgames/${exerciseId}`;
 export const getConversionDrillRoute = (drillId: number) => `/drills/${drillId}`;
+/** Query param holding a set-up position (board editor, analysis board, bots) */
+export const FEN_PARAM = "fen";
+export const getBoardEditorRoute = (fen?: string) =>
+  fen ? `/editor?${FEN_PARAM}=${encodeURIComponent(fen)}` : "/editor";
+/** The analysis board starting from a set-up position */
+export const getAnalysisFromPositionRoute = (fen: string) =>
+  `/analysis?${FEN_PARAM}=${encodeURIComponent(fen)}`;
+/** Play the computer from a set-up position (the game isn't saved) */
+export const getPlayBotsFromPositionRoute = (fen: string) =>
+  `/play-bots?${FEN_PARAM}=${encodeURIComponent(fen)}`;
 export const getProfileRoute = (id: number) => `/profile/${id}`;
 export const getProfileGamesRoute = (id: number) => `/profile/${id}/games`;
 export const getProfileStatsRoute = (id: number) => `/profile/${id}/stats`;

@@ -32,10 +32,22 @@ export class WebSocketMessageDispatcher {
     };
   }
 
+  /**
+   * Every subscriber gets the message, even when one of them throws: its
+   * error is rethrown afterwards, on its own, so it still shows up as an
+   * uncaught error.
+   */
   dispatch(message: WebSocketMessage) {
     const handlers = this.handlers.get(message.type);
-    if (handlers) {
-      handlers.forEach((handler) => handler(message));
+    if (!handlers) return;
+    for (const handler of handlers) {
+      try {
+        handler(message);
+      } catch (error) {
+        queueMicrotask(() => {
+          throw error;
+        });
+      }
     }
   }
 }

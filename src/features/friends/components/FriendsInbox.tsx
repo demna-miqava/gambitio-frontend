@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Check, Search, UserRoundPlus, UsersRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,8 @@ import {
 } from "../suggestions/hooks/useSuggestedFriends";
 import { OnlineNow } from "../status/OnlineNow";
 import { useTableGameRequests } from "@/features/table-mode/hooks/useTableGameRequests";
+import { useDuelInvites } from "@/features/puzzles/duel/hooks/useDuelInvites";
+import { getPuzzleDuelRoute } from "@/constants/routes";
 import { formatGameTime } from "@/utils/timeControl";
 
 const SectionTitle = ({ children, count }: { children: ReactNode; count?: number }) => (
@@ -193,7 +195,10 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
     requestAction.mutate({ requestId: `${request.id}`, action });
 
   const tableGames = useTableGameRequests();
-  const waiting = challenges.length + receivedRequests.length + tableGames.requests.length;
+  const duels = useDuelInvites();
+  const navigate = useNavigate();
+  const waiting =
+    challenges.length + receivedRequests.length + tableGames.requests.length + duels.incoming.length;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -261,6 +266,49 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
                 </Row>
                 );
               })}
+            </ul>
+          </section>
+        )}
+
+        {duels.incoming.length > 0 && (
+          <section className="space-y-3 p-4" aria-labelledby="inbox-duels">
+            <SectionTitle count={duels.incoming.length}>
+              <span id="inbox-duels">Puzzle duels</span>
+            </SectionTitle>
+            <ul className="space-y-2.5">
+              {duels.incoming.map((invite) => (
+                <Row
+                  key={invite.id}
+                  userId={invite.from.id}
+                  username={invite.from.username}
+                  avatarUrl={invite.from.avatarUrl}
+                  detail={invite.rematchOf ? "Wants a rematch" : "Same puzzles, 3 minutes"}
+                >
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => duels.decline.mutate(invite.id)}
+                    aria-label={`Decline ${invite.from.username}'s puzzle duel`}
+                  >
+                    <X aria-hidden="true" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={duels.accept.isPending}
+                    onClick={() =>
+                      duels.accept.mutate(invite.id, {
+                        onSuccess: ({ duelId }) => {
+                          setOpen(false);
+                          navigate(getPuzzleDuelRoute(duelId));
+                        },
+                      })
+                    }
+                    aria-label={`Accept ${invite.from.username}'s puzzle duel`}
+                  >
+                    Accept
+                  </Button>
+                </Row>
+              ))}
             </ul>
           </section>
         )}

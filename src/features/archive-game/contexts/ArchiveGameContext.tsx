@@ -111,9 +111,13 @@ export const ArchiveGameProvider = ({
   // a stale position.
   const syncBoardTo = useCallback(
     (node: AnalysisNode) => {
+      // Even before the board exists: on mount this runs ahead of
+      // ChessBoardProvider's layout effect (children's run first), which then
+      // creates the board from chessRef, so a tree that starts from a set-up
+      // position (FEN header) shows it from the first paint
+      chessRef.current.load(node.fen);
       const cg = cgRef.current;
       if (!cg) return;
-      chessRef.current.load(node.fen);
       const turn = syncBoard({
         cg,
         chess: chessRef.current,

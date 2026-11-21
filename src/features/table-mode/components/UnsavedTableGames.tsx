@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { CloudOff, Loader2, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formatShortDate } from "@/lib/utils";
+import { formatShortDate, getApiErrorMessage } from "@/lib/utils";
 import { UNSAVED_CHANGED_EVENT, isUnsavedStorageKey, loadUnsaved, removeUnsaved, type UnsavedTableGame } from "../utils/tableStorage";
 import { useTableGameSaver } from "../hooks/useSaveTableGame";
 
 const errorText = (error: unknown) =>
-  (error as { response?: { data?: { error?: string } } } | null)?.response?.data?.error ??
-  "Couldn't save it. Check your connection and try again.";
+  getApiErrorMessage(error, "Couldn't save it. Check your connection and try again.");
 
 /**
  * Finished table games the server doesn't have yet (saving failed at the

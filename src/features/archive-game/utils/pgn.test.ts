@@ -20,6 +20,10 @@ describe("parsePgn", () => {
     expect(root.children[0]!.children.map((n) => n.move!.san)).toEqual(["e5", "c5"]);
   });
 
+  it("reads a black move spaced out after its number", () => {
+    expect(mainline("1. e4 {comment} 1. ... e5 2. Nf3")).toEqual(["e4", "e5", "Nf3"]);
+  });
+
   it("takes a comment that is never closed as running to the end", () => {
     expect(mainline("1. e4 e5 {and so on")).toEqual(["e4", "e5"]);
   });

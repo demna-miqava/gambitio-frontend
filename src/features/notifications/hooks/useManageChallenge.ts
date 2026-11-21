@@ -16,6 +16,7 @@ import type { SendMessage } from "react-use-websocket";
 import { getSentChallenge } from "@/services/challenges";
 import type { ReadyState } from "react-use-websocket";
 import { timeOdds } from "@/utils/timeControl";
+import { serverClockOffset } from "@/utils/serverClock";
 import type { OpeningSummary } from "@/features/openings/startingOpenings";
 
 /** Same as the server's CHALLENGE_TTL_MS: unanswered challenges expire */
@@ -85,7 +86,9 @@ export const useManageChallenge = (
           matchMinutes: sent.matchMinutes ?? null,
           ...(sent.seriesId ? { seriesId: sent.seriesId } : {}),
           ...(sent.seriesGame ? { seriesGame: sent.seriesGame } : {}),
-          sentAt: new Date(sent.createdAt).getTime(),
+          // On this device's clock, like a challenge sent from here, so a
+          // clock that runs ahead doesn't expire it early
+          sentAt: new Date(sent.createdAt).getTime() - serverClockOffset(),
         };
         outgoingRef.current = next;
         setOutgoingState(next);
@@ -117,27 +120,38 @@ export const useManageChallenge = (
    */
   const lastSentTypeRef = useRef<NOTIFICATION_MESSAGE_TYPES | null>(null);
 
+  /**
+   * Sends now, or (`queue`) when the socket is down, on the reconnect.
+   * Sending, accepting and declining are never queued: the player was told
+   * it worked only because the socket was open, and a challenge accepted
+   * minutes later, whenever the socket comes back, isn't what they chose.
+   */
   const send = useCallback(
     (
       message:
         | SendChallengeMessage
         | CancelChallengeMessage
         | AcceptChallengeMessage
-        | DeclineChallengeMessage
+        | DeclineChallengeMessage,
+      queue = false
     ) => {
       lastSentTypeRef.current = message.type;
-      sendMessage(JSON.stringify(message));
+      sendMessage(JSON.stringify(message), queue);
     },
     [sendMessage]
   );
 
+  // Read when the player acts, not when the callback was made: a challenge
+  // toast keeps the handleAccept it was shown with for as long as it's open
+  const readyStateRef = useRef(readyState);
+  readyStateRef.current = readyState;
   const checkConnection = useCallback(() => {
-    if (readyState !== 1) {
+    if (readyStateRef.current !== 1) {
       toast.error("Not connected. Check your connection and try again.");
       return false;
     }
     return true;
-  }, [readyState]);
+  }, []);
 
   const clearOutgoing = useCallback(
     () => setOutgoingChallenge(null),
@@ -150,10 +164,13 @@ export const useManageChallenge = (
     setOutgoingChallenge(null);
     // Sent even while disconnected: react-use-websocket queues it for the
     // reconnect, and the server may still hold the challenge
-    send({
-      type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_CANCELLED,
-      data: { challengedId: outgoing.challengedId },
-    });
+    send(
+      {
+        type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_CANCELLED,
+        data: { challengedId: outgoing.challengedId },
+      },
+      true
+    );
   }, [send, setOutgoingChallenge]);
 
   const sendChallenge = useCallback(

@@ -8,16 +8,18 @@ export const useQueryParams = (key: string, defaultValue: string = "") => {
     return searchParams.get(key) || defaultValue;
   }, [searchParams, key, defaultValue]);
 
+  // Changes a copy: the hook's searchParams is React Router's memoized object
+  // for the current URL, which other readers of it still see
   const setValue = useCallback(
     (newValue: string | undefined) => {
-      if (newValue === undefined || newValue === "") {
-        searchParams.delete(key);
-      } else {
-        searchParams.set(key, newValue);
-      }
-      setSearchParams(searchParams);
+      setSearchParams((current) => {
+        const next = new URLSearchParams(current);
+        if (newValue === undefined || newValue === "") next.delete(key);
+        else next.set(key, newValue);
+        return next;
+      });
     },
-    [searchParams, setSearchParams, key]
+    [setSearchParams, key]
   );
 
   return [value, setValue] as const;

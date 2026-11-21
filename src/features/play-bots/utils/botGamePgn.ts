@@ -10,6 +10,8 @@ interface BotGamePgnInput {
   result: Omit<BotGameResult, "endReason"> | null;
   /** Defaults to now */
   date?: Date;
+  /** A position set up in the board editor (written as SetUp/FEN headers) */
+  startFen?: string;
 }
 
 /** PGN result tag from the player's point of view. */
@@ -31,8 +33,9 @@ export const buildBotGamePgn = ({
   botName,
   result,
   date = new Date(),
+  startFen,
 }: BotGamePgnInput): string => {
-  const chess = new Chess();
+  const chess = new Chess(startFen);
   for (const { san } of moves) chess.move(san);
   const white = playerColor === "white" ? playerName : botName;
   const black = playerColor === "white" ? botName : playerName;

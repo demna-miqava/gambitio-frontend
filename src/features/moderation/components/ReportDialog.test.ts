@@ -8,6 +8,11 @@ describe("reportContext", () => {
     expect(reportContext({})).toEqual({});
   });
 
+  it("or a game's spectator chat", () => {
+    expect(reportContext({ spectatorGameId: 7 })).toEqual({ spectatorGameId: 7 });
+    expect(reportContext({ studyRoomId: 9, spectatorGameId: 7 })).toEqual({ studyRoomId: 9 });
+  });
+
   it("never both: the game wins", () => {
     expect(reportContext({ gameId: 5, studyRoomId: 9 })).toEqual({ gameId: 5 });
   });

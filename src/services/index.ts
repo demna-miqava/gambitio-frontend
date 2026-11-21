@@ -10,8 +10,17 @@ export const setAuthTokenGetter = (getter: TokenGetter | null) => {
   getAuthToken = getter;
 };
 
+/**
+ * A request the API hasn't answered by then has hung (a dropped connection
+ * the browser hasn't noticed): fail it, so the page shows an error and Retry
+ * instead of loading forever. Far above any real answer, a cold start
+ * included; every request is small JSON (no uploads). A call can set its own.
+ */
+const DEFAULT_TIMEOUT_MS = 30_000;
+
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
+  timeout: DEFAULT_TIMEOUT_MS,
 });
 
 // Authenticate with a bearer token rather than cookies, so the API works on

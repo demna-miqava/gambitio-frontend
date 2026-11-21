@@ -108,12 +108,21 @@ export const useBasePuzzleSession = (
     [rated, applyOutcome]
   );
 
-  /** The solution of a hidden puzzle, from the server (a miss if it wasn't over). */
+  // The puzzle on the board now, for a reveal that answers later
+  const puzzleRef = useRef(puzzle);
+  puzzleRef.current = puzzle;
+
+  /**
+   * The solution of a hidden puzzle, from the server (a miss if it wasn't
+   * over). Null if it failed, or if another puzzle is up by the time it comes.
+   */
   const revealCurrent = useCallback(async (): Promise<Puzzle | null> => {
     if (!puzzle?.hidden) return puzzle;
     try {
       const result = await puzzleService.reveal(puzzle.id);
+      // The server counted it either way
       applyOutcome(puzzle.id, result, true);
+      if (puzzleRef.current?.id !== puzzle.id) return null;
       const revealed: Puzzle = { ...puzzle, moves: result.line, hidden: false };
       setPuzzle(revealed);
       return revealed;

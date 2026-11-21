@@ -1,14 +1,12 @@
-import type { Api } from "@lichess-org/chessground/api";
 import { Chess, DEFAULT_POSITION, type Move } from "chess.js";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { PlayerColor } from "../types/game.types";
-import { Chessground } from "@lichess-org/chessground";
 import { calculateLegalMoves } from "../utils/board-utils";
 import { currentHistory, nextHistory, type MoveHistory } from "../utils/moveHistory";
 import { BOARD_CONFIG } from "../constants/board-config";
-import { useSettings } from "@/features/settings/SettingsContext";
-import { attachTouchDragAssist } from "../utils/touchDragAssist";
 import { useBoardOrientation } from "./useBoardOrientation";
+import { useBoardSettings } from "./useBoardSettings";
+import { useChessground } from "./useChessground";
 
 interface UseChessBoardOptions {
   color: PlayerColor;
@@ -34,9 +32,7 @@ export const useChessBoard = ({ color, viewOnly = false }: UseChessBoardOptions)
   // (socket messages), the state for rendering.
   const inputLockedRef = useRef(false);
   const [inputLocked, setInputLockedState] = useState(false);
-  const { settings } = useSettings();
-  const boardRef = useRef<HTMLDivElement>(null);
-  const cgRef = useRef<Api | null>(null);
+  const boardSettings = useBoardSettings();
 
   /**
    * Call after changing chessRef: records the side to move and the moves.
@@ -60,87 +56,37 @@ export const useChessBoard = ({ color, viewOnly = false }: UseChessBoardOptions)
     return historyRef.current.moves;
   }, []);
 
-  const pendingDestroyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const detachDragAssistRef = useRef<(() => void) | null>(null);
+  // The board, created once on mount, before any child's effects run (see
+  // useChessground); settings changes are applied by the hook
+  const { boardRef, cgRef } = useChessground(
+    () => {
+      const chess = chessRef.current;
+      const playerColorCode = color === "white" ? "w" : "b";
+      const isMyTurn = chess.turn() === playerColorCode;
+      return {
+        fen: chess.fen(),
+        orientation: color,
+        viewOnly,
+        draggable: { enabled: BOARD_CONFIG.ENABLE_DRAGGABLE },
+        turnColor: chess.turn() === "w" ? "white" : "black",
+        // A position that starts with the side to move in check (set up in
+        // the board editor) shows it before the first move
+        check: chess.inCheck(),
+        movable: {
+          color: color,
+          free: false,
+          dests: isMyTurn ? calculateLegalMoves(chess) : new Map(),
+        },
+      };
+    },
+    { dragAssist: !viewOnly, settings: boardSettings }
+  );
 
-  // Initialize board once on mount. A layout effect, so the board exists
-  // before any child's useEffect runs (effects run child-first): children
-  // attach move handlers and sync positions from their own effects.
+  // The side to move at the start (a layout effect too, after the board's)
   useLayoutEffect(() => {
-    // Remounted right after a cleanup (React StrictMode in development):
-    // keep the existing board, since child components have already attached
-    // their move handlers to it
-    if (pendingDestroyRef.current) {
-      clearTimeout(pendingDestroyRef.current);
-      pendingDestroyRef.current = null;
-    }
-    const scheduleDestroy = () => {
-      // Chessground adds document-level mouse/touch/scroll listeners that only
-      // destroy() removes; deferred so a StrictMode remount can cancel it
-      pendingDestroyRef.current = setTimeout(() => {
-        pendingDestroyRef.current = null;
-        detachDragAssistRef.current?.();
-        detachDragAssistRef.current = null;
-        cgRef.current?.destroy();
-        cgRef.current = null;
-      }, 0);
-    };
-    if (!boardRef.current || cgRef.current) return scheduleDestroy;
-    const chess = chessRef.current;
-    const playerColorCode = color === "white" ? "w" : "b";
-    const isMyTurn = chess.turn() === playerColorCode;
-
-    cgRef.current = Chessground(boardRef.current, {
-      fen: chess.fen(),
-      orientation: color,
-      viewOnly,
-      coordinates: settings?.boardCoordinatesEnabled ?? true,
-      premovable: { enabled: settings?.premovesEnabled },
-      draggable: { enabled: BOARD_CONFIG.ENABLE_DRAGGABLE },
-      turnColor: chess.turn() === "w" ? "white" : "black",
-      highlight: {
-        lastMove: settings?.moveHighlightEnabled ?? true,
-        check: true,
-      },
-      movable: {
-        showDests: settings?.showLegalMovesEnabled,
-        color: color,
-        free: false,
-        dests: isMyTurn ? calculateLegalMoves(chess) : new Map(),
-      },
-    });
-
-    if (!viewOnly) detachDragAssistRef.current = attachTouchDragAssist(cgRef.current);
-
-    const currentTurn = chess.turn();
+    const currentTurn = chessRef.current.turn();
     setTurn(currentTurn === "w" ? "white" : "black");
-
-    return scheduleDestroy;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Update board configuration when settings change
-  useEffect(() => {
-    if (!cgRef.current) return;
-
-    cgRef.current.set({
-      coordinates: settings?.boardCoordinatesEnabled ?? true,
-      premovable: { enabled: settings?.premovesEnabled },
-      highlight: {
-        lastMove: settings?.moveHighlightEnabled ?? true,
-        check: true,
-      },
-      movable: {
-        ...cgRef.current.state.movable,
-        showDests: settings?.showLegalMovesEnabled,
-      },
-    });
-  }, [
-    settings?.boardCoordinatesEnabled,
-    settings?.premovesEnabled,
-    settings?.moveHighlightEnabled,
-    settings?.showLegalMovesEnabled,
-  ]);
+  }, [setTurn]);
 
   /**
    * Locks or unlocks the board for the player (game over, connection lost).
@@ -153,7 +99,7 @@ export const useChessBoard = ({ color, viewOnly = false }: UseChessBoardOptions)
     inputLockedRef.current = locked;
     setInputLockedState(locked);
     if (locked) cgRef.current?.stop();
-  }, []);
+  }, [cgRef]);
 
   // The side at the bottom: the player's colour until the board is flipped
   const { orientation, flip: flipBoard, setOrientation } = useBoardOrientation(cgRef, color);

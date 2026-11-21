@@ -26,8 +26,7 @@ const BackToList = () => (
  * being played, and the viewer's own place in it. Having this page open is
  * what gets a player paired.
  */
-const Tournament = () => {
-  const tournamentId = parsePositiveId(useParams().tournamentId);
+const TournamentLobby = ({ tournamentId }: { tournamentId: number | null }) => {
   const { id: viewerId } = useUser();
   const { state, isPending, notFound, isError, refetch, isConnected } = useTournament(tournamentId);
   useDocumentTitle(state?.tournament.name);
@@ -145,6 +144,14 @@ const Tournament = () => {
       </div>
     </PageContainer>
   );
+};
+
+// Keyed by id: going from one tournament straight to another (back and
+// forward) starts the lobby over, socket included, so a message the last
+// one's socket delivers before it closes can't land in this one's state
+const Tournament = () => {
+  const tournamentId = parsePositiveId(useParams().tournamentId);
+  return <TournamentLobby key={tournamentId ?? "none"} tournamentId={tournamentId} />;
 };
 
 export default Tournament;

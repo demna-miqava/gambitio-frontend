@@ -41,6 +41,14 @@ export const QKEY_REPERTOIRE = "repertoire";
 export const QKEY_REPERTOIRE_CHECK = "repertoire-check";
 export const QKEY_STUDY_ROOMS = "study-rooms";
 export const QKEY_ENDGAME_PROGRESS = "endgame-progress";
+/** The coordinates trainer's bests and latest runs */
+export const QKEY_COORDINATE_SCORES = "coordinate-scores";
+/** Puzzle duel invites to and from the signed-in player */
+export const QKEY_DUEL_INVITES = "duel-invites";
+/** One puzzle duel as the signed-in player sees it: [key, duelId] */
+export const QKEY_DUEL = "duel";
+/** The duel the signed-in player is in now, if any */
+export const QKEY_ACTIVE_DUEL = "active-duel";
 export const QKEY_ENDGAME_TABLEBASE = "endgame-tablebase";
 export const QKEY_STARTING_OPENINGS = "starting-openings";
 export const QKEY_CONVERSION_DRILLS = "conversion-drills";

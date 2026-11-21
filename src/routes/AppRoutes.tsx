@@ -6,6 +6,7 @@ import {
   AnalysisBoard,
   ArchiveGame,
   BotGame,
+  BoardEditor,
   TableMode,
   TableGame,
   CurrentGame,
@@ -13,6 +14,7 @@ import {
   EndgameLab,
   ConversionDrills,
   ConversionDrill,
+  Coordinates,
   Home,
   ImportGame,
   IntroPage,
@@ -27,6 +29,8 @@ import {
   ProfileSetup,
   ProfileStats,
   PuzzleModePage,
+  PuzzleDuel,
+  PuzzleDuelGame,
   PuzzlesLanding,
   Repertoire,
   Series,
@@ -62,6 +66,8 @@ export const AppRoutes = () => {
         <Route path={ROUTES.SERIES} element={<Series />} />
         <Route path={ROUTES.STUDY} element={<StudyRooms />} />
         <Route path={ROUTES.ENDGAMES} element={<EndgameLab />} />
+        {/* No engine and nothing about the game in it: open during a live game too */}
+        <Route path={ROUTES.COORDINATES} element={<Coordinates />} />
         <Route path={ROUTES.TOURNAMENTS} element={<Tournaments />} />
         <Route path={ROUTES.TOURNAMENT} element={<Tournament />} />
         {/* Engine, analysis and opening preparation: closed while you're in a live game */}
@@ -72,8 +78,13 @@ export const AppRoutes = () => {
           <Route path={ROUTES.TABLE_GAME} element={<TableGame />} />
           <Route path={ROUTES.ARCHIVE_GAME} element={<ArchiveGame />} />
           <Route path={ROUTES.PUZZLE_MODE} element={<PuzzleModePage />} />
+          {/* Puzzles like the other modes: not while you're in a live game */}
+          <Route path={ROUTES.PUZZLE_DUEL} element={<PuzzleDuel />} />
+          <Route path={ROUTES.PUZZLE_DUEL_GAME} element={<PuzzleDuelGame />} />
           <Route path={ROUTES.TOOLS.IMPORT_GAME} element={<ImportGame />} />
           <Route path={ROUTES.TOOLS.ANALYSIS_BOARD} element={<AnalysisBoard />} />
+          {/* Leads to analysis and bots, so closed with them */}
+          <Route path={ROUTES.TOOLS.BOARD_EDITOR} element={<BoardEditor />} />
           <Route path={ROUTES.ENDGAME_EXERCISE} element={<EndgameExercise />} />
           {/* Scanning games and playing drills both run Stockfish */}
           <Route path={ROUTES.CONVERSION_DRILLS} element={<ConversionDrills />} />

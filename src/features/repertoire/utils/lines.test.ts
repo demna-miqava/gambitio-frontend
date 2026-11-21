@@ -34,6 +34,12 @@ describe("parseMoveText", () => {
     expect(parseMoveText("1. e4 e5 2. Nf3 2... Nc6")).toEqual({ ok: true, moves: ["e4", "e5", "Nf3", "Nc6"] });
   });
 
+  it("reads a pasted PGN: headers, nested variations and spaced-out black moves", () => {
+    const pgn = '[Event "Casual"]\n[White "A"]\n\n1. e4 (1. d4 d5 (1... Nf6 2. c4) 2. c4) 1... c5 2. Nf3 ... d6 *';
+    expect(parseMoveText(pgn)).toEqual({ ok: true, moves: ["e4", "c5", "Nf3", "d6"] });
+    expect(parseMoveText("1. e4 ... e5")).toEqual({ ok: true, moves: ["e4", "e5"] });
+  });
+
   it("names the first illegal move", () => {
     expect(parseMoveText("1. e4 e5 2. Ke3")).toEqual({ ok: false, message: "2. Ke3 isn't a legal move there." });
     expect(parseMoveText("e4 e5 Nf3 Nf3")).toEqual({ ok: false, message: "2... Nf3 isn't a legal move there." });

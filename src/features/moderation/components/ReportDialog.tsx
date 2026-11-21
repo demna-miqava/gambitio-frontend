@@ -21,22 +21,44 @@ interface ReportDialogProps {
   gameId?: number;
   /** Instead of a game: the study room whose chat it happened in */
   studyRoomId?: number;
+  /** Or the game whose spectator chat it happened in (its spectator chat goes with the report) */
+  spectatorGameId?: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-/** The report's context: a game, or else a study room (never both) */
+/** The report's context: a game, or else a study room, or else a game's spectator chat (one at most) */
 // eslint-disable-next-line react-refresh/only-export-components
-export const reportContext = ({ gameId, studyRoomId }: { gameId?: number; studyRoomId?: number }) =>
-  gameId !== undefined ? { gameId } : studyRoomId !== undefined ? { studyRoomId } : {};
+export const reportContext = ({
+  gameId,
+  studyRoomId,
+  spectatorGameId,
+}: {
+  gameId?: number;
+  studyRoomId?: number;
+  spectatorGameId?: number;
+}) =>
+  gameId !== undefined
+    ? { gameId }
+    : studyRoomId !== undefined
+      ? { studyRoomId }
+      : spectatorGameId !== undefined
+        ? { spectatorGameId }
+        : {};
 
 /**
  * Reports a player to the moderators: a reason, optional details, and the
  * choice to block them as well. Mounted only while open, so it always
  * starts empty.
  */
-const ReportForm = ({ player, gameId, studyRoomId, onOpenChange }: Omit<ReportDialogProps, "open">) => {
-  const context = reportContext({ gameId, studyRoomId });
+const ReportForm = ({
+  player,
+  gameId,
+  studyRoomId,
+  spectatorGameId,
+  onOpenChange,
+}: Omit<ReportDialogProps, "open">) => {
+  const context = reportContext({ gameId, studyRoomId, spectatorGameId });
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [details, setDetails] = useState("");
   const [alsoBlock, setAlsoBlock] = useState(false);
@@ -129,6 +151,10 @@ const ReportForm = ({ player, gameId, studyRoomId, onOpenChange }: Omit<ReportDi
         ) : "studyRoomId" in context ? (
           <p className="text-xs text-muted-foreground">
             This room's chat is sent with the report.
+          </p>
+        ) : "spectatorGameId" in context ? (
+          <p className="text-xs text-muted-foreground">
+            The spectator chat of this game is sent with the report.
           </p>
         ) : null}
       </div>

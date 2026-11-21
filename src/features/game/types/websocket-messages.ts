@@ -1,6 +1,7 @@
 import { GAME_MESSAGE_TYPES } from "../constants/websocket-types";
 import type { SeriesSummary } from "@/features/series/types";
 import type { ChatMessage, ChatState } from "@/features/game-chat/types";
+import type { SpectatorChatMessage, SpectatorChatState } from "@/features/spectator-chat/types";
 
 export type DrawOfferMessage = {
   type: GAME_MESSAGE_TYPES.DRAW_OFFER;
@@ -135,6 +136,8 @@ export type InitialGameStateMessage = {
     spectators?: number;
     /** The players' chat; absent for spectators */
     chat?: ChatState;
+    /** The spectators' chat; absent for the players */
+    spectatorChat?: SpectatorChatState;
     result?: GameResult;
     reason?: GameEndReason;
     winnerId?: number | null;
@@ -195,6 +198,12 @@ export type ChatStatusMessage = {
   data: ChatState;
 };
 
+/** A spectator chat message was stored; sent to the spectators (the writer included), never the players */
+export type SpectatorChatEventMessage = {
+  type: GAME_MESSAGE_TYPES.SPECTATOR_CHAT;
+  data: SpectatorChatMessage;
+};
+
 export type GameWebSocketMessage =
   | DrawOfferMessage
   | DrawResponseMessage
@@ -212,4 +221,5 @@ export type GameWebSocketMessage =
   | TimeAddedMessage
   | ChatEventMessage
   | ChatStatusMessage
+  | SpectatorChatEventMessage
   | GameErrorMessage;

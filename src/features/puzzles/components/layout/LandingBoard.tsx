@@ -1,6 +1,5 @@
-import { useEffect, useRef } from "react";
-import { Chessground } from "@lichess-org/chessground";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
+import { useChessground } from "@/features/game/hooks/useChessground";
 import { useUser } from "@/hooks/useUser";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 
@@ -12,19 +11,13 @@ const SAMPLE_PUZZLE = {
 };
 
 export const LandingBoard = () => {
-  const boardRef = useRef<HTMLDivElement>(null);
   const { username, image } = useUser();
-
-  useEffect(() => {
-    if (!boardRef.current) return;
-    const cg = Chessground(boardRef.current, {
-      fen: SAMPLE_PUZZLE.fen,
-      lastMove: [...SAMPLE_PUZZLE.lastMove],
-      viewOnly: true,
-      coordinates: true,
-    });
-    return () => cg.destroy();
-  }, []);
+  const { boardRef } = useChessground(() => ({
+    fen: SAMPLE_PUZZLE.fen,
+    lastMove: [...SAMPLE_PUZZLE.lastMove],
+    viewOnly: true,
+    coordinates: true,
+  }));
 
   return (
     <BoardLayout

@@ -99,15 +99,17 @@ export const getNavItems = (userId: number): NavItem[] => [
     title: "Puzzles",
     url: ROUTES.PUZZLES,
     icon: Puzzle,
-    // The endgame lab and conversion drills are training too
-    match: [ROUTES.PUZZLES, ROUTES.ENDGAMES, ROUTES.CONVERSION_DRILLS],
+    // The endgame lab, conversion drills and coordinates are training too
+    match: [ROUTES.PUZZLES, ROUTES.ENDGAMES, ROUTES.CONVERSION_DRILLS, ROUTES.COORDINATES],
     items: [
       { title: "Solve puzzles", url: getPuzzleModeRoute("infinite") },
       { title: "Puzzle Rush", url: getPuzzleModeRoute("rush") },
       { title: "Survival", url: getPuzzleModeRoute("survival") },
       { title: "Calculate first", url: getPuzzleModeRoute("calculate") },
+      { title: "Puzzle duel", url: ROUTES.PUZZLE_DUEL },
       { title: "Endgame lab", url: ROUTES.ENDGAMES },
       { title: "Conversion drills", url: ROUTES.CONVERSION_DRILLS },
+      { title: "Coordinates", url: ROUTES.COORDINATES },
     ],
   },
   {
@@ -123,6 +125,7 @@ export const getNavItems = (userId: number): NavItem[] => [
     icon: Microscope,
     match: [
       ROUTES.TOOLS.ANALYSIS_BOARD,
+      ROUTES.TOOLS.BOARD_EDITOR,
       ROUTES.TOOLS.IMPORT_GAME,
       "/archive/",
       ROUTES.REPERTOIRE,
@@ -130,6 +133,7 @@ export const getNavItems = (userId: number): NavItem[] => [
     ],
     items: [
       { title: "Analysis board", url: ROUTES.TOOLS.ANALYSIS_BOARD },
+      { title: "Board editor", url: ROUTES.TOOLS.BOARD_EDITOR },
       { title: "Opening repertoire", url: ROUTES.REPERTOIRE },
       { title: "Study rooms", url: ROUTES.STUDY },
       { title: "Import a game", url: ROUTES.TOOLS.IMPORT_GAME },

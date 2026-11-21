@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Chess, type Move, type PieceSymbol, type Square } from "chess.js";
-import { Chessground } from "@lichess-org/chessground";
-import type { Api } from "@lichess-org/chessground/api";
 import type { Key } from "@lichess-org/chessground/types";
 import { calculateLegalMoves } from "@/features/game/utils/board-utils";
-import { isPromotionMove } from "@/features/game/utils/promotionUtils";
-import { useSettings } from "@/features/settings/SettingsContext";
 import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
 import type { PlayerColor } from "@/features/game/types/game.types";
 import { useMoveNavigation } from "@/features/game/hooks/useMoveNavigation";
 import { parseTypedMove } from "@/features/game/utils/parseTypedMove";
-import { attachTouchDragAssist } from "@/features/game/utils/touchDragAssist";
+import { useChessground } from "@/features/game/hooks/useChessground";
+import { useBoardSettings } from "@/features/game/hooks/useBoardSettings";
+import { usePromotionPicker } from "@/features/game/hooks/usePromotionPicker";
 import { BotEngine } from "../services/botEngine";
 import type { Bot } from "../constants/bots";
 import { botThinkDelayMs } from "../utils/thinkDelay";
@@ -58,18 +56,6 @@ const getResult = (chess: Chess, playerColor: PlayerColor): BotGameResult | null
   return null;
 };
 
-/**
- * Fallbacks while settings load, matching the user_settings column defaults
- * on the server (what a new account gets).
- */
-export const BOARD_SETTING_DEFAULTS = {
-  boardCoordinatesEnabled: true,
-  moveHighlightEnabled: true,
-  premovesEnabled: false,
-  showLegalMovesEnabled: true,
-  autoPromoteToQueenEnabled: false,
-} as const;
-
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const lastMoveOf = (chess: Chess): [Key, Key] | undefined => {
@@ -79,25 +65,33 @@ const lastMoveOf = (chess: Chess): [Key, Key] | undefined => {
 
 /**
  * A local game against Stockfish: the board, rules and engine all run in the
- * browser. Finished games are saved afterwards (see useSaveBotGame).
+ * browser. Finished games are saved afterwards (see useSaveBotGame), except
+ * ones from a position set up in the board editor (`startFen`), which the
+ * server doesn't take.
  */
-export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
-  const boardRef = useRef<HTMLDivElement>(null);
-  const cgRef = useRef<Api | null>(null);
+export const useBotGame = (bot: Bot, playerColor: PlayerColor, startFen?: string) => {
+  const chessRef = useRef(new Chess(startFen));
+  const playerCode = playerColor === "white" ? "w" : "b";
+  const boardSettings = useBoardSettings();
+  // Created once per game; settings changes are applied by the hook
+  const { boardRef, cgRef } = useChessground(
+    () => ({
+      fen: chessRef.current.fen(),
+      orientation: playerColor,
+      turnColor: chessRef.current.turn() === "w" ? "white" : "black",
+      check: chessRef.current.inCheck(),
+      draggable: { enabled: true },
+      movable: {
+        free: false,
+        color: playerColor,
+        dests: chessRef.current.turn() === playerCode ? calculateLegalMoves(chessRef.current) : new Map(),
+      },
+    }),
+    { dragAssist: true, settings: boardSettings }
+  );
   // The player's side at the bottom until they flip the board
   const { orientation, flip } = useBoardOrientation(cgRef, playerColor);
-  const chessRef = useRef(new Chess());
   const engineRef = useRef<BotEngine | null>(null);
-  const { settings } = useSettings();
-  const coordinates =
-    settings?.boardCoordinatesEnabled ?? BOARD_SETTING_DEFAULTS.boardCoordinatesEnabled;
-  const highlightLastMove =
-    settings?.moveHighlightEnabled ?? BOARD_SETTING_DEFAULTS.moveHighlightEnabled;
-  const premoves = settings?.premovesEnabled ?? BOARD_SETTING_DEFAULTS.premovesEnabled;
-  const showDests =
-    settings?.showLegalMovesEnabled ?? BOARD_SETTING_DEFAULTS.showLegalMovesEnabled;
-  const autoQueen =
-    settings?.autoPromoteToQueenEnabled ?? BOARD_SETTING_DEFAULTS.autoPromoteToQueenEnabled;
   const { playSoundForMove, playGameEndSound } = useChessSound();
 
   const [history, setHistory] = useState<Move[]>([]);
@@ -115,12 +109,6 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
   // time, and a new search started before the stopped one has answered
   // would get that answer.
   const searchRef = useRef<Promise<unknown> | null>(null);
-  const [pendingPromotion, setPendingPromotion] = useState<{
-    from: Square;
-    to: Square;
-  } | null>(null);
-
-  const playerCode = playerColor === "white" ? "w" : "b";
 
   // Show the current position (also after a rejected move or cancelled
   // promotion, keeping the last-move highlight)
@@ -143,7 +131,7 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
       });
       if (myTurn) cg.playPremove();
     },
-    [playerCode, playerColor]
+    [playerCode, playerColor, cgRef]
   );
 
   const afterMove = useCallback(
@@ -160,7 +148,7 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
       }
       return finished;
     },
-    [syncBoard, playSoundForMove, playerColor]
+    [syncBoard, playSoundForMove, playerColor, cgRef]
   );
 
   const playEngineMove = useCallback(async () => {
@@ -198,7 +186,8 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
       });
       afterMove(move);
     } catch {
-      setEngineError(true);
+      // Not for an engine destroyed meanwhile (unmount)
+      if (engineRef.current === engine) setEngineError(true);
     } finally {
       // A cancelled search leaves "thinking" to the one that replaced it
       if (isCurrent()) setThinking(false);
@@ -223,40 +212,29 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
     [afterMove, playEngineMove, syncBoard, playerCode]
   );
 
-  // Board + engine setup
+  // Engine setup (the board is useChessground's)
   useEffect(() => {
-    if (!boardRef.current) return;
-    const chess = new Chess();
-    chessRef.current = chess;
-
-    cgRef.current = Chessground(boardRef.current, {
-      fen: chess.fen(),
-      orientation: playerColor,
-      turnColor: "white",
-      coordinates,
-      highlight: { lastMove: highlightLastMove, check: true },
-      premovable: { enabled: premoves },
-      draggable: { enabled: true },
-      movable: {
-        free: false,
-        color: playerColor,
-        showDests,
-        dests: playerCode === "w" ? calculateLegalMoves(chess) : new Map(),
-      },
-    });
-
-    const detachDragAssist = attachTouchDragAssist(cgRef.current);
-
     let engine: BotEngine | null = null;
     try {
-      engine = new BotEngine();
-      engineRef.current = engine;
-      engine
+      const created = new BotEngine();
+      engine = created;
+      engineRef.current = created;
+      // A set-up position can be over already (mate or stalemate on the board)
+      const over = getResult(chessRef.current, playerColor);
+      if (over) {
+        finishedRef.current = true;
+        setResult(over);
+      }
+      created
         .newGame(bot.rating)
         .then(() => {
-          if (playerCode === "b") void playEngineMove();
+          // The bot moves first when it's its turn (Black, or a set-up position)
+          if (chessRef.current.turn() !== playerCode) void playEngineMove();
         })
-        .catch(() => setEngineError(true));
+        .catch(() => {
+          // Not for an engine destroyed meanwhile (unmount)
+          if (engineRef.current === created) setEngineError(true);
+        });
     } catch {
       setEngineError(true);
     }
@@ -264,47 +242,18 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
     return () => {
       engine?.destroy();
       engineRef.current = null;
-      detachDragAssist();
-      cgRef.current?.destroy();
-      cgRef.current = null;
     };
-    // Set up once per game; settings changes are applied below
+    // Set up once per game
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Route user moves through chess.js (and the promotion picker when needed)
-  useEffect(() => {
-    cgRef.current?.set({
-      movable: {
-        events: {
-          after: (orig, dest) => {
-            const from = orig as Square;
-            const to = dest as Square;
-            const piece = chessRef.current.get(from);
-            if (isPromotionMove(to, piece)) {
-              if (autoQueen) {
-                playUserMove(from, to, "q");
-                return;
-              }
-              setPendingPromotion({ from, to });
-              return;
-            }
-            playUserMove(from, to);
-          },
-        },
-      },
-    });
-  }, [playUserMove, autoQueen]);
-
-  useEffect(() => {
-    cgRef.current?.set({
-      coordinates,
-      highlight: { lastMove: highlightLastMove, check: true },
-      premovable: { enabled: premoves },
-      movable: { showDests },
-    });
-    if (!premoves) cgRef.current?.cancelPremove();
-  }, [coordinates, highlightLastMove, premoves, showDests]);
+  const { pendingPromotion, setPendingPromotion, selectPromotion } = usePromotionPicker(
+    cgRef,
+    chessRef,
+    playUserMove,
+    boardSettings.autoQueen
+  );
 
   // Stepping through earlier moves. New moves jump back to the live position
   // (useMoveNavigation resets on a new move count), as in live games.
@@ -319,7 +268,7 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
     }
     const moves = chessRef.current.history({ verbose: true });
     const shown = moves[viewingIndex - 1];
-    const position = new Chess(shown ? shown.after : undefined);
+    const position = new Chess(shown ? shown.after : startFen);
     cg.cancelPremove();
     cg.selectSquare(null);
     cg.set({
@@ -329,14 +278,7 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
       lastMove: shown ? [shown.from, shown.to] : undefined,
       movable: { color: undefined, dests: new Map() },
     });
-  }, [viewingIndex, syncBoard]);
-
-  const selectPromotion = (piece: PieceSymbol) => {
-    if (!pendingPromotion) return;
-    const { from, to } = pendingPromotion;
-    setPendingPromotion(null);
-    playUserMove(from, to, piece);
-  };
+  }, [viewingIndex, syncBoard, cgRef, startFen]);
 
   const cancelPromotion = () => {
     setPendingPromotion(null);
@@ -390,10 +332,19 @@ export const useBotGame = (bot: Bot, playerColor: PlayerColor) => {
   const resign = () => {
     if (result || finishedRef.current) return;
     finishedRef.current = true;
+    // A search under way is cut short (its reply is dropped)
+    searchIdRef.current += 1;
+    if (searchRef.current) engineRef.current?.stop();
+    setThinking(false);
     setResult({ outcome: "loss", reason: "by resignation", endReason: "resignation" });
     playGameEndSound();
     cgRef.current?.stop();
     cgRef.current?.set({ movable: { color: undefined, dests: new Map() } });
+    if (pendingPromotion) {
+      // The open promotion picker closes, and its pawn goes back
+      setPendingPromotion(null);
+      syncBoard();
+    }
   };
 
   return {

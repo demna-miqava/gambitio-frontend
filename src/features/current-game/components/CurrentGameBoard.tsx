@@ -3,7 +3,7 @@ import Clock from "@/features/game/components/Clock";
 import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerPopover } from "@/features/profile/components/PlayerPopover";
-import { useRef, useMemo } from "react";
+import { useCallback, useEffect, useRef, useMemo } from "react";
 import { useSettings } from "@/features/settings/SettingsContext";
 import { calculatePlayerRating } from "../utils/rating-helpers";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
@@ -13,6 +13,7 @@ import { PromotionSelector } from "@/features/game/components/PromotionSelector"
 import { ConnectionBanner } from "./ConnectionBanner";
 import { GiveTimeButton } from "./GiveTimeButton";
 import { useShownLine } from "@/features/game/hooks/useShownLine";
+import type { PlayerColor } from "@/features/game/types/game.types";
 
 const CurrentGameBoard = () => {
   const { image } = useUser();
@@ -37,7 +38,10 @@ const CurrentGameBoard = () => {
   const shownLine = useShownLine();
   const { settings } = useSettings();
 
-  const { time } = game;
+  // Each side's own starting clock: they differ in a game with time odds
+  const startingTime = (side: PlayerColor) =>
+    (side === "white" ? game.whiteTime : game.blackTime) ?? game.time;
+  const opponentColor: PlayerColor = color === "white" ? "black" : "white";
   const username = player.username;
   const rating = player.rating;
   const opponentUsername = opponent.username;
@@ -74,13 +78,19 @@ const CurrentGameBoard = () => {
 
   // Tells the server a clock reached zero. The server checks its own clock
   // and decides the result, so it doesn't matter which side reports it.
-  const handleTimeout = () => {
+  // Once per server clock update: a report the server didn't take (the
+  // clock here ran a little ahead) is followed by new times, after which
+  // the next zero is reported again.
+  const handleTimeout = useCallback(() => {
     if (!timeoutSentRef.current) {
       timeoutSentRef.current = sendMessage(
         JSON.stringify({ type: GAME_MESSAGE_TYPES.TIMEOUT })
       );
     }
-  };
+  }, [sendMessage]);
+  useEffect(() => {
+    timeoutSentRef.current = false;
+  }, [whiteTimeLeft, blackTimeLeft]);
 
   // Clocks keep running while disconnected, like the server's do. The server
   // flags a timeout on its own and resyncs both clocks on reconnect.
@@ -127,7 +137,7 @@ const CurrentGameBoard = () => {
     <div className="flex shrink-0 items-center gap-1">
       <GiveTimeButton />
       <Clock
-        startingTime={time}
+        startingTime={startingTime(opponentColor)}
         isActive={opponentClockActive}
         onTimeout={opponentClockActive ? handleTimeout : undefined}
         gameEnded={gameEnded}
@@ -138,7 +148,7 @@ const CurrentGameBoard = () => {
   const playerClock = (
     <div className="flex shrink-0 flex-col items-center">
       <Clock
-        startingTime={time}
+        startingTime={startingTime(color)}
         isActive={playerClockActive}
         onTimeout={playerClockActive ? handleTimeout : undefined}
         gameEnded={gameEnded}

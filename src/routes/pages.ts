@@ -32,8 +32,11 @@ export const ArchiveGame = page(() => import("@/pages/ArchiveGame"));
 export const Watch = page(() => import("@/pages/Watch"));
 export const PuzzlesLanding = page(() => import("@/pages/PuzzlesLanding"));
 export const PuzzleModePage = page(() => import("@/pages/PuzzleModePage"));
+export const PuzzleDuel = page(() => import("@/pages/PuzzleDuel"));
+export const PuzzleDuelGame = page(() => import("@/pages/PuzzleDuelGame"));
 export const ImportGame = page(() => import("@/pages/ImportGame"));
 export const AnalysisBoard = page(() => import("@/pages/AnalysisBoard"));
+export const BoardEditor = page(() => import("@/pages/BoardEditor"));
 export const Leaderboard = page(() => import("@/pages/Leaderboard"));
 export const Series = page(() => import("@/pages/Series"));
 export const Repertoire = page(() => import("@/pages/Repertoire"));
@@ -45,6 +48,7 @@ export const EndgameLab = page(() => import("@/pages/EndgameLab"));
 export const EndgameExercise = page(() => import("@/pages/EndgameExercise"));
 export const ConversionDrills = page(() => import("@/pages/ConversionDrills"));
 export const ConversionDrill = page(() => import("@/pages/ConversionDrill"));
+export const Coordinates = page(() => import("@/pages/Coordinates"));
 export const NotFoundPage = page(() => import("@/pages/NotFoundPage"));
 // Profile
 export const Profile = page(() => import("@/pages/Profile"));
@@ -138,6 +142,9 @@ const ROUTE_PAGES: [pattern: string, pages: Page[]][] = [
   [ROUTES.WATCH, [Watch]],
   [ROUTES.SETTINGS, [Settings]],
   [ROUTES.PUZZLES, [PuzzlesLanding]],
+  // Before /puzzles/:mode, which "/puzzles/duel" would match too
+  [ROUTES.PUZZLE_DUEL, [PuzzleDuel]],
+  [ROUTES.PUZZLE_DUEL_GAME, [PuzzleDuelGame]],
   [ROUTES.PUZZLE_MODE, [PuzzleModePage]],
   [ROUTES.LEADERBOARD, [Leaderboard]],
   [ROUTES.SERIES, [Series]],
@@ -150,8 +157,10 @@ const ROUTE_PAGES: [pattern: string, pages: Page[]][] = [
   [ROUTES.ENDGAME_EXERCISE, [EndgameExercise]],
   [ROUTES.CONVERSION_DRILLS, [ConversionDrills]],
   [ROUTES.CONVERSION_DRILL, [ConversionDrill]],
+  [ROUTES.COORDINATES, [Coordinates]],
   [ROUTES.TOOLS.IMPORT_GAME, [ImportGame]],
   [ROUTES.TOOLS.ANALYSIS_BOARD, [AnalysisBoard]],
+  [ROUTES.TOOLS.BOARD_EDITOR, [BoardEditor]],
 ];
 
 /** The pages AppRoutes renders for `pathname`; empty when none matches. */

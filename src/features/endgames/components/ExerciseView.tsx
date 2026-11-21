@@ -1,34 +1,25 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, CheckCircle2, Lightbulb, LayoutGrid, Loader2, RotateCcw, Target, XCircle } from "lucide-react";
-import { BoardLayout } from "@/features/game/components/BoardLayout";
+import { ArrowRight, CheckCircle2, Lightbulb, LayoutGrid, Target } from "lucide-react";
 import { GameLayout } from "@/features/game/components/GameLayout";
-import { PromotionSelector } from "@/features/game/components/PromotionSelector";
-import { MoveNavigationControls } from "@/features/game/components/MoveControls";
-import { FlipBoardButton } from "@/features/game/components/FlipBoardButton";
 import { useFlipBoardKey } from "@/features/game/hooks/useFlipBoardKey";
-import { SettingsMovesListView } from "@/features/game/components/MovesList";
+import { useShortcutKey } from "@/features/game/hooks/useShortcutKey";
 import { startPlyOfFen } from "@/features/game/utils/moveListUtils";
-import { TypedMoveInput } from "@/features/game/components/TypedMoveInput";
-import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { Button } from "@/components/ui/button";
-import { BotAvatar } from "@/features/play-bots/components/BotAvatar";
-import { describeMove } from "@/features/play-bots/utils/describeMove";
-import { useUser } from "@/hooks/useUser";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { ROUTES, getEndgameExerciseRoute } from "@/constants/routes";
-import { cn } from "@/lib/utils";
 import { nextEndgameExercise } from "../data/exercises";
-import { ENDGAME_ENGINE_RATING, useEndgameExercise } from "../hooks/useEndgameExercise";
+import { useEndgameExercise } from "../hooks/useEndgameExercise";
 import { useEndgameProgress, useRecordEndgameAttempt } from "../hooks/useEndgameProgress";
+import { useRecordAttemptOnce } from "../hooks/useRecordAttemptOnce";
 import type { EndgameExercise } from "../types";
 import { objectiveLabel } from "../utils/objective";
 import { movesLabel } from "../utils/format";
+import { practiceText, shownFenOf } from "../utils/practiceText";
 import { DifficultyBadge } from "./DifficultyBadge";
 import { ExerciseAnalysis } from "./ExerciseAnalysis";
-
-const ENGINE_NAME = "Stockfish";
+import { PracticeBoard, PracticeMoves, PracticeStatus, RetryButton } from "./PracticeBoard";
 
 /** How far into the objective's move budget the attempt is, in words. */
 const budgetText = (exercise: EndgameExercise, playerMoves: number): string => {
@@ -38,41 +29,17 @@ const budgetText = (exercise: EndgameExercise, playerMoves: number): string => {
   return `${movesLabel(playerMoves)} played`;
 };
 
-const isTypingTarget = (target: EventTarget | null) =>
-  target instanceof HTMLElement &&
-  (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
-
 /** An exercise in progress: the board against the engine, and the objective beside it. */
 export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
-  const { username, image } = useUser();
-  const {
-    boardRef,
-    history,
-    positions,
-    playerMoves,
-    thinking,
-    evaluation,
-    result,
-    attempt,
-    engineError,
-    pendingPromotion,
-    selectPromotion,
-    cancelPromotion,
-    retry,
-    submitTypedMove,
-    navigation,
-    orientation,
-    flip,
-    showArrow,
-    isPlayerTurn,
-  } = useEndgameExercise(exercise);
-  useFlipBoardKey(flip);
+  const game = useEndgameExercise(exercise);
+  const { playerMoves, result, retry, showArrow, thinking } = game;
+  useFlipBoardKey(game.flip);
   const [hintsShown, setHintsShown] = useState(0);
   // Off by default: the exercise is to find the moves yourself
   const [analysisOn, setAnalysisOn] = useState(false);
   const { byId } = useEndgameProgress();
   const progress = byId.get(exercise.id);
-  const record = useRecordEndgameAttempt();
+  const { mutate: saveAttempt } = useRecordEndgameAttempt();
   const next = nextEndgameExercise(exercise.id);
 
   useDocumentTitle(
@@ -80,91 +47,19 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
   );
 
   // Each finished attempt is saved once
-  const recordedAttempt = useRef<number | null>(null);
-  const { mutate: saveAttempt } = record;
-  useEffect(() => {
-    if (!result || recordedAttempt.current === attempt) return;
-    recordedAttempt.current = attempt;
+  useRecordAttemptOnce(game, (success, moves) =>
     saveAttempt(
-      { exerciseId: exercise.id, success: result.status === "success", moves: playerMoves },
+      { exerciseId: exercise.id, success, moves },
       { onError: () => toast.error("Couldn't save your result", { id: "endgame-save" }) }
-    );
-  }, [result, attempt, exercise.id, playerMoves, saveAttempt]);
+    )
+  );
 
   // R retries at once (not while typing a move)
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== "r" || event.metaKey || event.ctrlKey || event.altKey) return;
-      if (event.repeat || isTypingTarget(event.target)) return;
-      event.preventDefault();
-      retry();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [retry]);
+  useShortcutKey("r", retry);
 
-  const playerCode = exercise.playerColor === "white" ? "w" : "b";
-  const lastMove = history.at(-1);
-  const engineMoved = lastMove && lastMove.color !== playerCode;
-  const announcement = engineError
-    ? "The engine couldn't start. Try reloading the page."
-    : [engineMoved && `${ENGINE_NAME} played ${describeMove(lastMove)}.`, result?.message ?? evaluation.message]
-        .filter(Boolean)
-        .join(" ");
-
-  const status = engineError
-    ? "The engine couldn't start. Try reloading the page."
-    : result
-      ? result.message
-      : evaluation.message ||
-        (thinking ? `${ENGINE_NAME} is thinking…` : isPlayerTurn ? "Your move" : "Waiting…");
-
-  const boardLabel = [
-    "Chess board",
-    `You play ${exercise.playerColor}. ${objectiveLabel(exercise.objective)}`,
-    lastMove &&
-      `Last move: ${lastMove.color === playerCode ? "you" : ENGINE_NAME} played ${describeMove(lastMove)}`,
-    result?.message ?? (isPlayerTurn ? "Your move" : undefined),
-  ]
-    .filter(Boolean)
-    .join(". ");
-
-  const shownFen = positions[navigation.currentIndex] ?? exercise.fen;
-
-  const engineRow = {
-    name: ENGINE_NAME,
-    startingRating: ENDGAME_ENGINE_RATING,
-    avatar: <BotAvatar rating={ENDGAME_ENGINE_RATING} className="size-8 rounded-lg" />,
-  };
-  const engineStatus = thinking ? (
-    <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Thinking" />
-  ) : undefined;
-  const playerRow = {
-    name: username,
-    avatar: <PlayerAvatar username={username} avatarUrl={image} size="sm" />,
-  };
-
-  const board = (
-    <BoardLayout
-      boardRef={boardRef}
-      boardLabel={boardLabel}
-      material={{ fen: shownFen, bottom: orientation }}
-      // The player is at the bottom unless they flipped the board
-      {...(orientation === exercise.playerColor
-        ? { topPlayer: engineRow, topPlayerClock: engineStatus, bottomPlayer: playerRow }
-        : { topPlayer: playerRow, bottomPlayer: engineRow, bottomPlayerClock: engineStatus })}
-    >
-      {pendingPromotion && (
-        <PromotionSelector
-          color={exercise.playerColor}
-          square={pendingPromotion.to}
-          onSelect={selectPromotion}
-          onCancel={cancelPromotion}
-          boardOrientation={orientation}
-        />
-      )}
-    </BoardLayout>
-  );
+  const { status, announcement, boardLabel } = practiceText(game, exercise);
+  const shownFen = shownFenOf(game);
+  const board = <PracticeBoard game={game} position={exercise} label={boardLabel} />;
 
   const hints = exercise.hints.slice(0, hintsShown);
 
@@ -196,35 +91,13 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
           )}
         </div>
 
-        <div
-          className={cn(
-            "flex items-start gap-2 rounded-lg px-3 py-2.5 text-sm font-medium",
-            result?.status === "success" && "bg-win-bg text-win",
-            (result?.status === "failure" || engineError) && "bg-loss-bg text-loss",
-            !result && !engineError && "bg-muted text-foreground"
-          )}
-        >
-          {result?.status === "success" && <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />}
-          {result?.status === "failure" && <XCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />}
-          <span>
-            {result && <span className="font-medium">{result.status === "success" ? "Solved. " : "Not this time. "}</span>}
-            {status}
-          </span>
-        </div>
+        <PracticeStatus game={game}>
+          {result && <span className="font-medium">{result.status === "success" ? "Solved. " : "Not this time. "}</span>}
+          {status}
+        </PracticeStatus>
 
         <div className="grid grid-cols-2 gap-2">
-          <Button
-            size="md"
-            variant={result?.status === "success" ? "outline" : "default"}
-            onClick={retry}
-            aria-keyshortcuts="r"
-            disabled={history.length === 0 && !result}
-          >
-            <RotateCcw aria-hidden="true" /> Retry
-            <kbd className="ml-1 hidden rounded border border-current/30 px-1 text-[0.65rem] font-normal opacity-70 sm:inline">
-              R
-            </kbd>
-          </Button>
+          <RetryButton game={game} onRetry={retry} />
           {next ? (
             <Button size="md" variant={result?.status === "success" ? "default" : "outline"} asChild>
               <Link to={getEndgameExerciseRoute(next.id)}>
@@ -273,29 +146,14 @@ export const ExerciseView = ({ exercise }: { exercise: EndgameExercise }) => {
         onArrow={showArrow}
       />
 
-      <div className="space-y-2 lg:border-t lg:border-border lg:pt-3">
-        <div className="rounded-xl bg-card px-1 py-1.5 lg:rounded-none lg:bg-transparent lg:p-0">
-          <SettingsMovesListView
-            moves={history}
-            activeIndex={navigation.currentIndex - 1}
-            onSelect={navigation.goToMove}
-            startPly={startPlyOfFen(exercise.fen)}
-          />
-        </div>
-        <div className="flex gap-1.5">
-          <div className="min-w-0 flex-1">
-            <MoveNavigationControls {...navigation} />
-          </div>
-          <FlipBoardButton onFlip={flip} orientation={orientation} />
-        </div>
-        {!result && !engineError && <TypedMoveInput onSubmit={submitTypedMove} />}
+      <PracticeMoves game={game} startPly={startPlyOfFen(exercise.fen)}>
         <Link
           to={ROUTES.ENDGAMES}
           className="block pt-1 text-center text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           Back to the endgame lab
         </Link>
-      </div>
+      </PracticeMoves>
     </div>
   );
 

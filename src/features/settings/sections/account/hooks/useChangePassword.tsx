@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useUser } from "@clerk/clerk-react";
+import { isClerkAPIResponseError } from "@clerk/clerk-react/errors";
 import { useState } from "react";
 import { toast } from "sonner";
 import { passwordSchema } from "@/lib/schemas/validation.schemas";
@@ -46,8 +47,10 @@ export const useChangePassword = () => {
       toast.success("Password changed");
       form.reset();
     } catch (error) {
-      const clerkError = error as { errors?: { message: string }[] };
-      const message = clerkError.errors?.[0]?.message || "Couldn't change your password";
+      // Clerk explains a refusal (wrong current password, a breached new one)
+      const message =
+        (isClerkAPIResponseError(error) && error.errors[0]?.message) ||
+        "Couldn't change your password";
       toast.error(message);
     } finally {
       setIsLoading(false);

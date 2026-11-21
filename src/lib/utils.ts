@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { isAxiosError } from "axios"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -28,6 +29,7 @@ export function formatShortDate(date: string | Date): string {
  * fallback when there's none (network errors, timeouts).
  */
 export function getApiErrorMessage(error: unknown, fallback: string): string {
-  const data = (error as { response?: { data?: { error?: unknown } } })?.response?.data;
+  if (!isAxiosError<{ error?: unknown } | undefined>(error)) return fallback;
+  const data = error.response?.data;
   return typeof data?.error === "string" && data.error ? data.error : fallback;
 }

@@ -18,6 +18,7 @@ import { StudyInviteToasts } from "@/features/study/components/StudyInviteToasts
 import { FriendUpdates } from "@/features/friends/components/FriendUpdates";
 import { BlockUpdates } from "@/features/moderation/components/BlockUpdates";
 import { FriendsInbox } from "@/features/friends/components/FriendsInbox";
+import { DuelInviteListener } from "@/features/puzzles/duel/components/DuelInviteListener";
 import { PushSync } from "@/features/push/PushSync";
 import { GameShellProvider, useGameShell } from "@/context/GameShellContext";
 
@@ -114,6 +115,7 @@ const AppShell = () => {
           <ChallengesProvider>
             <AppSidebar />
             <StudyInviteToasts />
+            <DuelInviteListener />
             <FriendUpdates />
             <BlockUpdates />
             <PushSync />

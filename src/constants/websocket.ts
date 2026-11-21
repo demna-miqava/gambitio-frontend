@@ -41,3 +41,16 @@ export const NOTIFICATIONS_RECONNECT_OPTIONS = {
   reconnectAttempts: Number.POSITIVE_INFINITY,
   reconnectInterval: (attempt: number) => backoffDelay(attempt, NOTIFICATIONS_RECONNECT_CAP_MS),
 };
+
+/**
+ * For a socket whose frames are all handled in onMessage: react-use-websocket
+ * otherwise also stores each one as lastMessage, a synchronous re-render
+ * (flushSync) of the component holding the socket, plus a second JSON.parse,
+ * per frame. Only for sockets nothing reads lastMessage or lastJsonMessage of,
+ * and whose onMessage changes what is shown through state, not refs alone.
+ */
+export const ON_MESSAGE_ONLY = {
+  filter: () => false,
+  disableJson: true,
+};
+

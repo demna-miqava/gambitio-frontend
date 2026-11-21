@@ -29,6 +29,10 @@ export const enum GAME_MESSAGE_TYPES {
   // (server -> the two players) How the chat stands now: a player changed
   // who they chat with while the game was on
   CHAT_STATUS = "chat_status",
+  // Spectator chat (everyone watching, never the players). Goes both ways:
+  // { text } from a spectator to the server, the stored message back to the
+  // spectators (the server never sends it to either player)
+  SPECTATOR_CHAT = "spectator_chat",
   REMATCH_CANCELED = "rematch_canceled",
   MATCH_FOUND = "match_found",
 

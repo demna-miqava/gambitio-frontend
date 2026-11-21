@@ -28,11 +28,7 @@ export const useFriendOpponents = ({
   const { id } = useUser();
   const query = useQuery({
     queryKey: [QKEY_FRIEND_STATUSES, "opponents", { page, limit, search }],
-    queryFn: () => {
-      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-      if (search) params.set("q", search);
-      return getFriendOpponents(params.toString());
-    },
+    queryFn: () => getFriendOpponents({ page, limit, q: search }),
     enabled: !!id,
     staleTime: 10_000,
     refetchInterval: OPPONENTS_POLL_MS,

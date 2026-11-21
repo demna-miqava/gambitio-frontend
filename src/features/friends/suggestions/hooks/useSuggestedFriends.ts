@@ -13,7 +13,7 @@ export const useSuggestedFriends = (searchQuery?: string) => {
 
   const query = useQuery({
     queryKey: [QKEY_SUGGESTED_FRIENDS, userId, search],
-    queryFn: () => getFriendSuggestions(new URLSearchParams({ q: search }).toString()),
+    queryFn: () => getFriendSuggestions(search),
     enabled: !!userId && search.length >= MIN_PLAYER_SEARCH_LENGTH,
   });
 

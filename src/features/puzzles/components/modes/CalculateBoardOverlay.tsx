@@ -39,7 +39,10 @@ export const CalculateBoardOverlay = () => {
   if (!entering || !position) return null;
 
   const side = position.turn();
-  const dests = selected ? position.moves({ square: selected, verbose: true }).map((m) => m.to) : [];
+  // Once per square: a promotion is four moves to the same one
+  const dests = selected
+    ? [...new Set(position.moves({ square: selected, verbose: true }).map((m) => m.to))]
+    : [];
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (promotion) return;

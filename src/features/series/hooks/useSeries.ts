@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { isAxiosError } from "axios";
+import { getApiErrorMessage } from "@/lib/utils";
 import { QKEY_HEAD_TO_HEAD, QKEY_SERIES, QKEY_USER_SERIES } from "@/constants/queryKeys";
 import { getSeriesRoute } from "@/constants/routes";
 import { useUser } from "@/hooks/useUser";
@@ -94,9 +94,7 @@ export const useSeriesUpdates = () => {
   );
 };
 
-const errorMessage = (error: unknown) =>
-  (isAxiosError(error) && (error.response?.data as { error?: string } | undefined)?.error) ||
-  "Couldn't resign the series. Try again.";
+const errorMessage = (error: unknown) => getApiErrorMessage(error, "Couldn't resign the series. Try again.");
 
 export const useResignSeries = (seriesId: number) => {
   const queryClient = useQueryClient();

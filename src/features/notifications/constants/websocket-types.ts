@@ -28,5 +28,16 @@ export enum NOTIFICATION_MESSAGE_TYPES {
   TABLE_GAME_ANSWERED = "table_game_answered",
   /** The player blocked or unblocked someone (in any tab): refresh the lists */
   BLOCKS_UPDATED = "blocks_updated",
+  /** Puzzle duels: an invite came in or went out ({ invite }) */
+  DUEL_INVITE = "duel_invite",
+  DUEL_INVITE_SENT = "duel_invite_sent",
+  /** An invite was declined, cancelled or lapsed ({ inviteId, status }) */
+  DUEL_INVITE_CLOSED = "duel_invite_closed",
+  /** A duel the player is in started ({ duelId, startsAt, endsAt }) */
+  DUEL_STARTED = "duel_started",
+  /** The other player's (or your own) score and strikes ({ duelId, userId, score, strikes, out }) */
+  DUEL_PROGRESS = "duel_progress",
+  /** A duel ended ({ duelId, winnerId, endReason, scores }) */
+  DUEL_ENDED = "duel_ended",
   ERROR = "error",
 }

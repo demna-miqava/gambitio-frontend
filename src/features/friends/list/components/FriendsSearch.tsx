@@ -1,24 +1,26 @@
-import { useState, useEffect } from "react";
-import { useQueryParams } from "@/hooks/useQueryParams";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
+import { paramsForSearch } from "@/features/friends/utils/searchParams";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
 export const FriendsSearch = () => {
-  const [search, setSearch] = useQueryParams("search", "");
-  const [, setPage] = useQueryParams("page", "1");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("search") ?? "";
   const [inputValue, setInputValue] = useState(search);
   const debouncedValue = useDebounce(inputValue, 500);
 
-  // Update URL param when debounced value changes
+  // Update the URL only when the typed search settles on something new. Not
+  // whenever the URL changes (turning the page, ?page=3 in a link), which
+  // would otherwise send the list straight back to page 1.
+  const appliedRef = useRef(debouncedValue);
   useEffect(() => {
-    if (debouncedValue.length === 0) {
-      setSearch(undefined);
-      setPage("1");
-    } else {
-      setSearch(debouncedValue);
-    }
-  }, [debouncedValue, setSearch, setPage]);
+    if (appliedRef.current === debouncedValue) return;
+    appliedRef.current = debouncedValue;
+    if (debouncedValue === search) return;
+    setSearchParams((current) => paramsForSearch(current, debouncedValue));
+  }, [debouncedValue, search, setSearchParams]);
 
   return (
     <div className="relative w-full sm:w-64">

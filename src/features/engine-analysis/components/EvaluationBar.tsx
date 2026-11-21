@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Chess } from "chess.js";
 import { useAnalysis } from "../contexts/EngineAnalysisContext";
 import { formatScore, getWhitePercentage } from "../utils/engineAnalysis.utils";
 import { EVAL_BAR } from "../constants";
@@ -6,24 +7,61 @@ import type { EvaluationLine } from "../types";
 import { cn } from "@/lib/utils";
 import type { PlayerColor } from "@/features/game/types/game.types";
 
+/** A finished game's result, from white's view */
+type GameResult = { result: 1 | 0 | -1 };
+
+/**
+ * Checkmate or stalemate: Stockfish has no line to report (just "bestmove
+ * (none)"), so the bar shows the result instead.
+ */
+const finishedResult = (fen: string): GameResult | null => {
+  if (!fen) return null;
+  try {
+    const chess = new Chess(fen);
+    if (chess.isCheckmate()) return { result: chess.turn() === "w" ? -1 : 1 };
+    if (chess.isStalemate()) return { result: 0 };
+  } catch {
+    // Not a position
+  }
+  return null;
+};
+
 /** The live engine's bar. bottom: the side at the bottom of the board. */
 export const EvaluationBar = ({ bottom = "white" }: { bottom?: PlayerColor }) => {
   const { analysis } = useAnalysis();
   const bestLine: EvaluationLine | undefined = analysis.lines[0];
+  const { isAnalyzing, fen } = analysis;
 
   // What the bar shows. It only moves for results deep enough to trust
   // (the first few depths swing wildly), and it holds its value while a new
   // position is being analysed instead of dropping back to the middle.
-  const [shown, setShown] = useState<EvaluationLine | null>(null);
+  const [shown, setShown] = useState<EvaluationLine | GameResult | null>(null);
   useEffect(() => {
-    if (!bestLine) return;
+    if (!bestLine) {
+      // An analysed position without lines: a finished game
+      const over = isAnalyzing ? null : finishedResult(fen);
+      if (over) setShown(over);
+      return;
+    }
     if (bestLine.depth >= EVAL_BAR.minDepth || bestLine.mate !== undefined) {
       setShown(bestLine);
     } else {
       // Nothing shown yet: better a rough value than an empty bar
       setShown((current) => current ?? bestLine);
     }
-  }, [bestLine]);
+  }, [bestLine, isAnalyzing, fen]);
+
+  if (shown && "result" in shown) {
+    const label = shown.result === 1 ? "1-0" : shown.result === -1 ? "0-1" : "½-½";
+    return (
+      <EvaluationBarView
+        whitePercent={50 + 50 * shown.result}
+        label={label}
+        spokenLabel={`Evaluation ${label}`}
+        bottom={bottom}
+      />
+    );
+  }
 
   const whitePercentage = shown ? getWhitePercentage(shown) : 50;
   const label = shown ? formatScore(shown) : "0.0";

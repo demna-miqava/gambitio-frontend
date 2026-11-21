@@ -46,18 +46,33 @@ export const drawReason = (chess: Chess): string | null => {
 };
 
 /**
+ * Where the pieces `color` got by promoting stand after `moves`, followed
+ * move by move (a count against the starting pieces misses a promotion
+ * that only replaces a piece the player took earlier).
+ */
+const promotedSquares = (moves: Move[], color: Color): Set<Square> => {
+  const squares = new Set<Square>();
+  for (const move of moves) {
+    if (move.color === color) {
+      if (move.promotion) squares.add(move.to);
+      else if (squares.delete(move.from)) squares.add(move.to);
+    } else {
+      // Taken
+      squares.delete(move.to);
+    }
+  }
+  return squares;
+};
+
+/**
  * Whether the opponent has a new piece from a promotion that they keep: a
  * piece just promoted that the player can take for free doesn't count yet.
  */
-const opponentKeepsPromotion = (
-  chess: Chess,
-  opponent: Color,
-  startPieces: number,
-  lastMove: Move | undefined
-): boolean => {
-  if (pieceCount(chess, opponent) <= startPieces) return false;
+const opponentKeepsPromotion = (chess: Chess, opponent: Color, lastMove: Move | undefined): boolean => {
+  const promoted = promotedSquares(chess.history({ verbose: true }), opponent);
   const justPromoted = lastMove?.color === opponent && lastMove.promotion;
-  return !(justPromoted && isHanging(chess, lastMove.to));
+  if (justPromoted && isHanging(chess, lastMove.to)) promoted.delete(lastMove.to);
+  return promoted.size > 0;
 };
 
 const describeLimit = (objective: EndgameObjective): string => {
@@ -113,7 +128,6 @@ export const evaluateObjective = (
   const player: Color = exercise.playerColor === "white" ? "w" : "b";
   const opponent: Color = player === "w" ? "b" : "w";
   const start = new Chess(exercise.fen);
-  const startOpponentPieces = pieceCount(start, opponent);
   const lastMove = chess.history({ verbose: true }).at(-1);
   const draw = drawReason(chess);
 
@@ -129,11 +143,11 @@ export const evaluateObjective = (
       if (draw) {
         return failure(
           draw === "stalemate"
-            ? "Stalemate. The black king had no legal move but wasn't in check."
+            ? `Stalemate. The ${opponent === "w" ? "white" : "black"} king had no legal move but wasn't in check.`
             : `The game is drawn by ${draw}.`
         );
       }
-      if (opponentKeepsPromotion(chess, opponent, startOpponentPieces, lastMove)) {
+      if (opponentKeepsPromotion(chess, opponent, lastMove)) {
         return failure("The pawn promoted and the new piece survived.");
       }
       if (objective.maxMoves !== undefined && playerMoves >= objective.maxMoves) {
@@ -155,7 +169,7 @@ export const evaluateObjective = (
         return success("Promoted, and the new piece is safe.");
       }
       if (draw) return failure(`The game is drawn by ${draw}.`);
-      if (opponentKeepsPromotion(chess, opponent, startOpponentPieces, lastMove)) {
+      if (opponentKeepsPromotion(chess, opponent, lastMove)) {
         return failure("Your opponent promoted first.");
       }
       if (pawnCount(chess, player) === 0) return failure("You have no pawns left to promote.");
@@ -172,7 +186,7 @@ export const evaluateObjective = (
 
     case "draw": {
       if (draw) return success(`Drawn by ${draw}. Well defended!`);
-      if (opponentKeepsPromotion(chess, opponent, startOpponentPieces, lastMove)) {
+      if (opponentKeepsPromotion(chess, opponent, lastMove)) {
         return failure("The pawn promoted and the new queen survived.");
       }
       const startPlayerPieces = pieceCount(start, player);

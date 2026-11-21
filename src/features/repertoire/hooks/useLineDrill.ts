@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Chess, type Move, type PieceSymbol, type Square } from "chess.js";
-import { Chessground } from "@lichess-org/chessground";
-import type { Api } from "@lichess-org/chessground/api";
 import type { Key } from "@lichess-org/chessground/types";
 import { calculateLegalMoves } from "@/features/game/utils/board-utils";
-import { attachTouchDragAssist } from "@/features/game/utils/touchDragAssist";
 import { isPromotionMove } from "@/features/game/utils/promotionUtils";
 import { parseTypedMove } from "@/features/game/utils/parseTypedMove";
 import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
-import { useSettings } from "@/features/settings/SettingsContext";
-import { BOARD_SETTING_DEFAULTS } from "@/features/play-bots/hooks/useBotGame";
+import { useBoardSettings } from "@/features/game/hooks/useBoardSettings";
+import { useChessground } from "@/features/game/hooks/useChessground";
 import type { RepertoireLine } from "@/services/repertoire";
 import { isPlayerPly, moveSquares, otherLinePlaying } from "../utils/drill";
 import { formatMoves } from "../utils/lines";
@@ -42,8 +39,18 @@ export const useLineDrill = (
   allLines: readonly RepertoireLine[],
   onFinish: (correct: boolean) => void
 ) => {
-  const boardRef = useRef<HTMLDivElement>(null);
-  const cgRef = useRef<Api | null>(null);
+  const { coordinates, highlightLastMove, showDests } = useBoardSettings();
+  // Created once per line (the practice view remounts for a new line); no
+  // premoves: the opponent's replies play themselves
+  const { boardRef, cgRef } = useChessground(
+    () => ({
+      fen: new Chess().fen(),
+      orientation: line.color,
+      draggable: { enabled: true },
+      movable: { free: false, color: undefined, dests: new Map() },
+    }),
+    { dragAssist: true, settings: { coordinates, highlightLastMove, premoves: false, showDests } }
+  );
   // The line's colour at the bottom until the player flips the board
   const { orientation, flip } = useBoardOrientation(cgRef, line.color);
   const chessRef = useRef(new Chess());
@@ -51,10 +58,6 @@ export const useLineDrill = (
   const finishRef = useRef(onFinish);
   finishRef.current = onFinish;
   const { playSound } = useChessSound();
-  const { settings } = useSettings();
-  const coordinates = settings?.boardCoordinatesEnabled ?? BOARD_SETTING_DEFAULTS.boardCoordinatesEnabled;
-  const highlight = settings?.moveHighlightEnabled ?? BOARD_SETTING_DEFAULTS.moveHighlightEnabled;
-  const showDests = settings?.showLegalMovesEnabled ?? BOARD_SETTING_DEFAULTS.showLegalMovesEnabled;
 
   const [ply, setPly] = useState(0);
   const [failed, setFailed] = useState(false);
@@ -83,7 +86,7 @@ export const useLineDrill = (
         movable: { color: mine ? line.color : undefined, dests: mine ? calculateLegalMoves(chess) : new Map() },
       });
     },
-    [line.color, playerTurn]
+    [cgRef, line.color, playerTurn]
   );
 
   const showArrow = useCallback((san: string | null) => {
@@ -91,7 +94,7 @@ export const useLineDrill = (
     if (!cg) return;
     const squares = san ? moveSquares(chessRef.current.fen(), san) : null;
     cg.setAutoShapes(squares ? [{ orig: squares.from as Key, dest: squares.to as Key, brush: "green" }] : []);
-  }, []);
+  }, [cgRef]);
 
   const sound = useCallback(
     (move: Move) => playSound(move.san.includes("#") ? "gameEnd" : move.captured ? "capture" : "move"),
@@ -208,47 +211,22 @@ export const useLineDrill = (
     [advance, allLines, continueLine, line, playerTurn, showArrow, syncBoard]
   );
 
-  // Board setup, once per line (the practice view remounts for a new line)
+  // The drill starts once per line (the board itself: useChessground)
   useEffect(() => {
-    if (!boardRef.current) return;
-    const chess = new Chess();
-    chessRef.current = chess;
-    const cg = Chessground(boardRef.current, {
-      fen: chess.fen(),
-      orientation: line.color,
-      coordinates,
-      highlight: { lastMove: highlight, check: true },
-      draggable: { enabled: true },
-      premovable: { enabled: false },
-      movable: { free: false, showDests, color: undefined, dests: new Map() },
-    });
-    cgRef.current = cg;
-    const detach = attachTouchDragAssist(cg);
+    chessRef.current = new Chess();
     syncBoard();
     continueLine(`Practising ${line.name}, as ${line.color}.`);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      detach();
-      cg.destroy();
-      cgRef.current = null;
     };
-    // Set up once per line; settings changes are applied below
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     cgRef.current?.set({
-      coordinates,
-      highlight: { lastMove: highlight, check: true },
-      movable: { showDests },
-    });
-  }, [coordinates, highlight, showDests]);
-
-  useEffect(() => {
-    cgRef.current?.set({
       movable: { events: { after: (orig, dest) => onPlayerMove(orig as Square, dest as Square) } },
     });
-  }, [onPlayerMove]);
+  }, [cgRef, onPlayerMove]);
 
   /** Shows the move to play (an arrow); the run then counts as a miss. */
   const showHint = useCallback(() => {

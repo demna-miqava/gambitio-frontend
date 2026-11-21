@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Ban, Check, Clock, UserRound, UserRoundPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DuelInviteButton } from "@/features/puzzles/duel/components/DuelInviteButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -88,7 +89,7 @@ const HeadToHead = ({ player }: { player: PopoverPlayer }) => {
  * Add friend, or where the request stands; Unblock for a player you've
  * blocked. Nothing that leaves the page.
  */
-const Friendship = ({ player }: { player: PopoverPlayer }) => {
+const Friendship = ({ player, canDuel }: { player: PopoverPlayer; canDuel: boolean }) => {
   const status = useFriendship(player);
   const sendRequest = useSendFriendRequest();
   const requestAction = useFriendRequestAction();
@@ -112,7 +113,12 @@ const Friendship = ({ player }: { player: PopoverPlayer }) => {
     case "loading":
       return <Skeleton className="h-8 w-full" />;
     case "friends":
-      return (
+      // Friends can race each other at puzzles from here, but not from a
+      // game being played: a duel leaves the page, and its invite would
+      // land on the opponent's board
+      return canDuel ? (
+        <DuelInviteButton friend={player} />
+      ) : (
         <span className="flex h-8 items-center justify-center gap-1.5 text-sm text-muted-foreground">
           <Check className="size-4" aria-hidden="true" /> Friends
         </span>
@@ -222,7 +228,7 @@ export const PlayerCard = ({
       {!isSelf && <HeadToHead player={player} />}
 
       <div className={isSelf ? "grid" : "grid grid-cols-2 gap-2"}>
-        {!isSelf && <Friendship player={player} />}
+        {!isSelf && <Friendship player={player} canDuel={!profileInNewTab} />}
         <Button asChild variant="outline" size="sm">
           <Link
             to={getProfileRoute(player.id)}

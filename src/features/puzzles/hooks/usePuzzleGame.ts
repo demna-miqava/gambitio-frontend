@@ -23,6 +23,12 @@ const tryMove = (chess: Chess, uci: string): Move | null => {
   }
 };
 
+/**
+ * Chessground's own move only carries the piece across (castling included):
+ * a promotion or an en passant capture needs the position from chess.js.
+ */
+const needsFenSync = (move: Move) => !!move.promotion || move.flags.includes("e");
+
 const REPLY_DELAY_MS = 500;
 
 /**
@@ -92,12 +98,17 @@ export const usePuzzleGame = ({
   }, []);
   useEffect(() => clearTimers, [clearTimers]);
 
+  // Bumped whenever the board starts over (new puzzle, retry, solution), so
+  // a server answer for an earlier attempt at the same puzzle is dropped
+  const boardRunRef = useRef(0);
+
   // The puzzle the board was last turned to the solver's side for
   const orientedPuzzleRef = useRef<Puzzle["id"] | null>(null);
   const resetBoard = useCallback(
     (newPuzzle: Puzzle | null) => {
       if (!newPuzzle) return;
       clearTimers();
+      boardRunRef.current += 1;
 
       const chess = chessRef.current;
 
@@ -173,6 +184,7 @@ export const usePuzzleGame = ({
         const currentTurn = chess.turn() === "w" ? "white" : "black";
 
         api.set({
+          ...(needsFenSync(replyMove) ? { fen: chess.fen() } : {}),
           turnColor: currentTurn,
           movable: {
             dests: calculateLegalMoves(chess),
@@ -275,13 +287,15 @@ export const usePuzzleGame = ({
       const api = cgRef.current;
       const chess = chessRef.current;
       const asked = puzzle;
+      const run = boardRunRef.current;
+      // Moved on to another puzzle, or started this one over, meanwhile
+      const stale = () => puzzleRef.current?.id !== asked.id || boardRunRef.current !== run;
       api.set({ movable: { color: undefined } });
 
       verifier
         .check(asked.id, [...playerMoves(asked.moves, moveIndex), uciMove])
         .then((result) => {
-          // Moved on to another puzzle meanwhile
-          if (puzzleRef.current?.id !== asked.id) return;
+          if (stale()) return;
           const played = result.line[moveIndex];
           let shown = move;
           // Only the promotion piece is swapped: an alternative mate the
@@ -308,7 +322,7 @@ export const usePuzzleGame = ({
         })
         .catch((error) => {
           console.error("Failed to check puzzle move", error);
-          if (puzzleRef.current?.id !== asked.id) return;
+          if (stale()) return;
           // Take the move back so it can be played again
           chess.undo();
           const turn = chess.turn() === "w" ? "white" : "black";
@@ -351,6 +365,7 @@ export const usePuzzleGame = ({
           const move = tryMove(chess, orig + dest + (isPromotion ? promotion : ""));
 
           if (!move) return;
+          if (needsFenSync(move)) api.set({ fen: chess.fen() });
 
           const uciMove =
             move.from + move.to + (move.promotion ? move.promotion : "");
@@ -392,6 +407,7 @@ export const usePuzzleGame = ({
     const chess = chessRef.current;
     const api = cgRef.current;
     clearTimers();
+    boardRunRef.current += 1;
 
     // Reset board to initial puzzle position
     try {
@@ -437,6 +453,7 @@ export const usePuzzleGame = ({
 
       const turnColor = chess.turn() === "w" ? "white" : "black";
       api.set({
+        ...(needsFenSync(moveResult) ? { fen: chess.fen() } : {}),
         turnColor,
         check: chess.inCheck(),
       });

@@ -13,6 +13,7 @@ export const useUser = () => {
   const {
     data: profileStatus,
     isFetched: profileFetched,
+    isFetching: profileFetching,
     isError,
     error,
     refetch,
@@ -41,8 +42,11 @@ export const useUser = () => {
   const email =
     chessProfile?.email || clerkUser?.primaryEmailAddress?.emailAddress;
 
-  // isPending until Clerk loaded AND profile status fetched (when signed in)
-  const isPending = !clerkLoaded || (isSignedIn && !profileFetched);
+  // isPending until Clerk loaded AND profile status fetched (when signed in),
+  // and again while Retry asks for a status we never got (otherwise the
+  // error screen stays as it is, as if Retry did nothing)
+  const isPending =
+    !clerkLoaded || (isSignedIn && (!profileFetched || (!profileStatus && profileFetching)));
   const isAuthenticated = clerkLoaded && isSignedIn;
 
   return {

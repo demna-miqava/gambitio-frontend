@@ -48,7 +48,8 @@ export function parsePgn(pgn: string): ParsedPgn {
 
   for (const [token] of movetext.matchAll(TOKEN_RE)) {
     if (token.startsWith("{") || token.startsWith(";") || token.startsWith("$")) continue;
-    if (/^\d+\.(\.\.)?$/.test(token) || /^(1-0|0-1|1\/2-1\/2|\*)$/.test(token)) continue;
+    // Move numbers, also a black move's spaced out ("1. ... e5"), and results
+    if (/^\d+\.(\.\.)?$/.test(token) || token === "..." || /^(1-0|0-1|1\/2-1\/2|\*)$/.test(token)) continue;
 
     if (token === "(") {
       if (!last) throw new PgnParseError("Variation before any move");

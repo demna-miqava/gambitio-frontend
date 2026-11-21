@@ -121,11 +121,12 @@ export type ChallengeDeclinedNotification = {
   type: NOTIFICATION_MESSAGE_TYPES.CHALLENGE_DECLINED;
   /**
    * Who declined. `reason` is set when nobody declined: the challenge expired
-   * unanswered, or was withdrawn because the sender went offline.
+   * unanswered, was withdrawn because the sender went offline, or went
+   * because the sender (this player) started a game ("playing").
    */
   data?: {
     challengedId?: number;
-    reason?: "expired" | "offline";
+    reason?: "expired" | "offline" | "playing";
   };
 };
 

@@ -63,6 +63,8 @@ interface BotSelectorProps {
   onSelectBot: (bot: Bot) => void;
   selectedColor: PlayerColorOption;
   onSelectColor: (color: PlayerColorOption) => void;
+  /** A position set up in the board editor: the game starts there and isn't saved */
+  startFen?: string;
 }
 
 export const BotSelector = ({
@@ -70,6 +72,7 @@ export const BotSelector = ({
   onSelectBot,
   selectedColor,
   onSelectColor,
+  startFen,
 }: BotSelectorProps) => {
   const navigate = useNavigate();
   const { ref: listRef, edges, onScroll } = useScrollEdges<HTMLDivElement>();
@@ -83,7 +86,7 @@ export const BotSelector = ({
           : "black"
         : selectedColor;
     navigate(ROUTES.BOT_GAME, {
-      state: { botId: selectedBot.id, color: finalColor, gameKey: Date.now() },
+      state: { botId: selectedBot.id, color: finalColor, gameKey: Date.now(), ...(startFen && { startFen }) },
     });
   };
 
@@ -91,7 +94,11 @@ export const BotSelector = ({
     <div className="flex flex-col gap-5 rounded-2xl bg-card p-4 sm:p-5">
       <PageHeader
         title="Play the computer"
-        description="Choose an opponent. Games against the computer aren't rated."
+        description={
+          startFen
+            ? "Choose an opponent for the position you set up. Games from a set-up position aren't rated or kept."
+            : "Choose an opponent. Games against the computer aren't rated."
+        }
       />
 
       {/* Phones scroll the page; only the two-column layout gets a scroll box */}

@@ -98,6 +98,14 @@ describe("ReviewEngine", () => {
     worker.onerror?.({ message: "wasm failed" });
     await expect(search).rejects.toThrow("wasm failed");
   });
+
+  test("a worker that crashed between searches fails the next one", async () => {
+    const worker = new FakeStockfish(searches);
+    const engine = new ReviewEngine(() => worker);
+    await engine.evaluate(START, { depth: 12, moveTimeMs: 400 });
+    worker.onerror?.({ message: "wasm failed" });
+    await expect(engine.evaluate(AFTER_E4)).rejects.toThrow("wasm failed");
+  });
 });
 
 describe("runReview", () => {
