@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,7 +7,15 @@ import { PlayerCard } from "./PlayerPopover";
 
 // The viewer is player 1
 vi.mock("@/hooks/useUser", () => ({ useUser: () => ({ id: 1, image: "" }) }));
-vi.mock("../hooks/useFriendship", () => ({ useFriendship: () => ({ kind: "none" }) }));
+// Strangers unless a test says otherwise
+const friendship = vi.hoisted(() => ({ kind: "none", invited: [] as number[] }));
+vi.mock("../hooks/useFriendship", () => ({ useFriendship: () => ({ kind: friendship.kind }) }));
+vi.mock("@/features/puzzles/duel/hooks/useDuelInvites", () => ({
+  useDuelInvites: () => ({
+    outgoing: friendship.invited.map((id) => ({ to: { id } })),
+    send: { isPending: false, mutate: () => {} },
+  }),
+}));
 
 const profile = (id: number, username: string) => ({
   user: {
@@ -66,6 +74,11 @@ const render = (
 
 const opponent = { id: 2, username: "gambit_gal" };
 
+afterEach(() => {
+  friendship.kind = "none";
+  friendship.invited = [];
+});
+
 describe("PlayerCard", () => {
   it("shows when the player joined, their ratings and your record against them", () => {
     const html = render(opponent);
@@ -92,6 +105,31 @@ describe("PlayerCard", () => {
   it("opens the profile in a new tab during a game", () => {
     expect(render(opponent, { profileInNewTab: true })).toContain('target="_blank"');
     expect(render(opponent)).not.toContain('target="_blank"');
+  });
+
+  it("offers a friend a puzzle duel", () => {
+    friendship.kind = "friends";
+    const html = render(opponent);
+    expect(html).toContain('aria-label="Invite gambit_gal to a puzzle duel"');
+    expect(html).toContain("Duel");
+    expect(html).not.toContain("Add friend");
+  });
+
+  it("shows a duel invite that is already waiting for the friend's answer", () => {
+    friendship.kind = "friends";
+    friendship.invited = [2];
+    const html = render(opponent);
+    expect(html).toContain('aria-label="Puzzle duel invite sent to gambit_gal"');
+    expect(html).toContain("Invited");
+  });
+
+  it("offers no duel from a game being played: the friend is only named as one", () => {
+    friendship.kind = "friends";
+    // The card of the game's page, while the game is on
+    const html = render(opponent, { profileInNewTab: true });
+    expect(html).not.toContain("puzzle duel");
+    expect(html).not.toContain("Duel");
+    expect(html).toContain("Friends");
   });
 
   it("has no record, friend request or block menu on your own card", () => {

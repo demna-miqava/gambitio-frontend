@@ -52,11 +52,15 @@ const Coordinates = () => {
     startButtonFocusRef.current = true;
   }, [options, record, scores.data?.bests, start]);
 
-  // Start and Play again unmount with their panel: keep focus in the new one
+  // Start and Play again unmount with their panel: keep focus in the new
+  // one. Without scrolling to it: on a phone the panel is below the board,
+  // and the run is played on the board, so that is what comes into view
+  // (the top of the page; on a wide screen it already is)
   useEffect(() => {
     if (run?.phase === "ready" && startButtonFocusRef.current) {
       startButtonFocusRef.current = false;
-      runPanelRef.current?.focus();
+      runPanelRef.current?.focus({ preventScroll: true });
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
   }, [run?.phase]);
 
@@ -86,7 +90,10 @@ const Coordinates = () => {
     if (!finished || !resultRef.current) return;
     playGameEndSoundRef.current();
     mutate(resultRef.current);
-    playAgainRef.current?.focus();
+    // Focus doesn't scroll for a button that is in the window but under the
+    // phone's bottom bar, so bring it clear of that (see its scroll margin)
+    playAgainRef.current?.focus({ preventScroll: true });
+    playAgainRef.current?.scrollIntoView({ block: "nearest" });
   }, [finished, mutate]);
 
   const onSquare = useCallback(
@@ -150,6 +157,10 @@ const Coordinates = () => {
   return (
     <GameLayout
       bareBoard
+      // Before a run the board only previews the options: on a phone it
+      // would push Start below the fold, so the controls come alone there
+      // and the board appears with the run
+      boardIsDecorative={!run}
       board={
         <CoordinatesBoard
           perspective={shownOptions.perspective}

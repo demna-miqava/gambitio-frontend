@@ -88,7 +88,13 @@ export const RunResult = forwardRef<HTMLButtonElement, RunResultProps>(
         )}
 
         <div className="grid gap-2 sm:grid-cols-2">
-          <Button ref={playAgainRef} size="lg" onClick={onPlayAgain}>
+          {/* Scrolled into view when the run ends: clear of the phone's bottom bar (AppLayout's padding for it) */}
+          <Button
+            ref={playAgainRef}
+            size="lg"
+            className="scroll-mb-[calc(5rem+env(safe-area-inset-bottom))] md:scroll-mb-4"
+            onClick={onPlayAgain}
+          >
             <Play aria-hidden="true" /> Play again
           </Button>
           <Button size="lg" variant="outline" onClick={onChangeOptions}>
