@@ -1,58 +1,33 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import type {
-  GameEndReason,
   GameEndedMessage,
   InitialGameStateMessage,
 } from "@/features/game/types/websocket-messages";
 import { useChessSound } from "@/features/game/contexts/ChessSoundContext";
 import { useUser } from "@/hooks/useUser";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
-import { getGameEndMessage } from "../constants/gameEndMessages";
+import { getGameEndMessage, type PlayerEndMessage } from "../constants/gameEndMessages";
 import { useLiveGame } from "../contexts/LiveGameContext";
 import { GAME_MESSAGE_TYPES } from "@/features/game/constants/websocket-types";
 import { useMessageDispatcher } from "@/hooks/useMessageDispatcher";
 import { gameMessages } from "@/services/websocketMessageDispatcher";
 
-export type FinishState = {
-  title: string;
-  description?: string;
-};
+export type FinishState = PlayerEndMessage;
 
 const NOT_CONNECTED = "Not connected. Try again when you're back online.";
 
 /**
- * Endings caused by the last move on the board. The result dialog waits a
- * moment for these, so the final move is seen before the dialog covers it.
- */
-const ENDED_ON_BOARD: ReadonlySet<GameEndReason> = new Set([
-  "checkmate",
-  "stalemate",
-  "threefold_repetition",
-  "insufficient_material",
-  "fifty_move_rule",
-]);
-export const RESULT_DIALOG_DELAY_MS = 1000;
-
-/**
  * Resign/abort, and the game result: `finish` is set when the game ends here
- * (and opens the result dialog) or when a finished game is opened.
+ * or when a finished game is opened. The side rail shows it (GameOutcome).
  */
 export const useGameActions = () => {
-  const { game, sendMessage } = useLiveGame();
+  const { game, sendMessage, opponent, announce } = useLiveGame();
   const { ply } = useChessBoardContext();
   const { playGameEndSound } = useChessSound();
   const { id: currentUserId } = useUser();
 
-  const [openGameResultDialog, setOpenGameResultDialog] = useState(false);
   const [finish, setFinish] = useState<FinishState | null>(null);
-  const dialogTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (dialogTimerRef.current) clearTimeout(dialogTimerRef.current);
-    },
-    []
-  );
 
   // The server allows aborting until both players have made a move of their
   // own: an opening's moves (startPly) don't count
@@ -63,27 +38,19 @@ export const useGameActions = () => {
       const { reason, winnerId } = data;
 
       const isWinner = winnerId === currentUserId;
-      const message = getGameEndMessage(reason, isWinner, winnerId === null);
+      const message = getGameEndMessage(reason, isWinner, winnerId === null, opponent.username);
 
       if (message) {
         setFinish(message);
-        if (dialogTimerRef.current) clearTimeout(dialogTimerRef.current);
-        if (ENDED_ON_BOARD.has(reason)) {
-          dialogTimerRef.current = setTimeout(() => {
-            dialogTimerRef.current = null;
-            setOpenGameResultDialog(true);
-          }, RESULT_DIALOG_DELAY_MS);
-        } else {
-          setOpenGameResultDialog(true);
-        }
-        // No live-region announcement: the dialog takes focus and is read out
+        // The result appears beside the board, where nothing takes focus
+        announce(`${message.title}, ${message.description}`);
         playGameEndSound();
       }
     },
-    [playGameEndSound, currentUserId]
+    [playGameEndSound, currentUserId, opponent.username, announce]
   );
 
-  // Opening an already finished game: show the result, without the dialog
+  // Opening an already finished game: show the result, with nothing read out
   const handleInitialState = useCallback(
     ({ data }: InitialGameStateMessage) => {
       if (!data.isFinished || !data.reason) return;
@@ -91,11 +58,12 @@ export const useGameActions = () => {
       const message = getGameEndMessage(
         data.reason,
         winnerId === currentUserId,
-        winnerId === null
+        winnerId === null,
+        opponent.username
       );
       if (message) setFinish((current) => current ?? message);
     },
-    [currentUserId]
+    [currentUserId, opponent.username]
   );
 
   useMessageDispatcher<GameEndedMessage>(
@@ -120,8 +88,6 @@ export const useGameActions = () => {
   const onAbort = useCallback(() => send(GAME_MESSAGE_TYPES.ABORT), [send]);
 
   return {
-    openGameResultDialog,
-    setOpenGameResultDialog,
     finish,
     onResign,
     onAbort,

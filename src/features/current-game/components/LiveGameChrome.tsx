@@ -3,11 +3,12 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { LeaveGameDialog } from "@/components/LeaveGameDialog";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
 import { useLiveGame } from "../contexts/LiveGameContext";
+import { FocusHint } from "@/features/game-tools/FocusHint";
 
 /**
  * The parts of the live game page that aren't board or panel: the page
- * heading and live region for screen readers, the tab title, and the
- * "Leave the game?" prompt while the game is on.
+ * heading and live region for screen readers, the tab title, focus mode's
+ * way out, and the "Leave the game?" prompt while the game is on.
  */
 export const LiveGameChrome = () => {
   const { game, spectating, gameEnded, connectionStatus, announcement } =
@@ -38,6 +39,7 @@ export const LiveGameChrome = () => {
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {announcement}
       </div>
+      {!spectating && <FocusHint />}
       <LeaveGameDialog
         blocker={blocker}
         description="Your clock keeps running while you're away. You can get back to the game from Home."

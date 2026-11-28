@@ -4,6 +4,9 @@ import { BoardLayout } from "@/features/game/components/BoardLayout";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { PlayerPopover } from "@/features/profile/components/PlayerPopover";
 import { useCallback, useEffect, useRef, useMemo } from "react";
+import { DisconnectedMark } from "./DisconnectedMark";
+import { usePlayerConnections } from "../hooks/useOpponentConnection";
+import { cn } from "@/lib/utils";
 import { useSettings } from "@/features/settings/SettingsContext";
 import { calculatePlayerRating } from "../utils/rating-helpers";
 import { useChessBoardContext } from "@/features/game/contexts/ChessBoardContext";
@@ -35,6 +38,9 @@ const CurrentGameBoard = () => {
     receivedTime,
   } = useLiveGame();
   const timeoutSentRef = useRef(false);
+  // The opponent away from the board (their connection to the game closed
+  // and stayed closed): said beside their name, with the avatar stepped back
+  const opponentAway = usePlayerConnections().statusOf(opponent.id).away;
   const shownLine = useShownLine();
   const { settings } = useSettings();
 
@@ -97,32 +103,46 @@ const CurrentGameBoard = () => {
   const opponentClockActive = clockRunning && turn !== color;
   const playerClockActive = clockRunning && turn === color;
 
-  // The players' cards open from their avatars. They follow the "ratings
+  // The players' cards open from their names and avatars. They follow the "ratings
   // during a game" setting, and the profile opens in a new tab while the
   // game is on so it isn't left.
   const playerCard = {
     showRatings: settings?.showRatingsDuringGameEnabled ?? false,
     profileInNewTab: !gameEnded,
+    speed: game.type,
   };
   const opponentRow = {
     name: opponentUsername,
+    nameSlot: (
+      <PlayerPopover player={opponent} gameId={game.id} trigger="name" {...playerCard}>
+        {opponentUsername}
+      </PlayerPopover>
+    ),
     startingRating: opponentRatings.startingRating,
     provisional: opponent.provisional,
     newRating: opponentRatings.newRating,
     ratingChange: gameEnded ? opponentRatings.ratingChange : undefined,
+    status: opponentAway && <DisconnectedMark />,
     avatar: (
       <PlayerPopover player={opponent} gameId={game.id} {...playerCard}>
-        <PlayerAvatar
-          username={opponentUsername}
-          avatarUrl={opponent.avatarUrl}
-          isOpponent
-          size="sm"
-        />
+        <span className={cn("flex transition-opacity", opponentAway && "opacity-50")}>
+          <PlayerAvatar
+            username={opponentUsername}
+            avatarUrl={opponent.avatarUrl}
+            isOpponent
+            size="sm"
+          />
+        </span>
       </PlayerPopover>
     ),
   };
   const playerRow = {
     name: username,
+    nameSlot: (
+      <PlayerPopover player={player} trigger="name" {...playerCard}>
+        {username}
+      </PlayerPopover>
+    ),
     startingRating: playerRatings.startingRating,
     provisional: player.provisional,
     newRating: playerRatings.newRating,
@@ -146,7 +166,17 @@ const CurrentGameBoard = () => {
     </div>
   );
   const playerClock = (
-    <div className="flex shrink-0 flex-col items-center">
+    <div className="flex shrink-0 items-center gap-2">
+      {/* Beside the clock, inside the strip: under it would stick out below
+          the board column when the player's strip is the bottom one */}
+      {receivedTime && (
+        <span
+          className="text-xs font-semibold whitespace-nowrap tabular-nums text-rating-up"
+          aria-hidden="true"
+        >
+          +{receivedTime.seconds}s<span className="max-sm:hidden"> received</span>
+        </span>
+      )}
       <Clock
         startingTime={startingTime(color)}
         isActive={playerClockActive}
@@ -154,12 +184,6 @@ const CurrentGameBoard = () => {
         gameEnded={gameEnded}
         serverTimeLeft={color === "white" ? whiteTimeLeft : blackTimeLeft}
       />
-      <span
-        className="h-4 text-xs font-semibold tabular-nums text-emerald-700 dark:text-emerald-400"
-        aria-hidden="true"
-      >
-        {receivedTime ? `+${receivedTime.seconds}s received` : ""}
-      </span>
     </div>
   );
   // The player is at the bottom unless they flipped the board

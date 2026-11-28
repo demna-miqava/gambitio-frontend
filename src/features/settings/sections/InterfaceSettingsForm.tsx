@@ -84,14 +84,15 @@ const PaletteSwatch = ({ palette }: { palette: Palette }) => {
 const PaletteSetting = () => {
   const { palette: devicePalette } = useTheme();
   const { settings, updateSettings } = useSettings();
-  const palette = settings?.colorPalette ?? devicePalette;
+  // An account may still hold one of the palettes that were removed
+  const palette = isPaletteId(settings?.colorPalette) ? settings.colorPalette : devicePalette;
 
   return (
     <div className="space-y-3 border-b border-border pb-4">
       <div className="space-y-0.5">
         <p className="text-sm font-medium leading-none">Colours</p>
         <p className="text-sm text-muted-foreground">
-          The palette for the app and the board, in light and dark
+          The theme for the app and the board, in light and dark
         </p>
       </div>
       <RadioGroupPrimitive.Root
@@ -101,7 +102,7 @@ const PaletteSetting = () => {
         }
         disabled={!settings}
         aria-label="Colours"
-        className="grid grid-cols-2 gap-2.5 lg:grid-cols-3"
+        className="grid grid-cols-2 gap-2.5"
       >
         {PALETTES.map((option) => (
           <RadioGroupPrimitive.Item

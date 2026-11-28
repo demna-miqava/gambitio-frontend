@@ -36,6 +36,15 @@ export const takebackRequestText = (ply: number, me: PlayerColor): string =>
     ? "Your opponent asked to take back their last move and your reply"
     : "Your opponent asked to take back their last move";
 
+/**
+ * The same, as what follows the opponent's name in the side rail:
+ * "ann asks to take back their last move."
+ */
+export const takebackRequestDetail = (ply: number, me: PlayerColor): string =>
+  takebackPlies(ply, opponentOf(me)) === 2
+    ? "asks to take back their last move and your reply."
+    : "asks to take back their last move.";
+
 /** A player's view of takeback requests (see useTakeback) */
 export interface TakebackState {
   /** The opponent is waiting for this player's answer */

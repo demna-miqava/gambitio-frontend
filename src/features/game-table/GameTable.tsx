@@ -32,6 +32,16 @@ export type GameTableProps = {
   title?: string;
   actionHref?: string;
   limit?: number;
+  /**
+   * Home's recent games: a larger heading with an accent "View all" link,
+   * and a "Review" link at the end of each row (preview variant only)
+   */
+  review?: boolean;
+  /**
+   * Show at most this many of the fetched games (preview only). Home sets it
+   * to what fits on screen; `limit` is still what is fetched.
+   */
+  maxRows?: number;
 };
 
 export const GameTable = ({
@@ -39,6 +49,8 @@ export const GameTable = ({
   title = "Recent games",
   actionHref,
   limit = 10,
+  review = false,
+  maxRows,
 }: GameTableProps) => {
   const isPreview = variant === "preview";
   const userId = useProfileUserId();
@@ -62,8 +74,10 @@ export const GameTable = ({
     filterable: !isPreview,
   });
   const filtered = activeFilters > 0;
+  const rows = isPreview && maxRows !== undefined ? Math.min(maxRows, limit) : limit;
+  const shown = rows < limit ? games.slice(0, rows) : games;
 
-  const columns = useMemo(() => createColumns(userId), [userId]);
+  const columns = useMemo(() => createColumns(userId, { review: isPreview && review }), [userId, isPreview, review]);
 
   const paginationProps = useMemo(() => {
     const totalPages = pagination?.totalPages ?? 1;
@@ -118,7 +132,19 @@ export const GameTable = ({
 
   return (
     <section className="space-y-3">
-      {isPreview && actionHref ? (
+      {isPreview && review ? (
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-display text-xl leading-tight text-foreground sm:text-[22px]">{title}</h2>
+          {actionHref && games.length > 0 && (
+            <Link
+              to={actionHref}
+              className="relative touch-target text-[13px] font-semibold text-primary underline-offset-[3px] hover:underline"
+            >
+              View all
+            </Link>
+          )}
+        </div>
+      ) : isPreview && actionHref ? (
         <SectionHeader
           title={title}
           action={
@@ -167,10 +193,10 @@ export const GameTable = ({
       >
         <DataTable
           columns={columns}
-          data={games}
+          data={shown}
           enablePagination={!isPreview}
           isLoading={showLoading}
-          pageSize={limit}
+          pageSize={rows}
           onPageChange={setPage}
           emptyState={emptyState}
           {...paginationProps}
@@ -182,10 +208,10 @@ export const GameTable = ({
         aria-busy={isPlaceholderData || undefined}
       >
         <GameList
-          games={games}
+          games={shown}
           userId={userId}
           isLoading={showLoading}
-          rows={limit}
+          rows={rows}
           emptyState={emptyState}
         />
         {!isPreview && <Pagination onPageChange={setPage} {...paginationProps} />}

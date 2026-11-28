@@ -47,12 +47,15 @@ describe("isNavItemActive", () => {
 
   it("highlights one item per section", () => {
     expect(activeTitles("/home")).toEqual(["Home"]);
-    expect(activeTitles("/puzzles/rush")).toEqual(["Puzzles"]);
+    expect(activeTitles("/puzzles/rush")).toEqual(["Train"]);
     expect(activeTitles("/archive/3")).toEqual(["Analysis"]);
     expect(activeTitles("/leaderboard")).toEqual(["Leaderboard"]);
     expect(activeTitles("/watch")).toEqual(["Watch"]);
-    expect(activeTitles("/endgames/kq-vs-k")).toEqual(["Puzzles"]);
-    expect(activeTitles("/repertoire")).toEqual(["Analysis"]);
+    expect(activeTitles("/endgames/kq-vs-k")).toEqual(["Train"]);
+    expect(activeTitles("/drills")).toEqual(["Train"]);
+    expect(activeTitles("/coordinates")).toEqual(["Train"]);
+    // Your openings are something you practise, not an analysis tool
+    expect(activeTitles("/repertoire")).toEqual(["Train"]);
     expect(activeTitles("/study/4")).toEqual(["Analysis"]);
     expect(activeTitles("/series/2")).toEqual(["Play"]);
     expect(activeTitles("/tournaments")).toEqual(["Tournaments"]);

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getGameRoute } from "@/constants/routes";
 import { cn } from "@/lib/utils";
+import { UpNextRow } from "@/components/home/UpNextRow";
 import { useActiveGame } from "./useActiveGame";
 
 const LABEL = "Return to your game in progress";
@@ -21,29 +22,27 @@ const LiveDot = ({ className }: { className?: string }) => (
   </span>
 );
 
-/** Home: a card above everything else while a game is waiting for you. */
+/**
+ * Home, in "Up next": a row while a game is waiting for you. Renders only
+ * the row, so it belongs in a list (see UpNextRow).
+ */
 export const ReturnToGameBanner = () => {
   const gameId = useActiveGame();
   if (gameId === null) return null;
 
   return (
-    <section
+    <UpNextRow
       aria-label="Game in progress"
-      className="flex flex-col gap-3 rounded-2xl bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
-    >
-      <div className="min-w-0">
-        <p className="flex items-center gap-2.5 font-display text-xl text-foreground">
-          <LiveDot className="text-primary" />
-          Game in progress
-        </p>
-        <p className="text-sm text-muted-foreground">Pick up where you left off.</p>
-      </div>
-      <Button asChild className="h-11 sm:h-10">
-        <Link to={getGameRoute(gameId)}>
-          Return to game
-        </Link>
-      </Button>
-    </section>
+      icon={<Swords className="size-5" aria-hidden="true" />}
+      accent
+      title="Game in progress"
+      description="Pick up where you left off."
+      actions={
+        <Button asChild className="min-h-11 min-w-31 flex-1 sm:min-h-9 sm:flex-none">
+          <Link to={getGameRoute(gameId)}>Return to game</Link>
+        </Button>
+      }
+    />
   );
 };
 

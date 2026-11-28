@@ -12,6 +12,10 @@ import { useTimeControl, type TimeControl } from "./hooks/useTimeControl";
 import type { TimeControlType } from "@/types";
 import type { Friend } from "@/types";
 import { useMatchmaking } from "@/features/matchmaking/hooks/useMatchmaking";
+import { useRatedPreference } from "@/features/matchmaking/hooks/useRatedPreference";
+import { closestBot, type Bot } from "@/features/play-bots/constants/bots";
+import type { PlayerColorOption } from "@/types/game.types";
+import { useUser } from "@/hooks/useUser";
 import { getUserProfile } from "@/services/user";
 import { QKEY_USER_PROFILE } from "@/constants/queryKeys";
 import { ROUTES } from "@/constants/routes";
@@ -67,6 +71,15 @@ interface GameSetupContextValue {
   isSearching: boolean;
   isConnecting: boolean;
   setShouldConnect: (shouldConnect: boolean) => void;
+  /** Whether "Play online" looks for a rated game or a casual one */
+  rated: boolean;
+  setRated: (rated: boolean) => void;
+
+  // Against the computer (the "A bot" tab): kept here for the board beside it
+  bot: Bot;
+  setBot: (bot: Bot) => void;
+  botColor: PlayerColorOption;
+  setBotColor: (color: PlayerColorOption) => void;
 }
 
 const GameSetupContext = createContext<GameSetupContextValue | null>(null);
@@ -96,10 +109,24 @@ export const GameSetupProvider = ({
   // starts from the last challenge you sent (the terms one tap on a friend
   // sends), or from the online one before your first challenge
   const { timeControl: onlineTimeControl, updateTimeControl: setOnlineTimeControl } = useTimeControl();
+  const [rated, setRatedPreference] = useRatedPreference();
   const { isSearching, isConnecting, setShouldConnect } = useMatchmaking({
     time: onlineTimeControl.time,
     increment: onlineTimeControl.increment,
+    rated,
   });
+  // Like the time control, it can't change under a running search
+  const setRated = useCallback(
+    (next: boolean) => {
+      if (!isSearching) setRatedPreference(next);
+    },
+    [isSearching, setRatedPreference]
+  );
+  const { blitzRating } = useUser();
+  // The bot nearest the player's blitz rating until they pick one
+  const [pickedBot, setBot] = useState<Bot | null>(null);
+  const bot = pickedBot ?? closestBot(blitzRating);
+  const [botColor, setBotColor] = useState<PlayerColorOption>("random");
   const lastChallenge = useLastChallenge();
   // Picked in the form. Like the opening it belongs to the friend it was
   // picked for: another friend's form starts over
@@ -169,7 +196,7 @@ export const GameSetupProvider = ({
     [goTo]
   );
 
-  const canGoBack = activeSection !== "new" && activeSection !== "friends";
+  const canGoBack = activeSection === "custom" || activeSection === "friend-invite-options";
   const goBack = useCallback(() => {
     // Pop the entry we pushed, so the browser's Back and ours agree
     if (isSetupStep) {
@@ -229,8 +256,18 @@ export const GameSetupProvider = ({
       isSearching,
       isConnecting,
       setShouldConnect,
+      rated,
+      setRated,
+      bot,
+      setBot,
+      botColor,
+      setBotColor,
     }),
     [
+      rated,
+      setRated,
+      bot,
+      botColor,
       startingOpening,
       setStartingOpening,
       activeSection,

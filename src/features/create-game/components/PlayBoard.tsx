@@ -9,6 +9,7 @@ import { useGameSetup } from "../GameSetupContext";
 import { ClockFace } from "@/features/game/components/ClockFace";
 import { formatTime } from "@/features/game/utils/time-formatter";
 import type { TimeControl } from "../hooks/useTimeControl";
+import { BotAvatar } from "@/features/play-bots/components/BotAvatar";
 
 type Ratings = { blitzRating?: number; bulletRating?: number; rapidRating?: number };
 
@@ -44,7 +45,11 @@ const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 export const PlayBoard = () => {
   const user = useUser();
   const { username, image } = user;
-  const { timeControl, selectedFriend, isSearching, activeSection, startingOpening } = useGameSetup();
+  const { timeControl, selectedFriend, isSearching, activeSection, startingOpening, bot, botColor } =
+    useGameSetup();
+  // The "A bot" tab: the bot across the board, from the side picked, no clocks
+  const againstBot = activeSection === "bot";
+  const orientation = againstBot && botColor === "black" ? "black" : "white";
   const boardRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
 
@@ -69,7 +74,16 @@ export const PlayBoard = () => {
   useEffect(() => {
     cgRef.current?.set({ fen });
   }, [fen]);
-  const topPlayer = friend
+  useEffect(() => {
+    cgRef.current?.set({ orientation });
+  }, [orientation]);
+  const topPlayer = againstBot
+    ? {
+        name: bot.name,
+        startingRating: bot.rating,
+        avatar: <BotAvatar rating={bot.rating} className="size-8 rounded-lg" />,
+      }
+    : friend
     ? {
         name: friend.username,
         startingRating: ratingFor(friend, timeControl.format),
@@ -90,11 +104,12 @@ export const PlayBoard = () => {
       topPlayer={topPlayer}
       bottomPlayer={{
         name: username,
-        startingRating: ratingFor(user, timeControl.format),
+        // No rating beside the name against a bot: the game isn't rated
+        startingRating: againstBot ? undefined : ratingFor(user, timeControl.format),
         avatar: <PlayerAvatar username={username} avatarUrl={image} size="sm" />,
       }}
-      topPlayerClock={<ClockFace>{startingTime}</ClockFace>}
-      bottomPlayerClock={<ClockFace>{startingTime}</ClockFace>}
+      topPlayerClock={againstBot ? undefined : <ClockFace>{startingTime}</ClockFace>}
+      bottomPlayerClock={againstBot ? undefined : <ClockFace>{startingTime}</ClockFace>}
     />
   );
 };

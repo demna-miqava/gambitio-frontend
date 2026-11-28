@@ -57,3 +57,8 @@ export const QKEY_CONVERSION_DRILLS = "conversion-drills";
 export const QKEY_TABLE_GAME_REQUESTS = "table-game-requests";
 /** Table mode's friend picker: [key, userId, search] */
 export const QKEY_TABLE_FRIEND_PICKER = "table-friend-picker";
+export const QKEY_HOME_NEXT_PUZZLE = "home-next-puzzle";
+/** The days in a row with a solved puzzle */
+export const QKEY_PUZZLE_STREAK = "puzzle-streak";
+/** The search field's players, by what was typed */
+export const QKEY_PLAYER_SEARCH = "player-search";

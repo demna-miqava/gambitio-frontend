@@ -82,8 +82,20 @@ export type StoredGame = Omit<Game, "time" | "type" | "whitePlayer" | "blackPlay
   blackPlayer: StoredGamePlayer;
 };
 
-/** A row of the game history: no move list or position (GET /games/:id has those). */
-export type StoredGameListItem = Omit<StoredGame, "pgn" | "fen">;
+/**
+ * A row of the game history: no position, and no move list unless the page
+ * was asked for with it (GET /games/:id has both).
+ */
+export type StoredGameListItem = Omit<StoredGame, "pgn" | "fen"> & {
+  /**
+   * What the signed-in player's own computer review of the game came to:
+   * each side's accuracy (0 to 100; null for a side with no judged move).
+   * Null when they haven't reviewed it; absent from older servers.
+   */
+  accuracy?: { white: number | null; black: number | null } | null;
+  /** The moves, on a short page asked for with them (Home's recent games) */
+  pgn?: string | null;
+};
 
 export type PaginatedGamesResponse = {
   data: StoredGameListItem[];

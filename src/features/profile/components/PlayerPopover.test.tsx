@@ -40,6 +40,12 @@ const render = (
     blocked?: number[];
     /** Whether the card offers block and report (as the popover does) */
     moderation?: boolean;
+    /** The card as Home opens it: a friend can be challenged from it */
+    canChallenge?: boolean;
+    /** Games between the two, newest first (the record's recentGames) */
+    recentGames?: object[];
+    /** The block question is showing (held by whatever shows the card) */
+    confirmingBlock?: boolean;
   } = {}
 ) => {
   const queryClient = new QueryClient();
@@ -51,7 +57,7 @@ const render = (
     draws,
     losses,
     series: { won: 0, lost: 0, drawn: 0, active: 0 },
-    recentGames: [],
+    recentGames: props.recentGames ?? [],
     recentSeries: [],
   });
   queryClient.setQueryData(
@@ -65,7 +71,9 @@ const render = (
           player={player}
           showRatings={props.showRatings ?? true}
           profileInNewTab={props.profileInNewTab ?? false}
-          {...(props.moderation && { onModerate: () => {} })}
+          canChallenge={props.canChallenge ?? false}
+          {...(props.moderation && { onReport: () => {} })}
+          {...(props.confirmingBlock && { blockConfirm: { open: true, setOpen: () => {} } })}
         />
       </MemoryRouter>
     </QueryClientProvider>
@@ -93,13 +101,30 @@ describe("PlayerCard", () => {
 
   it("says so when you haven't finished a game against them", () => {
     const html = render(opponent, { record: [0, 0, 0] });
-    expect(html).toContain("No finished games against gambit_gal yet.");
+    expect(html).toContain("You haven&#x27;t played each other yet.");
   });
 
   it("leaves the ratings out while they're hidden during a game", () => {
     const html = render(opponent, { showRatings: false });
     expect(html).not.toContain("1534");
-    expect(html).toContain("Head to head");
+    expect(html).toContain("You against gambit_gal");
+  });
+
+  it("says how the last game against them went, with a way into its review", () => {
+    const game = (id: number, result: string, status = "finished") => ({
+      id,
+      status,
+      result,
+      winnerId: null,
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000 - 60_000).toISOString(),
+      whitePlayer: { id: 1, username: "queenside" },
+      blackPlayer: { id: 2, username: "gambit_gal" },
+    });
+    // The game being played right now isn't the last game
+    const html = render(opponent, { recentGames: [game(31, "", "in_progress"), game(30, "black_win")] });
+    expect(html).toMatch(/Last game: you lost, 2 hours ago\./);
+    expect(html).toContain('href="/archive/30?review=1"');
+    expect(render(opponent)).not.toContain("Last game");
   });
 
   it("opens the profile in a new tab during a game", () => {
@@ -132,25 +157,50 @@ describe("PlayerCard", () => {
     expect(html).toContain("Friends");
   });
 
-  it("has no record, friend request or block menu on your own card", () => {
+  it("has no record, friend request, block or report on your own card", () => {
     const html = render({ id: 1, username: "queenside" }, { moderation: true });
     expect(html).toContain("Joined Mar 9, 2025");
-    expect(html).not.toContain("Head to head");
+    expect(html).toContain("View profile");
+    expect(html).not.toContain("You against");
     expect(html).not.toContain("Add friend");
-    expect(html).not.toContain("More actions");
+    expect(html).not.toContain("Block");
+    expect(html).not.toContain("Report");
   });
 
   it("offers block and report on another player's card", () => {
-    expect(render(opponent, { moderation: true })).toContain(
-      'aria-label="More actions for gambit_gal"'
-    );
-    expect(render(opponent)).not.toContain("More actions");
+    const html = render(opponent, { moderation: true });
+    expect(html).toContain(">Block</button>");
+    expect(html).toContain(">Report</button>");
+    expect(render(opponent)).not.toContain("Report");
+  });
+
+  it("asks before blocking, in the card itself", () => {
+    const html = render(opponent, { moderation: true, confirmingBlock: true });
+    expect(html).toContain('role="alertdialog"');
+    expect(html).toContain("Block gambit_gal?");
+    expect(html).toContain(">Cancel</button>");
+    // The question takes the links' place
+    expect(html).not.toContain(">Report</button>");
+  });
+
+  it("offers a friend a challenge from Home, and never from a game being played", () => {
+    friendship.kind = "friends";
+    const home = render(opponent, { canChallenge: true });
+    expect(home).toContain('href="/play?section=friends&amp;friend=2"');
+    expect(home).toContain("Challenge");
+    expect(render(opponent, { canChallenge: true, profileInNewTab: true })).not.toContain("Challenge");
+    // Not a friend: the card offers the friend request instead
+    friendship.kind = "none";
+    expect(render(opponent, { canChallenge: true })).not.toContain("Challenge");
   });
 
   it("offers Unblock instead of Add friend for a player you've blocked", () => {
-    const html = render(opponent, { blocked: [2] });
+    const html = render(opponent, { blocked: [2], moderation: true });
     expect(html).toContain("Unblock");
     expect(html).not.toContain("Add friend");
+    // Already blocked: only Report is left among the quiet links
+    expect(html).not.toContain(">Block</button>");
+    expect(html).toContain(">Report</button>");
     // Blocking someone else changes nothing here
     expect(render(opponent, { blocked: [3] })).toContain("Add friend");
   });

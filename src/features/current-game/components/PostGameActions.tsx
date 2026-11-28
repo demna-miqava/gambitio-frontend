@@ -1,6 +1,5 @@
 import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ReviewGameLinks } from "@/features/game-review/components/ReviewGameLinks";
 import { getArchiveGameRoute, getGameReviewRoute, getGameRoute } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,8 +7,6 @@ import type { RematchState } from "../hooks/useRematch";
 import type { SeriesSummary } from "@/features/series/types";
 import { SeriesResultNote } from "@/features/series/components/SeriesResultNote";
 import { nextGameLabel } from "@/features/series/utils/seriesFormat";
-import RematchOffered from "./RematchOffered";
-import RematchRequested from "./RematchRequested";
 
 /** The page's one matchmaking connection (useMatchmaking), shared by every "New game" button */
 export interface NewGameSearch {
@@ -35,13 +32,24 @@ type Props = {
    * it): the offer is over, so link to that game instead.
    */
   rematchGameId?: number | null;
+  /** "ann" in "Waiting for ann"; "your opponent" without it */
+  opponentName?: string;
+  /**
+   * The time control a new game goes back into the queue for ("3+2"): the
+   * button reads "New 3+2". "New game" without it.
+   */
+  timeControl?: string;
+  /** The game was aborted: there's nothing to review, and no rematch to offer */
+  aborted?: boolean;
   className?: string;
 };
 
+const note = "text-sm font-semibold text-foreground";
+
 /**
- * Rematch and New game after the game, with the rematch offer/waiting/
- * declined states, and links to the game's review and analysis. Rendered in both the result dialog and the side panel,
- * from the same rematch and matchmaking state.
+ * What to do after the game: Rematch, straight back into the queue for the
+ * same time control, and the review. A rematch offer either way takes the
+ * place of the Rematch button, with who is waiting on whom above the row.
  */
 const PostGameActions = ({
   rematch,
@@ -50,6 +58,9 @@ const PostGameActions = ({
   series,
   viewerId,
   rematchGameId,
+  opponentName,
+  timeControl,
+  aborted = false,
   className,
 }: Props) => {
   const started = rematchGameId ?? null;
@@ -72,85 +83,140 @@ const PostGameActions = ({
   const timedMatchOn = series?.matchMinutes != null && series.status === "active";
   const nextGame = series?.status === "active" && started === null && !timedMatchOn ? series.next : null;
   const rematchLabel = nextGame ? `Next game (${nextGame.number} of ${series!.bestOf})` : "Rematch";
+  const them = opponentName ?? "your opponent";
+  const Them = opponentName ?? "Your opponent";
+  const newGameLabel = timeControl ? `New ${timeControl}` : "New game";
   // Leave the queue first, or matchmaking could pair us into a second game
   const acceptRematchAndStopSearch = () => {
     if (isSearching) setShouldConnect(false);
     acceptRematch();
   };
 
+  const newGame = (
+    <Button
+      size="md"
+      variant="outline"
+      onClick={() => setShouldConnect(!isSearching)}
+      aria-label={isSearching ? undefined : timeControl ? `New ${timeControl} game` : undefined}
+      className="min-w-0 bg-card px-2 max-md:h-11"
+    >
+      {isSearching ? "Cancel search" : newGameLabel}
+    </Button>
+  );
+  const review = (
+    <Button size="md" variant="outline" asChild className="min-w-0 bg-card px-2 max-md:h-11">
+      <Link to={getGameReviewRoute(gameId)}>Review game</Link>
+    </Button>
+  );
+
   return (
     <div className={cn("flex w-full flex-col gap-3", className)}>
       {series && <SeriesResultNote series={series} viewerId={viewerId} />}
       {nextGame && !rematchOffered && !rematchRequested && (
-        <p className="text-center text-xs text-muted-foreground">{nextGameLabel(series!, viewerId)}</p>
+        <p className="text-[13px] text-muted-foreground">{nextGameLabel(series!, viewerId)}</p>
       )}
       {rematchOffered && (
-        <RematchOffered
-          message={
-            nextGame ? `Your opponent is ready for game ${nextGame.number}` : undefined
-          }
-          onAcceptRematch={acceptRematchAndStopSearch}
-          onDeclineRematch={declineRematch}
-        />
+        <p className={note}>
+          {nextGame ? `${Them} is ready for game ${nextGame.number}.` : `${Them} wants a rematch.`}
+        </p>
       )}
       {rematchRequested && (
-        <RematchRequested onCancelRematchRequest={cancelRematch} />
+        <p className={note}>
+          {nextGame ? `Waiting for ${them}.` : `Rematch offered. Waiting for ${them}.`}
+        </p>
       )}
       {rematchDeclined && !rematchRequested && !rematchOffered && (
-        // Announced once by useRematch; this is shown in two places
-        <p className="text-center text-sm text-muted-foreground">
-          {nextGame
-            ? "Your opponent isn't ready for the next game."
-            : "Your opponent declined the rematch."}
+        // Announced once by useRematch
+        <p className="text-[13px] text-muted-foreground">
+          {nextGame ? `${Them} isn't ready for the next game.` : `${Them} declined the rematch.`}
         </p>
       )}
       {isSearching && (
-        <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          {isConnecting ? "Connecting…" : "Looking for an opponent…"}
+        <p className="flex items-center gap-2 text-[13px] font-semibold text-foreground" role="status">
+          <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden="true" />
+          {isConnecting
+            ? "Connecting…"
+            : timeControl
+              ? `Finding a ${timeControl} opponent…`
+              : "Finding an opponent…"}
         </p>
       )}
-      {isSearching && (rematchOffered || rematchRequested) && (
-        // The button row below is hidden while a rematch is pending
-        <Button size="md" variant="outline" onClick={() => setShouldConnect(false)} className="w-full">
-          Cancel search
-        </Button>
-      )}
-      {timedMatchOn && started !== null && (
-        <Button size="md" asChild className="w-full">
-          <Link to={getGameRoute(started)}>Go to next game</Link>
-        </Button>
-      )}
-      {!rematchOffered && !rematchRequested && !timedMatchOn && (
-        <div className="flex w-full gap-2">
-          <Button size="md"
-            variant={isSearching ? "outline" : "secondary"}
-            onClick={() => setShouldConnect(!isSearching)}
-            className="flex-1"
-          >
-            {isSearching ? "Cancel search" : "New game"}
+
+      {timedMatchOn ? (
+        started !== null && (
+          <Button size="md" asChild className="w-full max-md:h-11">
+            <Link to={getGameRoute(started)}>Go to next game</Link>
           </Button>
+        )
+      ) : aborted ? (
+        <div className="grid auto-cols-fr grid-flow-col gap-2">
+          <Button
+            size="md"
+            variant={isSearching ? "outline" : "default"}
+            onClick={() => setShouldConnect(!isSearching)}
+            className={cn("min-w-0 px-2 max-md:h-11", isSearching && "bg-card")}
+          >
+            {isSearching ? "Cancel search" : newGameLabel}
+          </Button>
+        </div>
+      ) : (
+        <div className={cn("grid gap-2", nextGame ? "grid-cols-2" : "grid-cols-3")}>
           {started !== null ? (
-            <Button size="md" asChild className="flex-1">
-              <Link to={getGameRoute(started)}>
-                {series ? "Go to next game" : "Go to rematch"}
-              </Link>
+            <Button size="md" asChild className={cn("min-w-0 px-2 max-md:h-11", nextGame && "col-span-2")}>
+              <Link to={getGameRoute(started)}>{series ? "Go to next game" : "Go to rematch"}</Link>
+            </Button>
+          ) : rematchOffered ? (
+            <Button
+              size="md"
+              onClick={acceptRematchAndStopSearch}
+              aria-label={nextGame ? "Accept the next game" : "Accept rematch"}
+              className={cn("min-w-0 px-2 max-md:h-11", nextGame && "col-span-2")}
+            >
+              Accept
+            </Button>
+          ) : rematchRequested ? (
+            <Button
+              size="md"
+              variant="outline"
+              onClick={cancelRematch}
+              className={cn("min-w-0 bg-card px-2 max-md:h-11", nextGame && "col-span-2")}
+            >
+              Cancel offer
             </Button>
           ) : (
-            <Button size="md"
+            <Button
+              size="md"
               onClick={requestRematch}
               disabled={rematchDeclined || rematchUsed || isSearching}
-              className="flex-1"
+              className={cn("min-w-0 px-2 max-md:h-11", nextGame && "col-span-2")}
             >
               {rematchLabel}
             </Button>
           )}
+          {newGame}
+          {review}
         </div>
       )}
-      <ReviewGameLinks
-        review={{ to: getGameReviewRoute(gameId) }}
-        analysis={{ to: getArchiveGameRoute(gameId) }}
-      />
+
+      {!aborted && (
+        <p className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+          {rematchOffered && (
+            <button
+              type="button"
+              onClick={declineRematch}
+              className="relative touch-target font-semibold text-muted-foreground underline-offset-[3px] outline-none hover:text-foreground hover:underline focus-visible:underline"
+            >
+              {nextGame ? "Not now" : "Decline rematch"}
+            </button>
+          )}
+          <Link
+            to={getArchiveGameRoute(gameId)}
+            className="relative touch-target font-semibold text-primary underline-offset-[3px] outline-none hover:underline focus-visible:underline"
+          >
+            Open the analysis board
+          </Link>
+        </p>
+      )}
     </div>
   );
 };

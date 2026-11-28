@@ -18,6 +18,7 @@ import {
   INITIAL_TAKEBACK_STATE,
   canRequestTakeback,
   takebackReducer,
+  takebackRequestDetail,
   takebackRequestText,
 } from "../utils/takeback";
 
@@ -168,6 +169,8 @@ export const useTakeback = () => {
     showTakebackRequest: !gameEnded && state.incoming,
     /** The side panel's prompt for the opponent's request (the toast says the same) */
     takebackRequestMessage: takebackRequestText(ply, color),
+    /** The same after the opponent's name: "asks to take back their last move." */
+    takebackRequestDetail: takebackRequestDetail(ply, color),
     takebackRequested: !gameEnded && sent,
     showTakebackDeclined: !gameEnded && declined,
     /**

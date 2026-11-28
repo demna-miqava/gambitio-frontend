@@ -12,9 +12,18 @@ export function readGifTheme(root: HTMLElement = document.documentElement): GifT
   const dark = root.classList.contains("dark");
   const colors = getPalette(paletteId)[dark ? "dark" : "light"];
   const style = getComputedStyle(root);
-  const cssVar = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;
+  // Some of the board's variables are derived from others (var(), color-mix()),
+  // which a canvas can't read as written: the browser resolves them on a probe
+  const probe = document.createElement("span");
+  probe.style.display = "none";
+  root.appendChild(probe);
+  const cssVar = (name: string, fallback: string) => {
+    if (!style.getPropertyValue(name).trim()) return fallback;
+    probe.style.color = `var(${name})`;
+    return getComputedStyle(probe).color || fallback;
+  };
 
-  return {
+  const theme: GifTheme = {
     boardLight: cssVar("--board-light", colors.boardLight),
     boardDark: cssVar("--board-dark", colors.boardDark),
     lastMove: cssVar("--board-last-move", "rgba(232, 200, 100, 0.45)"),
@@ -27,4 +36,6 @@ export function readGifTheme(root: HTMLElement = document.documentElement): GifT
     fontSans: `"Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`,
     fontDisplay: `Fraunces, ui-serif, Georgia, "Times New Roman", serif`,
   };
+  probe.remove();
+  return theme;
 }

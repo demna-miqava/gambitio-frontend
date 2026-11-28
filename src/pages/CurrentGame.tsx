@@ -1,5 +1,5 @@
 import CurrentGameBoard from "@/features/current-game/components/CurrentGameBoard";
-import { MovesContainer } from "@/features/current-game/components/MovesContainer";
+import { LiveGameRail } from "@/features/current-game/components/LiveGameRail";
 import { LiveGameChrome } from "@/features/current-game/components/LiveGameChrome";
 import { ChessBoardProvider } from "@/features/game/contexts/ChessBoardContext";
 import { GameNavigationProvider } from "@/features/game/contexts/GameNavigationContext";
@@ -18,6 +18,7 @@ import { getArchiveGameRoute } from "@/constants/routes";
 import { isPlayerGame } from "@/utils/storedGame";
 import { GameChatProvider } from "@/features/game-chat/GameChatContext";
 import { parsePositiveId } from "@/utils/ids";
+import { useGameShell } from "@/context/GameShellContext";
 
 /**
  * Live game page. Players, colors and time control come from the server, so
@@ -31,6 +32,8 @@ const CurrentGame = () => {
   const validId = parsePositiveId(gameId);
   const { data: game, isPending, error, refetch } = useGameData(validId);
   const { id: currentUserId } = useUser();
+  // Focus mode, as the rail's useFocusMode reports it to the shell
+  const { focusActive } = useGameShell();
   // The game id last seen in progress. A spectator stays on the page when
   // the game ends (even if a refetch now says "finished") to see the result.
   const [seenLive, setSeenLive] = useState<string | null>(null);
@@ -81,8 +84,10 @@ const CurrentGame = () => {
             <GameModeProvider mode={GAME_MODES.LIVE}>
               <LiveGameChrome />
               <GameLayout
+                rail
+                focus={focusActive}
                 board={<CurrentGameBoard />}
-                sidebar={<MovesContainer />}
+                sidebar={<LiveGameRail />}
               />
             </GameModeProvider>
           </GameChatProvider>

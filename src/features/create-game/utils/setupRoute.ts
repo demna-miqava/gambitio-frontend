@@ -4,6 +4,8 @@ import { parsePositiveId } from "@/utils/ids";
 export type GameSection =
   | "new"
   | "friends"
+  /** Against the computer: strength and side, picked on the same page */
+  | "bot"
   | "friend-invite-options"
   | "custom";
 
@@ -17,13 +19,14 @@ export type PlaySetupState = {
   setupStep?: boolean;
 };
 
-const URL_SECTIONS: GameSection[] = ["new", "friends", "custom"];
+const URL_SECTIONS: GameSection[] = ["new", "friends", "bot", "custom"];
 
 const parseId = parsePositiveId;
 
 /**
  * The query string for a setup step: "" for the default section,
- * "?section=custom", "?section=friends" or "?section=friends&friend=12".
+ * "?section=custom", "?section=bot", "?section=friends" or
+ * "?section=friends&friend=12".
  */
 export const getPlaySetupSearch = (
   section: GameSection,

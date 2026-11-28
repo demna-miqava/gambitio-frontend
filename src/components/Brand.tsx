@@ -28,7 +28,7 @@ export const BrandLogo = ({
     <BrandMark className={markClassName} />
     <span
       className={cn(
-        "font-display text-[1.375rem] leading-none text-foreground",
+        "font-display text-xl leading-none text-foreground",
         textClassName
       )}
     >

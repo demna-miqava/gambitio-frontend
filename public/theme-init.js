@@ -12,17 +12,11 @@
       (stored !== "light" &&
         window.matchMedia("(prefers-color-scheme: dark)").matches);
     if (dark) document.documentElement.classList.add("dark");
-    // Page backgrounds per palette, as in src/constants/palettes.ts
+    // Page backgrounds per theme, as in src/constants/palettes.ts (any other
+    // stored palette, from before there were two themes, falls back to emerald)
     var backgrounds = {
-      emerald: ["#f6f3ea", "#07130f"],
-      club: ["#f6f2ea", "#13100d"],
-      midnight: ["#f5f2ec", "#0b101b"],
-      walnut: ["#f9f1e9", "#160f0b"],
-      ink: ["#f7f6f3", "#272522"],
-      fjord: ["#f0f4f8", "#0a1119"],
-      plum: ["#faf0f0", "#160d13"],
-      tide: ["#f7f2e8", "#061316"],
-      olive: ["#f5f3e8", "#10110a"],
+      emerald: ["#f4f4f4", "#0e0e0e"],
+      walnut: ["#f8f4ef", "#100e0b"],
     };
     var palette = JSON.parse(localStorage.getItem("palette"));
     if (!Object.prototype.hasOwnProperty.call(backgrounds, palette)) palette = "emerald";

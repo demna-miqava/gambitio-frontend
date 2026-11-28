@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { New } from "./sections/New";
 import { Friends } from "./sections/Friends";
+import { Bot } from "./sections/Bot";
 import { Custom } from "./sections/Custom";
 import { FriendInviteOptions } from "./sections/FriendInviteOptions";
 import {
@@ -18,25 +19,17 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 const TITLES: Record<GameSection, string> = {
   new: "Play online",
   friends: "Play a friend",
+  bot: "Play a bot",
   custom: "Custom time",
   "friend-invite-options": "Send a challenge",
 };
 
-/** Same labels as the sidebar's Play links */
-const MODES: { section: "new" | "friends"; label: string }[] = [
-  { section: "new", label: "Play online" },
-  { section: "friends", label: "Play a friend" },
+/** Who to play: a stranger, a friend, or the computer, all set up on this page */
+const MODES: { section: "new" | "friends" | "bot"; label: string }[] = [
+  { section: "new", label: "Online" },
+  { section: "friends", label: "A friend" },
+  { section: "bot", label: "A bot" },
 ];
-
-const PlayComputerLink = () => (
-  <Link
-    to={ROUTES.PLAY_BOTS}
-    className="rounded-xl bg-background p-3.5 text-sm transition-colors hover:bg-accent"
-  >
-    <span className="block font-medium">Play the computer</span>
-    <span className="block text-xs text-muted-foreground">No waiting, any strength</span>
-  </Link>
-);
 
 const TableModeLink = () => (
   <Link
@@ -51,7 +44,7 @@ const TableModeLink = () => (
 export const CreateGameSidebar = () => {
   const { activeSection, setActiveSection, canGoBack, goBack, isSearching } =
     useGameSetup();
-  const isTopLevel = activeSection === "new" || activeSection === "friends";
+  const isTopLevel = MODES.some(({ section }) => section === activeSection);
   useDocumentTitle(TITLES[activeSection]);
 
   if (!isTopLevel) {
@@ -78,7 +71,7 @@ export const CreateGameSidebar = () => {
     <aside className="flex w-full flex-col gap-5 rounded-2xl bg-card p-5 sm:p-6">
       <PageHeader
         title="Play"
-        description="Find an opponent online or challenge a friend."
+        description="Find an opponent online, challenge a friend or play the computer."
       />
 
       <Tabs
@@ -88,7 +81,7 @@ export const CreateGameSidebar = () => {
       >
         {/* Switching while searching would stop the search */}
         {!isSearching && (
-          <TabsList aria-label="Opponent" className="grid h-11 w-full grid-cols-2">
+          <TabsList aria-label="Opponent" className="grid h-11 w-full grid-cols-3">
             {MODES.map(({ section, label }) => (
               <TabsTrigger key={section} value={section} className="relative touch-target">
                 {label}
@@ -102,9 +95,11 @@ export const CreateGameSidebar = () => {
         <TabsContent value="friends">
           <Friends />
         </TabsContent>
+        <TabsContent value="bot">
+          <Bot />
+        </TabsContent>
       </Tabs>
 
-      {!isSearching && <PlayComputerLink />}
       {!isSearching && <TableModeLink />}
     </aside>
   );

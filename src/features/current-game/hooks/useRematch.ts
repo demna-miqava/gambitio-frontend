@@ -21,14 +21,9 @@ export type RematchState = ReturnType<typeof useRematch>;
 
 /**
  * Rematch offers both ways. Call once per game page and pass the result to
- * every place that shows rematch UI (result dialog, side panel), so they
- * agree.
+ * whatever shows rematch UI (the result block in the side rail).
  */
-export const useRematch = ({
-  setOpenGameResultDialog,
-}: {
-  setOpenGameResultDialog: (open: boolean) => void;
-}) => {
+export const useRematch = () => {
   const { sendMessage, announce, opponent } = useLiveGame();
   const { startGame } = useStartGame();
   const { id: currentUserId } = useUser();
@@ -102,9 +97,8 @@ export const useRematch = ({
   const handleMatchFound = useCallback(
     (data: MatchFoundMessage) => {
       startGame(data);
-      setOpenGameResultDialog(false);
     },
-    [startGame, setOpenGameResultDialog]
+    [startGame]
   );
 
   useMessageDispatcher<CancelRematchMessage>(

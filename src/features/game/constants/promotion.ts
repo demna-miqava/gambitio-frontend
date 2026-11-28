@@ -13,11 +13,13 @@ import BlackKnight from "@/assets/pieces/black_knight.svg";
 
 export type PromotionPiece = "q" | "r" | "b" | "n";
 
+// Queen first (on the promotion square), then the knight: the one piece a
+// queen can't stand in for
 export const PROMOTION_PIECES: readonly PromotionPiece[] = [
   "q",
+  "n",
   "r",
   "b",
-  "n",
 ] as const;
 
 export const PIECE_NAMES: Readonly<Record<PieceSymbol, string>> = {

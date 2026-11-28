@@ -39,7 +39,7 @@ const ProfileFriends = () => {
       : undefined;
 
   // All friends, or (your own profile only) just those online or playing:
-  // ?show=online, which the friends icon's "See all" links to. The online
+  // ?show=online, which Home's Play a friend panel links to. The online
   // list is already loaded whole, so it is searched and paged here.
   const [searchParams, setSearchParams] = useSearchParams();
   const showOnline = isOwnProfile && searchParams.get(FRIENDS_SHOW_PARAM) === "online";

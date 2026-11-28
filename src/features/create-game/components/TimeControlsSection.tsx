@@ -1,4 +1,7 @@
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import { SPEED_ICON, SPEED_LABEL } from "@/features/game/constants/speed";
+import { ProvisionalMark } from "@/components/ProvisionalMark";
+import { useUser } from "@/hooks/useUser";
 import { PLAY_TIME_CONTROLS } from "../constants/timeControls";
 import { useGameSetup } from "../GameSetupContext";
 import { formatTimeControl } from "@/utils/timeControl";
@@ -26,6 +29,12 @@ export const TimeControlsSection = ({
 }: TimeControlsSectionProps) => {
   const { timeControl, updateTimeControl, openCustomTime, isSearching } =
     useGameSetup();
+  const { bulletRating, blitzRating, rapidRating, chessProfile } = useUser();
+  const ratings = {
+    bullet: { value: bulletRating, provisional: chessProfile?.bulletProvisional },
+    blitz: { value: blitzRating, provisional: chessProfile?.blitzProvisional },
+    rapid: { value: rapidRating, provisional: chessProfile?.rapidProvisional },
+  };
   const isPreset = PLAY_TIME_CONTROLS.some(({ options }) =>
     options.some(
       (o) => o.time === timeControl.time && o.increment === timeControl.increment
@@ -48,22 +57,34 @@ export const TimeControlsSection = ({
         aria-label="Time control"
         className="space-y-4"
       >
-        {PLAY_TIME_CONTROLS.map(({ label: format, options }) => (
-          <div key={format} className="space-y-2">
-            <p className="text-sm capitalize text-muted-foreground" aria-hidden="true">
-              {format}
+        {PLAY_TIME_CONTROLS.map(({ label: format, options }) => {
+          const Icon = SPEED_ICON[format];
+          const rating = ratings[format];
+          return (
+          <div key={format} className="space-y-1.5">
+            {/* The speed, and the player's rating in it at the end of the line */}
+            <p className="flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground">
+              <Icon className="size-[15px]" strokeWidth={2} aria-hidden="true" />
+              <span aria-hidden="true">{SPEED_LABEL[format]}</span>
+              {rating.value !== undefined && (
+                <span className="ml-auto font-normal text-faint tabular-nums">
+                  <span className="sr-only">Your {format} rating: </span>
+                  {rating.value}
+                  <ProvisionalMark provisional={rating.provisional} className="text-faint" />
+                </span>
+              )}
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {options.map(({ label, time, increment }) => (
                 <RadioGroupPrimitive.Item
                   key={valueOf(time, increment)}
                   value={valueOf(time, increment)}
                   aria-label={`${label} ${format}`}
                   className={cn(
-                    "h-12 rounded-xl bg-background font-display-num text-xl text-foreground transition-colors",
+                    "h-[50px] rounded-md bg-muted font-display-num text-xl text-foreground shadow-[inset_0_0_0_1px_var(--border)] transition-colors max-sm:h-14",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
-                    "hover:bg-accent",
-                    "data-[state=checked]:bg-primary-solid data-[state=checked]:text-primary-solid-foreground",
+                    "hover:shadow-[inset_0_0_0_1px_var(--border-strong)]",
+                    "data-[state=checked]:bg-primary-solid data-[state=checked]:text-primary-solid-foreground data-[state=checked]:shadow-none",
                     "disabled:pointer-events-none disabled:opacity-50"
                   )}
                 >
@@ -72,7 +93,8 @@ export const TimeControlsSection = ({
               ))}
             </div>
           </div>
-        ))}
+          );
+        })}
       </RadioGroupPrimitive.Root>
 
       {showCustom && (

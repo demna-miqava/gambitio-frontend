@@ -30,7 +30,14 @@ export const UnreadBadge = ({ count, className }: { count: number; className?: s
  * has chat turned off (the sheet says so). Renders nothing when the game has
  * no chat to show (see isChatShown).
  */
-export const ChatSheetButton = ({ className }: { className?: string }) => {
+export const ChatSheetButton = ({
+  className,
+  labelled = false,
+}: {
+  className?: string;
+  /** With its name under the icon, as a button of the phone's bottom bar (pass the bar's item classes) */
+  labelled?: boolean;
+}) => {
   const { available, unread, offReason } = useGameChat();
   const offByOpponent = offReason === "off_by_opponent";
   const Icon = offByOpponent ? MessageCircleOff : MessageCircle;
@@ -47,7 +54,7 @@ export const ChatSheetButton = ({ className }: { className?: string }) => {
         <Button
           type="button"
           variant="ghost"
-          size="icon"
+          size={labelled ? "md" : "icon"}
           aria-label={
             offByOpponent
               ? "Chat: your opponent has it turned off"
@@ -58,8 +65,12 @@ export const ChatSheetButton = ({ className }: { className?: string }) => {
           title={offByOpponent ? "Your opponent has chat turned off" : "Chat"}
           className={cn("relative", offByOpponent && "text-muted-foreground", className)}
         >
-          <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
-          <UnreadBadge count={unread} className="absolute top-0.5 right-0.5" />
+          <Icon className={labelled ? undefined : "size-[18px]"} strokeWidth={1.75} aria-hidden="true" />
+          {labelled && <span aria-hidden="true">Chat</span>}
+          <UnreadBadge
+            count={unread}
+            className={cn("absolute", labelled ? "top-1 left-1/2 ml-1.5" : "top-0.5 right-0.5")}
+          />
         </Button>
       </SheetTrigger>
       <SheetContent

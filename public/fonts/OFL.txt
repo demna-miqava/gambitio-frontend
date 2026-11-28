@@ -1,12 +1,18 @@
 The font files in this folder are:
 
+- Besley (besley-*.woff2)
+  Copyright 2022 The Besley Project Authors (https://github.com/indestructible-type/Besley)
+
+- Hanken Grotesk (hanken-grotesk-*.woff2)
+  Copyright 2022 The Hanken Grotesk Project Authors (https://github.com/marcologous/hanken-grotesk)
+
 - Fraunces (fraunces-*.woff2)
   Copyright 2020 The Fraunces Project Authors (https://github.com/undercasetype/Fraunces)
 
 - Instrument Sans (instrument-sans-*.woff2)
   Copyright 2022 The Instrument Sans Project Authors (https://github.com/Instrument/instrument-sans)
 
-They are unmodified subsets served by Google Fonts, and both are licensed
+They are unmodified subsets served by Google Fonts, and all four are licensed
 under the SIL Open Font License, Version 1.1, reproduced below.
 This license is also available with a FAQ at: https://openfontlicense.org
 

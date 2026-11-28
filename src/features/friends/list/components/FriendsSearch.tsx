@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { wantsFindPlayer } from "../findPlayer";
 import { useDebounce } from "@/hooks/useDebounce";
 import { paramsForSearch } from "@/features/friends/utils/searchParams";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
 export const FriendsSearch = () => {
+  const findPlayer = wantsFindPlayer(useLocation().state);
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("search") ?? "";
   const [inputValue, setInputValue] = useState(search);
@@ -23,15 +25,17 @@ export const FriendsSearch = () => {
   }, [debouncedValue, search, setSearchParams]);
 
   return (
-    <div className="relative w-full sm:w-64">
+    <div className="relative w-full sm:w-72">
       <Search
         className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
         aria-hidden="true"
       />
       <Input
         type="search"
-        aria-label="Search friends"
-        placeholder="Search friends…"
+        aria-label="Search friends or find a player"
+        placeholder="Search friends or find a player…"
+        // Came here from "Add a friend": ready to type a username
+        autoFocus={findPlayer}
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         className="pl-9"

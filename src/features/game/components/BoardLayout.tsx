@@ -6,18 +6,25 @@ import { PlayerDisplay } from "./PlayerDisplay";
 import { MaterialDisplay } from "./MaterialDisplay";
 import { getMaterial } from "../utils/material";
 import type { PlayerColor } from "../types/game.types";
+import { cn } from "@/lib/utils";
 
 interface PlayerInfo {
   name: string;
+  /** The name as something to click (it opens the player's card); `name` stays its text */
+  nameSlot?: ReactNode;
   startingRating?: number;
   provisional?: boolean;
   newRating?: number;
   ratingChange?: number;
   avatar?: ReactNode;
+  /** A short state beside the name ("Disconnected") */
+  status?: ReactNode;
 }
 
-// Same height with or without a clock, so every board page sizes alike
-const PLAYER_ROW = "flex min-h-12 flex-col justify-center sm:min-h-16";
+// Same height with or without a clock, so every board page sizes alike. From
+// 640px the row is the 52px strip plus a 12px gap on the board's side, so the
+// strips' outer edges are the top and bottom of the board column.
+const PLAYER_ROW = "flex min-h-12 flex-col sm:min-h-16";
 
 interface BoardLayoutProps {
   boardRef: React.RefObject<HTMLDivElement | null>;
@@ -69,14 +76,14 @@ export const BoardLayout = ({
   const top: PlayerColor = bottom === "white" ? "black" : "white";
 
   return (
-    <section className="flex w-full max-w-(--board-max) flex-col">
+    <section className="board-layout flex w-full max-w-(--board-max) flex-col">
       {topPlayer && (
-        <div className={PLAYER_ROW}>
+        <div className={cn(PLAYER_ROW, "board-layout-top justify-start")}>
           <PlayerDisplay {...topPlayer} clock={topPlayerClock} material={materialFor(top)} />
         </div>
       )}
 
-      <div className="board-frame @container relative aspect-square w-full">
+      <div className="board-layout-board board-frame @container relative aspect-square w-full">
         <div
           ref={boardRef}
           className="h-full w-full"
@@ -87,7 +94,7 @@ export const BoardLayout = ({
       </div>
 
       {bottomPlayer && (
-        <div className={PLAYER_ROW}>
+        <div className={cn(PLAYER_ROW, "board-layout-bottom justify-end")}>
           <PlayerDisplay
             {...bottomPlayer}
             clock={bottomPlayerClock}

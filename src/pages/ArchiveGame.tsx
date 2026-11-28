@@ -14,7 +14,7 @@ import ArchiveGameSidebar from "@/features/archive-game/components/ArchiveGameSi
 import { GameModeProvider } from "@/features/game/modes/GameModeProvider";
 import { GAME_MODES } from "@/features/game/modes/types";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { GameReviewProvider } from "@/features/game-review";
+import { GameReviewProvider, SaveReviewAccuracy } from "@/features/game-review";
 import { ShareGifProvider } from "@/features/share-gif";
 import { ShareLinkProvider } from "@/features/shared-game";
 import { parsePositiveId } from "@/utils/ids";
@@ -111,6 +111,11 @@ const ArchiveGame = () => {
                 black: gameData.blackPlayer.username,
               }}
             >
+              {/* The viewer's own game: what their review comes to goes with it in their lists */}
+              {currentUserId !== undefined &&
+                (gameData.whitePlayer.id === currentUserId || gameData.blackPlayer.id === currentUserId) && (
+                  <SaveReviewAccuracy gameId={gameData.id} />
+                )}
               {page}
             </GameReviewProvider>
           ) : (

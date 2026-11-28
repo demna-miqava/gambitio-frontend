@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
-import { Medal } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UpNextRow } from "@/components/home/UpNextRow";
 import { getTournamentRoute } from "@/constants/routes";
 import { useOpenTournaments } from "../hooks/useTournaments";
 import { tournamentFacts } from "../utils/tournamentFormat";
 import { TournamentClock } from "./TournamentClock";
 
 /**
- * Home: the tournament that is on, or the next one, when there is one.
- * Renders nothing otherwise (and while loading: it isn't worth a skeleton).
+ * Home, in "Up next": the tournament that is on, or the next one, as a row
+ * when there is one. Renders nothing otherwise (and while loading: it isn't
+ * worth a skeleton).
  */
 export const TournamentBanner = () => {
   // Read once: Home shouldn't keep asking while it sits open. The list's
@@ -20,24 +22,22 @@ export const TournamentBanner = () => {
   if (!tournament) return null;
 
   return (
-    <section
+    <UpNextRow
       aria-label="Tournament"
-      className="flex flex-col gap-3 rounded-2xl bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
-    >
-      <div className="min-w-0">
-        <p className="flex items-center gap-2.5 font-display text-xl text-foreground">
-          <Medal className="size-5 shrink-0 text-gold" aria-hidden="true" />
-          <span className="truncate">{tournament.name}</span>
-        </p>
-        <p className="text-sm text-muted-foreground">
+      icon={<Trophy className="size-5" aria-hidden="true" />}
+      title={tournament.name}
+      description={
+        <>
           {tournamentFacts(tournament)} · <TournamentClock tournament={tournament} compact />
-        </p>
-      </div>
-      <Button asChild variant={tournament.joined ? "default" : "outline"} className="h-11 shrink-0 sm:h-10">
-        <Link to={getTournamentRoute(tournament.id)}>
-          {tournament.joined ? "Open tournament" : "View tournament"}
-        </Link>
-      </Button>
-    </section>
+        </>
+      }
+      actions={
+        <Button asChild variant="outline" className="min-h-11 min-w-31 sm:min-h-9">
+          <Link to={getTournamentRoute(tournament.id)}>
+            {tournament.joined ? "Open tournament" : "View tournament"}
+          </Link>
+        </Button>
+      }
+    />
   );
 };

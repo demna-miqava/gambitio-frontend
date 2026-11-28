@@ -1,13 +1,11 @@
 import { useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Search, UserRoundPlus, UsersRound, X } from "lucide-react";
+import { ArrowRight, Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useUser } from "@/hooks/useUser";
-import { useDebounce } from "@/hooks/useDebounce";
 import { cn, formatShortDate } from "@/lib/utils";
 import { getProfileFriendsRoute, getProfileRoute } from "@/constants/routes";
 import { useChallenges } from "@/features/notifications/context/ChallengesContext";
@@ -16,15 +14,9 @@ import {
   challengeTermsLine,
   describeChallengeTerms,
 } from "@/features/notifications/utils/challengeLabels";
-import type { FriendRequest } from "../types";
-import { usePendingFriendRequests } from "../requests/hooks/usePendingFriendRequests";
-import { useFriendRequestAction } from "../requests/hooks/useFriendRequestAction";
-import { useSendFriendRequest } from "../suggestions/hooks/useSendFriendRequest";
-import {
-  MIN_PLAYER_SEARCH_LENGTH,
-  useSuggestedFriends,
-} from "../suggestions/hooks/useSuggestedFriends";
-import { OnlineNow } from "../status/OnlineNow";
+import type { FriendRequest } from "@/features/friends/types";
+import { usePendingFriendRequests } from "@/features/friends/requests/hooks/usePendingFriendRequests";
+import { useFriendRequestAction } from "@/features/friends/requests/hooks/useFriendRequestAction";
 import { useTableGameRequests } from "@/features/table-mode/hooks/useTableGameRequests";
 import { useDuelInvites } from "@/features/puzzles/duel/hooks/useDuelInvites";
 import { getPuzzleDuelRoute } from "@/constants/routes";
@@ -70,107 +62,16 @@ const Row = ({
   </li>
 );
 
-/** Find any player by username and send them a friend request. */
-const AddFriend = ({
-  sent,
-  received,
-  onAccept,
-}: {
-  sent: FriendRequest[];
-  received: FriendRequest[];
-  onAccept: (request: FriendRequest) => void;
-}) => {
-  const [value, setValue] = useState("");
-  const search = useDebounce(value.trim(), 300);
-  const { suggestions, isFetching, isError } = useSuggestedFriends(search);
-  const sendRequest = useSendFriendRequest();
-  const searching = search.length >= MIN_PLAYER_SEARCH_LENGTH;
-
-  return (
-    <section className="space-y-3 p-4" aria-labelledby="inbox-add-friend">
-      <SectionTitle>
-        <span id="inbox-add-friend">Add a friend</span>
-      </SectionTitle>
-      <div className="relative">
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          aria-hidden="true"
-        />
-        <Input
-          type="search"
-          aria-label="Find a player by username"
-          placeholder="Find a player by username…"
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          className="pl-9"
-        />
-      </div>
-      {searching &&
-        (isError ? (
-          <p className="text-sm text-muted-foreground">Couldn't search players. Try again.</p>
-        ) : isFetching && suggestions.length === 0 ? (
-          <div className="space-y-2" role="status" aria-label="Searching players">
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
-          </div>
-        ) : suggestions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No one else is called “{search}”. Friends you already have aren't listed.
-          </p>
-        ) : (
-          <ul className="space-y-2.5">
-            {suggestions.map((player) => {
-              // The request ids come back as strings
-              const id = String(player.id);
-              const theirs = received.find((request) => String(request.senderId) === id);
-              const mine = sent.some((request) => String(request.receiverId) === id);
-              return (
-                <Row
-                  key={player.id}
-                  userId={player.id}
-                  username={player.username}
-                  avatarUrl={player.avatarUrl}
-                >
-                  {theirs ? (
-                    <Button
-                      size="sm"
-                      onClick={() => onAccept(theirs)}
-                      aria-label={`Accept ${player.username}'s friend request`}
-                    >
-                      <Check aria-hidden="true" /> Accept
-                    </Button>
-                  ) : mine ? (
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Check className="size-3.5" aria-hidden="true" /> Request sent
-                    </span>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={sendRequest.isPending}
-                      onClick={() => sendRequest.mutate(player.id)}
-                      aria-label={`Add ${player.username} as a friend`}
-                    >
-                      <UserRoundPlus aria-hidden="true" /> Add
-                    </Button>
-                  )}
-                </Row>
-              );
-            })}
-          </ul>
-        ))}
-    </section>
-  );
-};
-
 /**
- * Friends and challenges, from one icon in the top corner: add a friend by
- * username, see which friends are online or playing (OnlineNow), and answer
- * the challenges and friend requests waiting on you.
- * The badge counts those. Rendered by the phone top bar and, from 768px, in
- * the corner of the page (AppLayout); not on game pages.
+ * Notifications: the bell in the top corner. Everything waiting on the
+ * player, on every page: challenges, puzzle duel invites, table games to
+ * confirm and friend requests, each answerable in place. The badge counts
+ * them. Who is online and adding friends live with the friends themselves
+ * (Home's Play a friend panel, the Play page, the profile's friends page),
+ * not here. Rendered by the phone top bar and, from 768px, in the corner of
+ * the page (AppLayout); not on game pages.
  */
-export const FriendsInbox = ({ className }: { className?: string }) => {
+export const NotificationsInbox = ({ className }: { className?: string }) => {
   const { id } = useUser();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
@@ -185,7 +86,6 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
   const { handleAcceptChallenge, handleDeclineChallenge } = useChallenges();
   const {
     receivedRequests,
-    sentRequests,
     isPending: requestsLoading,
     isError: requestsFailed,
     refetch,
@@ -207,11 +107,9 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
           variant="ghost"
           size="icon"
           className={cn("rounded-full", className)}
-          aria-label={
-            waiting ? `Friends and challenges, ${waiting} waiting` : "Friends and challenges"
-          }
+          aria-label={waiting ? `Notifications, ${waiting} waiting` : "Notifications"}
         >
-          <UsersRound className="size-5" aria-hidden="true" />
+          <Bell className="size-5" aria-hidden="true" />
           {waiting > 0 && (
             <span
               aria-hidden="true"
@@ -227,9 +125,11 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
         sideOffset={8}
         className="max-h-[min(36rem,calc(100svh-5rem))] w-[min(23rem,calc(100vw-1rem))] divide-y divide-border overflow-y-auto rounded-xl p-0"
       >
-        <AddFriend sent={sentRequests} received={receivedRequests} onAccept={answer("accept")} />
-
-        <OnlineNow enabled={open} onNavigate={() => setOpen(false)} />
+        {waiting === 0 && !requestsLoading && !requestsFailed && (
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+            Nothing is waiting on you. Challenges, duel invites and friend requests show up here.
+          </p>
+        )}
 
         {challenges.length > 0 && (
           <section className="space-y-3 p-4" aria-labelledby="inbox-challenges">
@@ -354,53 +254,53 @@ export const FriendsInbox = ({ className }: { className?: string }) => {
           </section>
         )}
 
-        <section className="space-y-3 p-4" aria-labelledby="inbox-requests">
-          <SectionTitle count={receivedRequests.length}>
-            <span id="inbox-requests">Friend requests</span>
-          </SectionTitle>
-          {requestsLoading ? (
-            <Skeleton className="h-9 w-full" role="status" aria-label="Loading friend requests" />
-          ) : requestsFailed ? (
-            <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-              Couldn't load your friend requests.
-              <Button size="sm" variant="outline" onClick={() => refetch()}>
-                Retry
-              </Button>
-            </div>
-          ) : receivedRequests.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No requests waiting.</p>
-          ) : (
-            <ul className="space-y-2.5">
-              {receivedRequests.map((request) => (
-                <Row
-                  key={request.id}
-                  userId={Number(request.senderId)}
-                  username={request.senderUsername}
-                  avatarUrl={request.senderAvatarUrl}
-                  detail={`Sent ${formatShortDate(request.createdAt)}`}
-                >
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    disabled={requestAction.isPending}
-                    onClick={() => answer("decline")(request)}
-                    aria-label={`Decline ${request.senderUsername}'s friend request`}
+        {(requestsLoading || requestsFailed || receivedRequests.length > 0) && (
+          <section className="space-y-3 p-4" aria-labelledby="inbox-requests">
+            <SectionTitle count={receivedRequests.length}>
+              <span id="inbox-requests">Friend requests</span>
+            </SectionTitle>
+            {requestsLoading ? (
+              <Skeleton className="h-9 w-full" role="status" aria-label="Loading friend requests" />
+            ) : requestsFailed ? (
+              <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+                Couldn't load your friend requests.
+                <Button size="sm" variant="outline" onClick={() => refetch()}>
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              <ul className="space-y-2.5">
+                {receivedRequests.map((request) => (
+                  <Row
+                    key={request.id}
+                    userId={Number(request.senderId)}
+                    username={request.senderUsername}
+                    avatarUrl={request.senderAvatarUrl}
+                    detail={`Sent ${formatShortDate(request.createdAt)}`}
                   >
-                    <X aria-hidden="true" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={requestAction.isPending}
-                    onClick={() => answer("accept")(request)}
-                    aria-label={`Accept ${request.senderUsername}'s friend request`}
-                  >
-                    Accept
-                  </Button>
-                </Row>
-              ))}
-            </ul>
-          )}
-        </section>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      disabled={requestAction.isPending}
+                      onClick={() => answer("decline")(request)}
+                      aria-label={`Decline ${request.senderUsername}'s friend request`}
+                    >
+                      <X aria-hidden="true" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={requestAction.isPending}
+                      onClick={() => answer("accept")(request)}
+                      aria-label={`Accept ${request.senderUsername}'s friend request`}
+                    >
+                      Accept
+                    </Button>
+                  </Row>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
 
         {id && (
           <Link

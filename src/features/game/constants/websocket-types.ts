@@ -7,6 +7,8 @@ export const enum GAME_MESSAGE_TYPES {
   ABORT = "abort",
   // Adds GIVE_TIME_MS to the opponent's clock
   GIVE_TIME = "give_time",
+  // Claims the win against an opponent who has left the game for long enough
+  CLAIM_WIN = "claim_win",
 
   // Draw actions
   DRAW_OFFER = "draw_offer",
@@ -47,4 +49,6 @@ export const enum GAME_MESSAGE_TYPES {
   TIME_ADDED = "time_added",
   // A takeback was accepted: the new position; sent to everyone on the game
   TAKEBACK = "takeback",
+  // A player left the game (no socket on it) or came back; sent to everyone on the game
+  PLAYER_CONNECTION = "player_connection",
 }

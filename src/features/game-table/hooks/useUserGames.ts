@@ -20,6 +20,12 @@ interface UseUserGamesOptions {
   defaultLimit?: number;
   /** Read filters from the URL (the full history only; previews never filter) */
   filterable?: boolean;
+  /**
+   * Ask for each game's moves too (a page of up to 20): Home's recent games
+   * name the opening from them. Part of the request, so every caller that
+   * shares the cached page must ask the same way
+   */
+  withMoves?: boolean;
 }
 
 const NO_FILTERS: HistoryFilters = {};
@@ -28,6 +34,7 @@ export const useUserGames = ({
   defaultPage = 1,
   defaultLimit = 10,
   filterable = false,
+  withMoves = false,
 }: UseUserGamesOptions = {}) => {
   const userId = useProfileUserId();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,7 +49,10 @@ export const useUserGames = ({
     () => (filterable ? parseHistoryFilters(new URLSearchParams(filterKey)) : NO_FILTERS),
     [filterable, filterKey]
   );
-  const apiFilters = useMemo(() => historyFiltersToApi(filters), [filters]);
+  const apiFilters = useMemo(
+    () => ({ ...historyFiltersToApi(filters), ...(withMoves && { moves: "true" }) }),
+    [filters, withMoves]
+  );
 
   const query = useQuery({
     queryKey: [QKEY_USER_GAMES, userId, page, limit, apiFilters],

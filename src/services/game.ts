@@ -99,3 +99,16 @@ export const getTableGameRequests = async (): Promise<TableGameRequest[]> =>
 export const answerTableGameRequest = async (gameId: number, action: "confirm" | "decline"): Promise<void> => {
   await apiRequest<void>("post", `/games/table/requests/${gameId}/${action}`);
 };
+
+/**
+ * Saves what the player's computer review of one of their own finished
+ * games came to (each side's accuracy, 0 to 100, or null for a side with no
+ * judged move). It is kept for them alone and shows in their game lists.
+ */
+export const saveGameReview = (
+  gameId: number,
+  accuracy: { white: number | null; black: number | null }
+): Promise<void> =>
+  apiRequest<void>("put", `/games/${gameId}/review`, {
+    data: { whiteAccuracy: accuracy.white, blackAccuracy: accuracy.black },
+  });

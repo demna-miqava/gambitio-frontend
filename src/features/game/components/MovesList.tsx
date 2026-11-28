@@ -16,13 +16,18 @@ const SHEET_QUERY = "(min-width: 64rem)";
  * Move list for a game played on a ChessBoardProvider + GameNavigationProvider
  * (live game, and any page that uses the same providers).
  */
-export const MovesList = () => {
+export const MovesList = ({ fill = false }: { fill?: boolean }) => {
   // The board's shared move list: a new array whenever the line changes,
   // including server resyncs that replace moves without changing the count
   const { moves } = useChessBoardContext();
   const { currentIndex, goToMove } = useGameNavigation();
   return (
-    <SettingsMovesListView moves={moves} activeIndex={currentIndex - 1} onSelect={goToMove} />
+    <SettingsMovesListView
+      moves={moves}
+      activeIndex={currentIndex - 1}
+      onSelect={goToMove}
+      fill={fill}
+    />
   );
 };
 
@@ -45,6 +50,11 @@ interface MovesListViewProps {
    * mid-game: numbering starts there, and with an odd one black moves first
    */
   startPly?: number;
+  /**
+   * The score sheet takes the height its parent gives it (a flex item with
+   * min-h-0) and scrolls inside, instead of capping its own height
+   */
+  fill?: boolean;
 }
 
 /**
@@ -56,11 +66,20 @@ interface MovesListViewProps {
  * Reads no account settings itself, so it also works on pages without a
  * signed-in user (a shared game); SettingsMovesListView adds them.
  */
-export const MovesListView = ({ moves, activeIndex, onSelect, showIcons = false, startPly = 0 }: MovesListViewProps) => {
+export const MovesListView = ({
+  moves,
+  activeIndex,
+  onSelect,
+  showIcons = false,
+  startPly = 0,
+  fill = false,
+}: MovesListViewProps) => {
   const stripRef = useRef<HTMLOListElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const movePairs = groupMovesIntoPairs(moves, startPly);
-  const showSheet = useMediaQuery(SHEET_QUERY);
+  const wide = useMediaQuery(SHEET_QUERY);
+  // A caller that gives the list its height has the room for the sheet
+  const showSheet = fill || wide;
 
   // Keep the newest / selected move in view
   useEffect(() => {
@@ -77,8 +96,13 @@ export const MovesListView = ({ moves, activeIndex, onSelect, showIcons = false,
 
   if (moves.length === 0) {
     return (
-      <p className="py-3 text-center text-sm text-muted-foreground lg:py-10">
-        Moves will appear here.
+      <p
+        className={cn(
+          "text-center text-[13px] text-faint",
+          fill ? "grid h-full place-items-center px-6" : "py-3 lg:py-10"
+        )}
+      >
+        The moves will appear here as you play.
       </p>
     );
   }
@@ -96,12 +120,12 @@ export const MovesListView = ({ moves, activeIndex, onSelect, showIcons = false,
         aria-current={active ? "step" : undefined}
         onClick={() => onSelect(index + 1)}
         className={cn(
-          "relative min-h-8 rounded-sm px-2 py-1 text-left text-sm tabular-nums transition-colors",
+          "relative min-h-8 rounded-[5px] px-2.5 py-1 text-left text-sm font-[550] tabular-nums transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
-          // The move on the board is set in ink, like a marked line on a scoresheet
+          // The move on the board: the one place the accent goes in the list
           active
-            ? "bg-foreground text-background"
-            : "text-foreground hover:bg-accent"
+            ? "bg-primary-soft font-bold text-primary"
+            : "text-foreground hover:bg-hover"
         )}
       >
         {/* Keeps the visible SAN in the accessible name */}
@@ -115,15 +139,18 @@ export const MovesListView = ({ moves, activeIndex, onSelect, showIcons = false,
     // Desktop: score sheet
     <div
       ref={sheetRef}
-      className="relative hidden max-h-[min(420px,calc(100svh-26rem))] min-h-40 overflow-y-auto lg:block"
+      className={cn(
+        "relative overflow-y-auto [scrollbar-width:thin]",
+        fill ? "h-full" : "hidden max-h-[min(420px,calc(100svh-26rem))] min-h-40 lg:block"
+      )}
     >
-      <ol className="grid grid-cols-[2.5rem_1fr_1fr] gap-y-0.5 text-sm" aria-label="Moves">
+      <ol className="grid grid-cols-[2.5rem_1fr_1fr] gap-x-0.5 text-sm" aria-label="Moves">
         {movePairs.map((pair) => {
           const whiteIndex = (pair.moveNumber - 1) * 2 - startPly;
           return (
             <li key={pair.moveNumber} className="contents">
               <span
-                className="flex items-center text-xs tabular-nums text-muted-foreground"
+                className="flex items-center pl-2 text-[13px] tabular-nums text-faint"
                 aria-hidden="true"
               >
                 {pair.moveNumber}.

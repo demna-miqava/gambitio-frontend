@@ -18,6 +18,9 @@ import { formatGameTime, hasTimeOdds } from "@/utils/timeControl";
 import { useLiveGame } from "../contexts/LiveGameContext";
 import { useSpectatorState, type SpectatorFinish } from "../hooks/useSpectatorState";
 import { ConnectionBanner } from "./ConnectionBanner";
+import { DisconnectedMark } from "./DisconnectedMark";
+import { usePlayerConnections } from "../hooks/useOpponentConnection";
+import { cn } from "@/lib/utils";
 import { OpeningName } from "@/features/openings";
 import { useShownLine } from "@/features/game/hooks/useShownLine";
 import { useLiveSeries } from "@/features/series/hooks/useLiveSeries";
@@ -74,9 +77,12 @@ const SpectatorBoard = ({ orientation }: { orientation: PlayerColor }) => {
     connectionStatus,
   } = useLiveGame();
   const shownLine = useShownLine();
+  const { statusOf } = usePlayerConnections();
 
   const playerInfo = (side: PlayerColor) => {
     const player = side === "white" ? game.whitePlayer : game.blackPlayer;
+    // Away from the board: their connection to the game has stayed closed
+    const away = player.id !== null && statusOf(player.id).away;
     const change =
       side === "white"
         ? ratingChanges?.whiteRatingChange
@@ -85,17 +91,25 @@ const SpectatorBoard = ({ orientation }: { orientation: PlayerColor }) => {
       side === "white" ? ratingChanges?.whiteNewRating : ratingChanges?.blackNewRating;
     return {
       name: player.username,
+      nameSlot: (
+        <PlayerPopover player={player} trigger="name">
+          {player.username}
+        </PlayerPopover>
+      ),
       startingRating: player.rating,
       provisional: player.provisional,
       newRating: newRating ?? player.rating,
       ratingChange: gameEnded ? change : undefined,
+      status: away && <DisconnectedMark />,
       avatar: (
         <PlayerPopover player={player}>
-          <PlayerAvatar
-            username={player.username}
-            avatarUrl={player.avatarUrl}
-            size="sm"
-          />
+          <span className={cn("flex transition-opacity", away && "opacity-50")}>
+            <PlayerAvatar
+              username={player.username}
+              avatarUrl={player.avatarUrl}
+              size="sm"
+            />
+          </span>
         </PlayerPopover>
       ),
     };

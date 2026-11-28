@@ -3,48 +3,56 @@ interface GameEndMessage {
   description: string;
 }
 
-const draw = (description: string): GameEndMessage => ({ title: "Draw", description });
+export type GameOutcomeKind = "win" | "loss" | "draw" | "aborted";
 
+/** A player's own result: the kind sets the result block's colour */
+export interface PlayerEndMessage extends GameEndMessage {
+  kind: GameOutcomeKind;
+}
+
+/** How a decisive game ended, as the line under "You won" / "ann won" */
+const DECISIVE: Record<string, (won: boolean, opponent: string) => string> = {
+  checkmate: () => "by checkmate",
+  resignation: (won, opponent) => (won ? `${opponent} resigned` : "You resigned"),
+  timeout: () => "on time",
+  // The winner claimed the game after the other player stayed away from it
+  abandonment: (won, opponent) => (won ? `${opponent} left the game` : "You left the game"),
+};
+
+/** How a draw came about, as the line under "Draw" */
+const DRAWN: Record<string, string> = {
+  draw_agreement: "by agreement",
+  timeout_vs_insufficient_material: "Time ran out, but the other side had no way to checkmate",
+  stalemate: "by stalemate",
+  threefold_repetition: "by repetition",
+  insufficient_material: "by insufficient material",
+  fifty_move_rule: "by the fifty-move rule",
+};
+
+/**
+ * The result as told to the player: a short headline ("You won", "ann won",
+ * "Draw", "Game aborted") and how it came about ("by checkmate"). The
+ * description has no full stop: the rating line follows it.
+ */
 export const getGameEndMessage = (
   reason: string,
   isWinner: boolean,
-  isDraw: boolean = false
-): GameEndMessage | null => {
-  const messages: Record<string, GameEndMessage> = {
-    resignation: {
-      title: isWinner ? "You won by resignation" : "You resigned",
-      description: isWinner ? "Your opponent resigned." : "The game has ended.",
-    },
-    draw_agreement: {
-      title: "Draw agreed",
-      description: "The game ended in a draw.",
-    },
-    aborted: {
-      title: "Game aborted",
-      description: "The game has been aborted.",
-    },
-    checkmate: {
-      title: isWinner ? "You won by checkmate" : "Checkmate",
-      description: isWinner ? "Well played." : "You lost the game.",
-    },
-    timeout: {
-      title: isWinner ? "You won on time" : "Time's up",
-      description: isWinner
-        ? "Your opponent ran out of time."
-        : "You ran out of time.",
-    },
-    timeout_vs_insufficient_material: draw(
-      "Time ran out, but the other side had no way to checkmate."
-    ),
-    stalemate: draw("Stalemate: no legal moves, but not in check."),
-    threefold_repetition: draw("The same position occurred three times."),
-    insufficient_material: draw("Neither side has enough material to checkmate."),
-    fifty_move_rule: draw("50 moves without a capture or pawn move."),
+  isDraw: boolean = false,
+  opponentName: string = "Your opponent"
+): PlayerEndMessage | null => {
+  if (reason === "aborted") {
+    return { kind: "aborted", title: "Game aborted", description: "No rating change" };
+  }
+  if (isDraw || reason in DRAWN) {
+    return { kind: "draw", title: "Draw", description: DRAWN[reason] ?? "The game ended in a draw" };
+  }
+  const how = DECISIVE[reason];
+  if (!how) return null;
+  return {
+    kind: isWinner ? "win" : "loss",
+    title: isWinner ? "You won" : `${opponentName} won`,
+    description: how(isWinner, opponentName),
   };
-
-  const message = messages[reason];
-  if (!message && isDraw) return draw("The game ended in a draw.");
-  return message ?? null;
 };
 
 const DRAW_DESCRIPTIONS: Record<string, string> = {
@@ -81,6 +89,7 @@ export const getSpectatorEndMessage = (
       checkmate: `${winner} won by checkmate.`,
       resignation: `${loser} resigned.`,
       timeout: `${loser} ran out of time.`,
+      abandonment: `${loser} left the game.`,
     };
     return {
       title: `${winner} won`,

@@ -4,7 +4,7 @@ import { ROUTES, getProfileRoute } from "@/constants/routes";
 import { BrandLogo } from "@/components/Brand";
 import { UserAvatar } from "@/components/UserAvatar";
 import { ReturnToGameTopBarLink } from "@/components/active-game/ReturnToGame";
-import { FriendsInbox } from "@/features/friends/components/FriendsInbox";
+import { NotificationsInbox } from "@/features/notifications/components/NotificationsInbox";
 import { useUser } from "@/hooks/useUser";
 import { useGameShell } from "@/context/GameShellContext";
 import { cn } from "@/lib/utils";
@@ -21,8 +21,9 @@ const barClass =
  *
  * Game pages (`compact`): a 2.5rem bar with the brand and, on the right, the
  * game's own tools (chat, focus mode, settings; see TopBarSlot), so the board
- * gets the room and there's no menu one tap away. Leaving through the brand
- * link is still guarded by the game page.
+ * gets the room and there's no menu one tap away. The live game also names
+ * itself there ("Blitz 3+2, Rated" over the opening), in place of the
+ * wordmark. Leaving through the brand link is still guarded by the game page.
  *
  * Heights match --app-top-bar-height set in AppLayout.
  */
@@ -34,16 +35,20 @@ export const MobileTopBar = ({ compact = false }: { compact?: boolean }) => {
 
   if (compact) {
     return (
-      <header className={cn(barClass, "h-10 px-3")}>
+      <header className={cn(barClass, "group/gamebar h-10 px-3")}>
         <Link
           to={ROUTES.HOME}
           aria-label="Gambitio home"
           // The bar is 40px; touch-target makes the link a 44px tap
           className="relative touch-target flex h-full items-center rounded-lg px-1 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <BrandLogo markClassName="size-6" textClassName="text-sm" />
+          {/* A game that names itself in the bar (the live game) takes the wordmark's place */}
+          <BrandLogo
+            markClassName="size-6"
+            textClassName="text-sm group-has-[[data-topbar-title]]/gamebar:sr-only"
+          />
         </Link>
-        <div ref={setTopBarSlot} className="ml-auto flex items-center" />
+        <div ref={setTopBarSlot} className="ml-2 flex min-w-0 flex-1 items-center justify-end" />
       </header>
     );
   }
@@ -64,7 +69,7 @@ export const MobileTopBar = ({ compact = false }: { compact?: boolean }) => {
       </Link>
       <div className="ml-auto flex items-center gap-1">
         <ReturnToGameTopBarLink />
-        <FriendsInbox className="size-11" />
+        <NotificationsInbox className="size-11" />
         {id && (
           <Link
             to={getProfileRoute(id)}

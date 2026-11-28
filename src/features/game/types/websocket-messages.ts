@@ -47,6 +47,8 @@ export type RatingChanges = {
 
 export type GameEndReason =
   | "resignation"
+  /** The winner claimed the game after the other player left it */
+  | "abandonment"
   | "draw_agreement"
   | "aborted"
   | "checkmate"
@@ -134,6 +136,15 @@ export type InitialGameStateMessage = {
     startPly?: number;
     /** People watching (not the players); only for games in progress */
     spectators?: number;
+    /**
+     * The players away from the board right now and for how long, and how
+     * long a player must be away before the other may claim the win; only
+     * for games in progress (absent from older servers)
+     */
+    away?: { userId: number; goneForMs: number }[];
+    /** The number of the last connection change `away` reflects (see PlayerConnectionMessage) */
+    awaySeq?: number;
+    claimAfterMs?: number;
     /** The players' chat; absent for spectators */
     chat?: ChatState;
     /** The spectators' chat; absent for the players */
@@ -175,6 +186,23 @@ export type TimeAddedMessage = {
 export type SpectatorsMessage = {
   type: GAME_MESSAGE_TYPES.SPECTATORS;
   count: number;
+};
+
+/**
+ * A player left the game (their last connection to it closed) or came back.
+ * `seq` numbers the game's connection changes in the order they happened:
+ * one that arrives after a newer one for the same player is dropped.
+ */
+export type PlayerConnectionMessage = {
+  type: GAME_MESSAGE_TYPES.PLAYER_CONNECTION;
+  data: {
+    userId: number;
+    connected: boolean;
+    seq: number;
+    /** For a player who left: how long ago, and the wait before the win can be claimed */
+    goneForMs?: number;
+    claimAfterMs?: number;
+  };
 };
 
 export type GameErrorMessage = {
@@ -219,6 +247,7 @@ export type GameWebSocketMessage =
   | CancelRematchMessage
   | SpectatorsMessage
   | TimeAddedMessage
+  | PlayerConnectionMessage
   | ChatEventMessage
   | ChatStatusMessage
   | SpectatorChatEventMessage

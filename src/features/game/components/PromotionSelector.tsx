@@ -57,6 +57,8 @@ export const PromotionSelector = memo(
     const handleEscape = useCallback(
       (event: KeyboardEvent) => {
         if (event.key === "Escape") {
+          // Claimed: the page's own Escape (leaving focus mode) doesn't run too
+          event.preventDefault();
           onCancel();
         }
       },
@@ -78,38 +80,38 @@ export const PromotionSelector = memo(
     }, [handleClickOutside, handleEscape]);
 
     return (
-      <div
-        ref={menuRef}
-        className="absolute z-50"
-        style={{
-          ...position,
-          width: "12.5%",
-        }}
-      >
+      <>
+        {/* The board dims and takes no input until a piece is picked; a
+            click here (anywhere outside the column) cancels */}
+        <div className="absolute inset-0 z-40 bg-black/45" aria-hidden="true" />
+        {/* One square wide, from the promotion square towards the player */}
         <div
-          className={`flex flex-col ${
-            reverseOrder ? "flex-col-reverse" : ""
-          } gap-1 rounded-lg overflow-hidden shadow-lg border bg-popover p-1`}
+          ref={menuRef}
+          role="group"
+          aria-label="Promote to"
+          className={`absolute z-50 flex w-[12.5%] overflow-hidden rounded-md bg-card shadow-lg ${
+            reverseOrder ? "flex-col-reverse" : "flex-col"
+          }`}
+          style={position}
         >
-          {PROMOTION_PIECES.map((piece) => {
+          {PROMOTION_PIECES.map((piece, index) => {
             const pieceSvg = PIECE_SVGS[color][piece];
             return (
               <button
                 key={piece}
+                type="button"
+                // The queen is the usual choice: Enter takes it
+                autoFocus={index === 0}
                 onClick={() => onSelect(piece)}
-                className="aspect-square bg-card hover:bg-accent hover:text-accent-foreground transition-colors rounded-md relative overflow-hidden p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="aspect-square p-[4%] outline-none transition-colors hover:bg-primary-soft focus-visible:bg-primary-soft focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                 aria-label={`Promote to ${PIECE_NAMES[piece]}`}
               >
-                <img
-                  src={pieceSvg}
-                  alt={PIECE_NAMES[piece]}
-                  className="w-full h-full object-contain"
-                />
+                <img src={pieceSvg} alt="" className="h-full w-full object-contain" draggable={false} />
               </button>
             );
           })}
         </div>
-      </div>
+      </>
     );
   }
 );

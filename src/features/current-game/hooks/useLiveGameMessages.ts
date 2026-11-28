@@ -47,6 +47,7 @@ const DROPPED_LABELS: Record<string, string> = {
   [GAME_MESSAGE_TYPES.REMATCH_RESPONSE]: "rematch reply",
   [GAME_MESSAGE_TYPES.CANCEL_REMATCH]: "rematch cancel",
   [GAME_MESSAGE_TYPES.GIVE_TIME]: "extra time",
+  [GAME_MESSAGE_TYPES.CLAIM_WIN]: "claim",
 };
 
 /** The error as shown: a dropped action names itself, so the user knows to send it again */

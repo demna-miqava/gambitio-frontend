@@ -9,6 +9,8 @@ export interface GameStats {
   wins: number;
   losses: number;
   draws: number;
+  /** The rating after each of the last few rated games, oldest first (absent from older servers) */
+  recent?: number[];
 }
 
 export interface Stats extends Record<string, GameStats> {

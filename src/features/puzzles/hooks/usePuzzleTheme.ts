@@ -5,7 +5,8 @@ import { isValidThemeKey } from "../utils/themeLabels";
 const STORAGE_KEY = "gambitio:puzzle-theme";
 const PARAM = "theme";
 
-const readStored = (): string => {
+/** Infinite mode's remembered theme filter ("" = all themes), e.g. for Home's next puzzle */
+export const readStoredPuzzleTheme = (): string => {
   try {
     const value = localStorage.getItem(STORAGE_KEY);
     return isValidThemeKey(value) ? value : "";
@@ -31,7 +32,7 @@ const store = (theme: string) => {
 export const usePuzzleTheme = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const param = searchParams.get(PARAM);
-  const theme = isValidThemeKey(param) ? param : param === null ? readStored() : "";
+  const theme = isValidThemeKey(param) ? param : param === null ? readStoredPuzzleTheme() : "";
 
   // Opened without ?theme=: put the remembered one in the URL
   useEffect(() => {

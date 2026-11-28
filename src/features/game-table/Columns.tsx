@@ -9,7 +9,19 @@ import type { StoredGameListItem } from "@/types";
 import { getResult, getScore } from "./utils/gameResult";
 import { fullMoves } from "@/utils/moves";
 
-export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListItem>[] => [
+/** The side of the game that isn't `userId`'s */
+const opponentOf = (game: StoredGameListItem, userId?: number) =>
+  game.whitePlayer.id === userId ? game.blackPlayer : game.whitePlayer;
+
+interface ColumnOptions {
+  /** A "Review" link at the end of each row (Home's recent games) */
+  review?: boolean;
+}
+
+export const createColumns = (
+  currentUserId?: number,
+  { review = false }: ColumnOptions = {}
+): ColumnDef<StoredGameListItem>[] => [
   {
     accessorKey: "timeControl",
     header: () => <span className="sr-only">Time control</span>,
@@ -85,4 +97,23 @@ export const createColumns = (currentUserId?: number): ColumnDef<StoredGameListI
       );
     },
   },
+  ...(review
+    ? [
+        {
+          id: "review",
+          header: () => <span className="sr-only">Review</span>,
+          cell: ({ row }) => (
+            <div className="text-right">
+              <Link
+                to={getArchiveGameRoute(row.original.id)}
+                aria-label={`Review game against ${opponentOf(row.original, currentUserId).username}`}
+                className="rounded-sm text-[13px] font-semibold text-primary underline-offset-[3px] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Review
+              </Link>
+            </div>
+          ),
+        } satisfies ColumnDef<StoredGameListItem>,
+      ]
+    : []),
 ];

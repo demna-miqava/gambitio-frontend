@@ -45,3 +45,18 @@ export const getUserFriends = async (userId: number, query: string): Promise<Pag
 export const deleteMyAccount = async (): Promise<void> => {
   await apiRequest<void>("delete", "/users/me");
 };
+
+/** A player found by name */
+export type FoundPlayer = {
+  id: number;
+  username: string;
+  avatarUrl: string | null;
+  isFriend: boolean;
+};
+
+/**
+ * Players by name, friends included: the exact name first, then names that
+ * start with `q`, then names that contain it (up to six).
+ */
+export const searchPlayers = async (q: string, signal?: AbortSignal): Promise<FoundPlayer[]> =>
+  (await apiRequest<{ data: FoundPlayer[] }>("get", "/users/search", { params: { q }, signal })).data;

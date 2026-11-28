@@ -38,6 +38,7 @@ export function replayGame(pgn: string | null | undefined): SharedGameLine {
 const HOW: Record<string, string> = {
   checkmate: "by checkmate",
   resignation: "by resignation",
+  abandonment: "when the opponent left the game",
   timeout: "on time",
   timeout_vs_insufficient_material: "on time, with no way to checkmate",
   stalemate: "by stalemate",

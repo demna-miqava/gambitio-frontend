@@ -215,9 +215,9 @@ describe("a tournament game's page", () => {
       );
     expect(actions(true, false)).toContain("Resign");
     expect(actions(true, false)).not.toContain("Abort");
-    expect(actions(true, true)).not.toContain("takeback");
+    expect(actions(true, true)).not.toContain("Takeback");
     // An ordinary game is as it was
-    expect(actions(false, false)).toContain("Abort game");
-    expect(actions(false, true)).toContain("Ask for a takeback");
+    expect(actions(false, false)).toContain("Abort");
+    expect(actions(false, true)).toContain("Takeback");
   });
 });

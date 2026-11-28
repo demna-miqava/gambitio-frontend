@@ -17,13 +17,14 @@ import { preloadSignedInPages } from "@/routes/pages";
 import { StudyInviteToasts } from "@/features/study/components/StudyInviteToasts";
 import { FriendUpdates } from "@/features/friends/components/FriendUpdates";
 import { BlockUpdates } from "@/features/moderation/components/BlockUpdates";
-import { FriendsInbox } from "@/features/friends/components/FriendsInbox";
+import { NotificationsInbox } from "@/features/notifications/components/NotificationsInbox";
 import { DuelInviteListener } from "@/features/puzzles/duel/components/DuelInviteListener";
 import { PushSync } from "@/features/push/PushSync";
 import { GameShellProvider, useGameShell } from "@/context/GameShellContext";
 
 const MAIN_ID = "main-content";
 const SIDEBAR_WIDE_OPEN_KEY = "sidebarWideOpen";
+const SIDEBAR_GAME_OPEN_KEY = "sidebarGameOpen";
 
 // Focus <main> directly rather than following "#main-content", which would
 // add a hash to the URL and count as a navigation
@@ -43,8 +44,10 @@ const skipToMain = (event: MouseEvent<HTMLAnchorElement>) => {
  * - 768–1279px: sidebar as an icon rail (it can be expanded; it folds back
  *   on the next navigation). No top bar.
  * - From 1280px: the full sidebar, which the user can collapse to the rail.
+ *   On game pages it starts as the rail, so the board gets the width; the
+ *   user can open it there too, and each of the two choices is remembered.
  *
- * Friends and challenges (FriendsInbox) sit in the top right corner: in the
+ * Notifications (NotificationsInbox) sit in the top right corner: in the
  * phone top bar, and from 768px in the corner of the page, which starts 3rem
  * down to leave it room. Game pages have neither.
  *
@@ -62,7 +65,7 @@ const CornerInbox = () => {
   if (isMobile) return null;
   return (
     <div className="absolute top-1.5 right-3 z-20">
-      <FriendsInbox />
+      <NotificationsInbox />
     </div>
   );
 };
@@ -90,6 +93,11 @@ const AppShell = () => {
     boolean,
     (open: boolean) => void,
   ];
+  // Game pages keep their own choice: folded until the user opens it there
+  const [gameOpen, setGameOpen] = useLocalStorage<boolean>(SIDEBAR_GAME_OPEN_KEY, false) as [
+    boolean,
+    (open: boolean) => void,
+  ];
   const [railOpen, setRailOpen] = useState(false);
   const [lastPathname, setLastPathname] = useState(pathname);
   if (lastPathname !== pathname) {
@@ -99,8 +107,8 @@ const AppShell = () => {
 
   return (
     <SidebarProvider
-      open={isWide ? wideOpen : railOpen}
-      onOpenChange={isWide ? setWideOpen : setRailOpen}
+      open={isWide ? (onGamePage ? gameOpen : wideOpen) : railOpen}
+      onOpenChange={isWide ? (onGamePage ? setGameOpen : setWideOpen) : setRailOpen}
       data-focus-mode={focusActive || undefined}
     >
       <a

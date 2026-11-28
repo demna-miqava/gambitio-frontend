@@ -155,6 +155,7 @@ export const shouldReconnectToGame = (game: Pick<WatchedGame, "inProgress"> | nu
 
 const REASONS: Record<GameEndReason, string> = {
   resignation: "by resignation",
+  abandonment: "the opponent left the game",
   draw_agreement: "by agreement",
   aborted: "",
   checkmate: "by checkmate",

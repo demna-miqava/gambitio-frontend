@@ -2,10 +2,10 @@ import {
   Eye,
   Home,
   Medal,
-  Puzzle,
   Settings,
   Swords,
   Microscope,
+  Target,
   Trophy,
   UserRound,
   type LucideIcon,
@@ -96,11 +96,17 @@ export const getNavItems = (userId: number): NavItem[] => [
     hideInBottomNav: true,
   },
   {
-    title: "Puzzles",
+    // Everything you practise: puzzles, endgames, drills, coordinates, your openings
+    title: "Train",
     url: ROUTES.PUZZLES,
-    icon: Puzzle,
-    // The endgame lab, conversion drills and coordinates are training too
-    match: [ROUTES.PUZZLES, ROUTES.ENDGAMES, ROUTES.CONVERSION_DRILLS, ROUTES.COORDINATES],
+    icon: Target,
+    match: [
+      ROUTES.PUZZLES,
+      ROUTES.ENDGAMES,
+      ROUTES.CONVERSION_DRILLS,
+      ROUTES.COORDINATES,
+      ROUTES.REPERTOIRE,
+    ],
     items: [
       { title: "Solve puzzles", url: getPuzzleModeRoute("infinite") },
       { title: "Puzzle Rush", url: getPuzzleModeRoute("rush") },
@@ -110,6 +116,7 @@ export const getNavItems = (userId: number): NavItem[] => [
       { title: "Endgame lab", url: ROUTES.ENDGAMES },
       { title: "Conversion drills", url: ROUTES.CONVERSION_DRILLS },
       { title: "Coordinates", url: ROUTES.COORDINATES },
+      { title: "Opening repertoire", url: ROUTES.REPERTOIRE },
     ],
   },
   {
@@ -128,13 +135,11 @@ export const getNavItems = (userId: number): NavItem[] => [
       ROUTES.TOOLS.BOARD_EDITOR,
       ROUTES.TOOLS.IMPORT_GAME,
       "/archive/",
-      ROUTES.REPERTOIRE,
       ROUTES.STUDY,
     ],
     items: [
       { title: "Analysis board", url: ROUTES.TOOLS.ANALYSIS_BOARD },
       { title: "Board editor", url: ROUTES.TOOLS.BOARD_EDITOR },
-      { title: "Opening repertoire", url: ROUTES.REPERTOIRE },
       { title: "Study rooms", url: ROUTES.STUDY },
       { title: "Import a game", url: ROUTES.TOOLS.IMPORT_GAME },
     ],

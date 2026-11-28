@@ -9,6 +9,7 @@ describe("getPlaySetupSearch", () => {
     expect(getPlaySetupSearch("new")).toBe("");
     expect(getPlaySetupSearch("friends")).toBe("?section=friends");
     expect(getPlaySetupSearch("custom")).toBe("?section=custom");
+    expect(getPlaySetupSearch("bot")).toBe("?section=bot");
     expect(getPlaySetupSearch("friend-invite-options", 12)).toBe(
       "?section=friends&friend=12"
     );
@@ -24,6 +25,7 @@ describe("parsePlaySetup", () => {
   it("reads the section and friend from the URL", () => {
     expect(parse("?section=friends")).toEqual({ section: "friends", friendId: null });
     expect(parse("?section=custom")).toEqual({ section: "custom", friendId: null });
+    expect(parse("?section=bot")).toEqual({ section: "bot", friendId: null });
     expect(parse("?section=friends&friend=12")).toEqual({
       section: "friend-invite-options",
       friendId: 12,

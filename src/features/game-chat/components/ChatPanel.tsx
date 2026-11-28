@@ -19,6 +19,8 @@ interface ChatPanelProps {
   className?: string;
   /** Put the cursor in the message box when the panel opens (the phone sheet) */
   autoFocus?: boolean;
+  /** Docked at the foot of the game's side rail, where it is about 9 lines tall */
+  compact?: boolean;
 }
 
 /**
@@ -51,7 +53,7 @@ export const ChatMuteButton = ({ className }: { className?: string }) => {
  * The conversation with the opponent and the box to write in. Fills the
  * height it is given; the messages scroll inside.
  */
-export const ChatPanel = ({ className, autoFocus = false }: ChatPanelProps) => {
+export const ChatPanel = ({ className, autoFocus = false, compact = false }: ChatPanelProps) => {
   const { messages, canSend, offReason, send, error, clearError, rejected, muted, showing } = useGameChat();
   const { opponent, gameEnded, isConnected } = useLiveGame();
   const { id: viewerId } = useUser();
@@ -119,11 +121,18 @@ export const ChatPanel = ({ className, autoFocus = false }: ChatPanelProps) => {
               )}
             </div>
           ) : isEmpty ? (
-            <div className="m-auto flex flex-col items-center gap-3 px-2 py-4 text-center">
-              <p className="text-sm text-muted-foreground">
+            <div
+              className={cn(
+                "m-auto flex flex-col items-center px-2 text-center",
+                compact ? "gap-2 py-1" : "gap-3 py-4"
+              )}
+            >
+              <p className={cn("text-muted-foreground", compact ? "text-[13px]" : "text-sm")}>
                 {muted
                   ? `You've hidden ${opponent.username}'s messages.`
-                  : `Say hello to ${opponent.username}. Only the two of you see this.`}
+                  : compact
+                    ? "Only the two of you can see this chat."
+                    : `Say hello to ${opponent.username}. Only the two of you see this.`}
               </p>
               {canSend && (
                 <div className="flex flex-wrap justify-center gap-1.5">

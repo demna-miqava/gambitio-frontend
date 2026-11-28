@@ -18,6 +18,19 @@ interface GameLayoutProps {
    * like the analysis panel, so the page itself never scrolls.
    */
   fitPanel?: boolean;
+  /**
+   * The live game's layout: the panel is one 372px rail as tall as the board
+   * column, and the page never scrolls. On phones the board column and the
+   * rail dissolve into one column whose parts are ordered in index.css
+   * (.game-layout[data-rail]): moves, opponent, board, you, prompts, then
+   * the action bar along the bottom edge.
+   */
+  rail?: boolean;
+  /**
+   * With `rail`, beside the board: the rail steps aside and the board with
+   * its two player strips takes the middle of the page (focus mode)
+   */
+  focus?: boolean;
 }
 
 /**
@@ -37,6 +50,8 @@ export const GameLayout = ({
   boardIsDecorative = false,
   bareBoard = false,
   fitPanel = false,
+  rail = false,
+  focus = false,
 }: GameLayoutProps) => {
   return (
     <div
@@ -44,6 +59,8 @@ export const GameLayout = ({
       data-bare-board={bareBoard || undefined}
       data-decorative-board={boardIsDecorative || undefined}
       data-fit-panel={fitPanel || undefined}
+      data-rail={rail || undefined}
+      data-focus={(rail && focus) || undefined}
     >
       <div className="game-layout-board -mx-4 -mt-5 flex min-w-0 items-center justify-center sm:mx-0 sm:mt-0">
         {board}

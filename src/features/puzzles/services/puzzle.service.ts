@@ -13,7 +13,29 @@ export interface FetchPuzzlesOptions {
   theme?: string;
 }
 
+/** The days in a row, in the player's own time zone, with at least one puzzle solved */
+export interface PuzzleStreak {
+  days: number;
+  /** False: the streak stands (it counts up to yesterday) but ends tonight without a solve */
+  solvedToday: boolean;
+}
+
+/** This device's IANA time zone ("Europe/Berlin"); undefined where the browser doesn't say */
+const timeZone = (): string | undefined => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export const puzzleService = {
+  /** The puzzle streak, with days counted in this device's time zone (UTC without one) */
+  fetchStreak: (): Promise<PuzzleStreak> => {
+    const tz = timeZone();
+    return apiRequest<PuzzleStreak>("get", "/puzzles/streak", { params: tz ? { tz } : {} });
+  },
+
   /**
    * Unsolved puzzles ordered by rating. "ascending" starts from the easiest
    * (Rush / Survival); "rated" starts near the user's puzzle rating (Infinite).
